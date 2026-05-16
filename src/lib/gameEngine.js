@@ -298,13 +298,18 @@ export function findLeadingHand(communityCards) {
 // NOTE: Red/Black payouts are defined in payoutConstants.js (COLOR_BOARD_PAYOUTS) — single source of truth
 
 // The winning Red/Black bets based on final community cards
-// Cumulative: if 4 red showing, both 3R and 4R win
+// EXACT MATCH RULE: each bet wins only when the count is exactly that number.
+// e.g. 3R wins only when exactly 3 red cards show — NOT when 4 or 5 show.
 export function resolveRedBlack(communityCards) {
   const reds = communityCards.filter(c => cardColor(c) === 'red').length;
   const blacks = communityCards.filter(c => cardColor(c) === 'black').length;
   const winners = [];
-  if (reds >= 3) { for (let i = 3; i <= reds; i++) winners.push(`${i}R`); }
-  if (blacks >= 3) { for (let i = 3; i <= blacks; i++) winners.push(`${i}B`); }
+  if (reds === 3) winners.push('3R');
+  if (reds === 4) winners.push('4R');
+  if (reds === 5) winners.push('5R');
+  if (blacks === 3) winners.push('3B');
+  if (blacks === 4) winners.push('4B');
+  if (blacks === 5) winners.push('5B');
   return winners;
 }
 

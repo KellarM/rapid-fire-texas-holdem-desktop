@@ -68,16 +68,13 @@ Deno.serve(async (req) => {
       const blacks = 5 - reds;
       let colorPayouts = 0;
       // Cumulative wins: if 4 reds, both 3R and 4R win
-      if (reds >= 3) {
-        for (let i = 3; i <= reds; i++) {
-          colorPayouts += betPerCategory * (1 + (rbPayoutMap[`${i}R`] || 1));
-        }
-      }
-      if (blacks >= 3) {
-        for (let i = 3; i <= blacks; i++) {
-          colorPayouts += betPerCategory * (1 + (rbPayoutMap[`${i}B`] || 1));
-        }
-      }
+      // Exact match rule
+      if (reds === 3) colorPayouts += betPerCategory * (1 + (rbPayoutMap['3R'] || 1));
+      if (reds === 4) colorPayouts += betPerCategory * (1 + (rbPayoutMap['4R'] || 1));
+      if (reds === 5) colorPayouts += betPerCategory * (1 + (rbPayoutMap['5R'] || 1));
+      if (blacks === 3) colorPayouts += betPerCategory * (1 + (rbPayoutMap['3B'] || 1));
+      if (blacks === 4) colorPayouts += betPerCategory * (1 + (rbPayoutMap['4B'] || 1));
+      if (blacks === 5) colorPayouts += betPerCategory * (1 + (rbPayoutMap['5B'] || 1));
       // If no color win, player loses that bet (roundPayouts unchanged)
       roundPayouts += colorPayouts;
 

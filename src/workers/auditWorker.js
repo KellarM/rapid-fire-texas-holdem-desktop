@@ -231,12 +231,13 @@ function buildHandResult(sequenceId, b0, b1, b2, b3, b4) {
   const blacks = 5 - reds;
 
   const colorWins = [];
-  if (reds>=3) colorWins.push('3R');
-  if (reds>=4) colorWins.push('4R');
-  if (reds>=5) colorWins.push('5R');
-  if (blacks>=3) colorWins.push('3B');
-  if (blacks>=4) colorWins.push('4B');
-  if (blacks>=5) colorWins.push('5B');
+  // Exact match rule
+  if (reds===3) colorWins.push('3R');
+  if (reds===4) colorWins.push('4R');
+  if (reds===5) colorWins.push('5R');
+  if (blacks===3) colorWins.push('3B');
+  if (blacks===4) colorWins.push('4B');
+  if (blacks===5) colorWins.push('5B');
 
   const riverRankIdx = b4 >> 2;
   const isLow = riverRankIdx <= 5;
@@ -343,7 +344,7 @@ function evalWinFromBoard(b0, b1, b2, b3, b4, betType, betKey, params, handPayou
     if ((b3&3)===1||(b3&3)===2) reds++;
     if ((b4&3)===1||(b4&3)===2) reds++;
     oddsUsed = colorPayouts[betKey] ?? null;
-    if ((colorIsRed ? reds : 5-reds) >= colorThreshold) won = true;
+    if ((colorIsRed ? reds : 5-reds) === colorThreshold) won = true;  // exact match rule
   } else if (betType === 'lh') {
     oddsUsed = lhPayout;
     if (lhLow ? (b4>>2)<=5 : (b4>>2)>5) won = true;
@@ -494,7 +495,7 @@ function handleRun(payload) {
       if ((b2&3)===1||(b2&3)===2) reds++;
       if ((b3&3)===1||(b3&3)===2) reds++;
       if ((b4&3)===1||(b4&3)===2) reds++;
-      if ((colorIsRed ? reds : 5-reds) >= colorThreshold) {
+      if ((colorIsRed ? reds : 5-reds) === colorThreshold) {  // exact match rule
         won = true;
         profit = BET * (colorPayouts[betKey] ?? 0);
       }
@@ -697,7 +698,7 @@ function handleExport(payload) {
       const auditedBetRankNonExceptionWin = (betType === 'rank' && auditedBetWon && rankException === 0) ? 1 : 0;
       const auditedBetLostToHouseWin = (houseWin === 1 && !auditedBetWon) ? 1 : 0;
 
-      lines += `${seqId},${c0.rank},${c0.suit},${c1.rank},${c1.suit},${c2.rank},${c2.suit},${c3.rank},${c3.suit},${c4.rank},${c4.suit},${winnerLabel},${winnerLabel2},${rankName},${sharedWin},${houseWin},${rankException},${reds>=3?1:0},${reds>=4?1:0},${reds>=5?1:0},${blacks>=3?1:0},${blacks>=4?1:0},${blacks>=5?1:0},${isLow?1:0},${isLow?0:1},${auditedBetWon?1:0},${auditedBetCardedHandWin},${auditedBetRankNonExceptionWin},${auditedBetLostToHouseWin}\n`;
+      lines += `${seqId},${c0.rank},${c0.suit},${c1.rank},${c1.suit},${c2.rank},${c2.suit},${c3.rank},${c3.suit},${c4.rank},${c4.suit},${winnerLabel},${winnerLabel2},${rankName},${sharedWin},${houseWin},${rankException},${reds===3?1:0},${reds===4?1:0},${reds===5?1:0},${blacks===3?1:0},${blacks===4?1:0},${blacks===5?1:0},${isLow?1:0},${isLow?0:1},${auditedBetWon?1:0},${auditedBetCardedHandWin},${auditedBetRankNonExceptionWin},${auditedBetLostToHouseWin}\n`;
     }
 
     rowsDone += batch;

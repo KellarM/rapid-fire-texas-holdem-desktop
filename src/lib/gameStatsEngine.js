@@ -172,12 +172,13 @@ export function computeBatch(batchStart, batchSize) {
             }
             const blacks = 5 - reds;
             const colorWins = [];
-            if (reds>=3) colorWins.push('3R');
-            if (reds>=4) colorWins.push('4R');
-            if (reds>=5) colorWins.push('5R');
-            if (blacks>=3) colorWins.push('3B');
-            if (blacks>=4) colorWins.push('4B');
-            if (blacks>=5) colorWins.push('5B');
+            // Exact match rule
+            if (reds===3) colorWins.push('3R');
+            if (reds===4) colorWins.push('4R');
+            if (reds===5) colorWins.push('5R');
+            if (blacks===3) colorWins.push('3B');
+            if (blacks===4) colorWins.push('4B');
+            if (blacks===5) colorWins.push('5B');
 
             // Update tallies for each winner
             const winnerIds = [];

@@ -57,14 +57,18 @@ export const HAND_RANK_PAYOUTS = {
 };
 
 // ── COLOR BOARD PAYOUTS ───────────────────────────────────────
-// Win condition: community cards contain >= N cards of that color
+// Win condition: EXACTLY N cards of that color in the 5 community cards.
+// 3R wins only when exactly 3 reds show (not 4 or 5).
+// 4R wins only when exactly 4 reds show (not 5).
+// 5R wins only when exactly 5 reds show (unchanged from before — was always exact).
+// NOTE: 3R and 4R payouts below are PLACEHOLDER — run calibration to confirm final values.
 export const COLOR_BOARD_PAYOUTS = {
-  '3R': 0.91,
-  '3B': 0.91,
-  '4R': 4.75,
-  '4B': 4.75,
-  '5R': 43.,
-  '5B': 43.,
+  '3R': 0.91,  // PLACEHOLDER — needs recalibration (exact-3 is less frequent than >=3)
+  '3B': 0.91,  // PLACEHOLDER — needs recalibration
+  '4R': 4.75,  // PLACEHOLDER — needs recalibration (exact-4 is less frequent than >=4)
+  '4B': 4.75,  // PLACEHOLDER — needs recalibration
+  '5R': 43.0,  // unchanged — exact-5 was already the only way to hit this
+  '5B': 43.0,  // unchanged
 };
 
 // ── LOW / HIGH PAYOUT ─────────────────────────────────────────

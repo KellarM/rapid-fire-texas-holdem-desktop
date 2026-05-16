@@ -125,24 +125,18 @@ Deno.serve(async (req) => {
       const blacks = 5 - reds;
       let colorPayouts = 0;
 
-      if (reds >= 3) {
-        for (let i = 3; i <= reds; i++) {
-          const key = `${i}R`;
-          const mult = rbPayoutMap[key] || 1;
-          colorPayouts += colorBetAmount * (1 + mult);
-          stats.categories.colorBets.byColor[key].wins += 1;
-          stats.categories.colorBets.byColor[key].payouts += colorBetAmount * (1 + mult);
-        }
-      }
-
-      if (blacks >= 3) {
-        for (let i = 3; i <= blacks; i++) {
-          const key = `${i}B`;
-          const mult = rbPayoutMap[key] || 1;
-          colorPayouts += colorBetAmount * (1 + mult);
-          stats.categories.colorBets.byColor[key].wins += 1;
-          stats.categories.colorBets.byColor[key].payouts += colorBetAmount * (1 + mult);
-        }
+      // Exact match rule — each bet wins only when count equals exactly that number
+      for (const [key, mult] of [
+        reds === 3 ? ['3R', rbPayoutMap['3R'] || 1] : null,
+        reds === 4 ? ['4R', rbPayoutMap['4R'] || 1] : null,
+        reds === 5 ? ['5R', rbPayoutMap['5R'] || 1] : null,
+        blacks === 3 ? ['3B', rbPayoutMap['3B'] || 1] : null,
+        blacks === 4 ? ['4B', rbPayoutMap['4B'] || 1] : null,
+        blacks === 5 ? ['5B', rbPayoutMap['5B'] || 1] : null,
+      ].filter(Boolean)) {
+        colorPayouts += colorBetAmount * (1 + mult);
+        stats.categories.colorBets.byColor[key].wins += 1;
+        stats.categories.colorBets.byColor[key].payouts += colorBetAmount * (1 + mult);
       }
 
       if (colorPayouts > 0) {
@@ -152,12 +146,13 @@ Deno.serve(async (req) => {
       }
 
       // Track all color bets placed
-      if (reds >= 3) {
-        for (let i = 3; i <= reds; i++) stats.categories.colorBets.byColor[`${i}R`].bets += colorBetAmount;
-      }
-      if (blacks >= 3) {
-        for (let i = 3; i <= blacks; i++) stats.categories.colorBets.byColor[`${i}B`].bets += colorBetAmount;
-      }
+      // Exact match rule
+      if (reds === 3) stats.categories.colorBets.byColor['3R'].bets += colorBetAmount;
+      if (reds === 4) stats.categories.colorBets.byColor['4R'].bets += colorBetAmount;
+      if (reds === 5) stats.categories.colorBets.byColor['5R'].bets += colorBetAmount;
+      if (blacks === 3) stats.categories.colorBets.byColor['3B'].bets += colorBetAmount;
+      if (blacks === 4) stats.categories.colorBets.byColor['4B'].bets += colorBetAmount;
+      if (blacks === 5) stats.categories.colorBets.byColor['5B'].bets += colorBetAmount;
 
       stats.categories.colorBets.payouts += colorPayouts;
       roundPayouts += colorPayouts;

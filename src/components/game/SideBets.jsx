@@ -60,8 +60,13 @@ export default function SideBets({
   const blacks = communityCards.filter(c => cardColor(c) === 'black').length;
 
   const liveRedBlack = [];
-  if (reds >= 3) for (let i = 3; i <= reds; i++) liveRedBlack.push(`${i}R`);
-  if (blacks >= 3) for (let i = 3; i <= blacks; i++) liveRedBlack.push(`${i}B`);
+  // Exact match rule: each bet wins only when count equals exactly that number
+  if (reds === 3) liveRedBlack.push('3R');
+  if (reds === 4) liveRedBlack.push('4R');
+  if (reds === 5) liveRedBlack.push('5R');
+  if (blacks === 3) liveRedBlack.push('3B');
+  if (blacks === 4) liveRedBlack.push('4B');
+  if (blacks === 5) liveRedBlack.push('5B');
 
   const hasColorBet = Object.keys(redBlackBets || {}).some(k => (redBlackBets[k] || 0) > 0);
   const hasRiverBet = lowHighBet && lowHighBet.amount > 0;

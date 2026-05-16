@@ -137,18 +137,13 @@ function runSimulation(handsToSimulate, config) {
     const reds = Math.floor(Math.random() * 6);
     const blacks = 5 - reds;
     let colorPayouts = 0;
-    if (reds >= 3) {
-      for (let i = 3; i <= reds; i++) {
-        const key = `${i}R`;
-        if (rbPayoutMap[key]) colorPayouts += betPerCategory * rbPayoutMap[key];
-      }
-    }
-    if (blacks >= 3) {
-      for (let i = 3; i <= blacks; i++) {
-        const key = `${i}B`;
-        if (rbPayoutMap[key]) colorPayouts += betPerCategory * rbPayoutMap[key];
-      }
-    }
+    // Exact match rule
+    if (reds === 3 && rbPayoutMap['3R']) colorPayouts += betPerCategory * rbPayoutMap['3R'];
+    if (reds === 4 && rbPayoutMap['4R']) colorPayouts += betPerCategory * rbPayoutMap['4R'];
+    if (reds === 5 && rbPayoutMap['5R']) colorPayouts += betPerCategory * rbPayoutMap['5R'];
+    if (blacks === 3 && rbPayoutMap['3B']) colorPayouts += betPerCategory * rbPayoutMap['3B'];
+    if (blacks === 4 && rbPayoutMap['4B']) colorPayouts += betPerCategory * rbPayoutMap['4B'];
+    if (blacks === 5 && rbPayoutMap['5B']) colorPayouts += betPerCategory * rbPayoutMap['5B'];
     roundPayouts += colorPayouts;
 
     // 4. Low/High (50% win rate)

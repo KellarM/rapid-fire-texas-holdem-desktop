@@ -136,8 +136,13 @@ Deno.serve(async (req) => {
       if(cardIsRed(c0))reds++; if(cardIsRed(c1))reds++; if(cardIsRed(c2))reds++;
       if(cardIsRed(c3))reds++; if(cardIsRed(c4))reds++;
       const blacks=5-reds;
-      if(reds>=3){colorHits[0]++;if(reds>=4){colorHits[1]++;if(reds>=5)colorHits[2]++;}}
-      if(blacks>=3){colorHits[3]++;if(blacks>=4){colorHits[4]++;if(blacks>=5)colorHits[5]++;}}
+      // Exact match rule
+      if(reds===3)colorHits[0]++;
+      if(reds===4)colorHits[1]++;
+      if(reds===5)colorHits[2]++;
+      if(blacks===3)colorHits[3]++;
+      if(blacks===4)colorHits[4]++;
+      if(blacks===5)colorHits[5]++;
 
       if(cardIsLow(c4))riverLow++;else riverHigh++;
     }

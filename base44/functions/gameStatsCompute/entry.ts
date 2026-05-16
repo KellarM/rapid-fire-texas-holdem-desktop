@@ -162,8 +162,13 @@ Deno.serve(async (req) => {
       const reds = commCards.filter(c=>SUIT_COLOR[c.s]==='red').length;
       const blacks = 5-reds;
       const colorHits=[];
-      if(reds>=3) for(let n=3;n<=reds;n++) colorHits.push(`${n}R`);
-      if(blacks>=3) for(let n=3;n<=blacks;n++) colorHits.push(`${n}B`);
+      // Exact match rule
+      if(reds===3) colorHits.push('3R');
+      if(reds===4) colorHits.push('4R');
+      if(reds===5) colorHits.push('5R');
+      if(blacks===3) colorHits.push('3B');
+      if(blacks===4) colorHits.push('4B');
+      if(blacks===5) colorHits.push('5B');
 
       // Tally — credit every tied winner
       for(const wi of winnerIdxs) {

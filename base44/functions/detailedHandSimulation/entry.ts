@@ -58,8 +58,13 @@ Deno.serve(async (req) => {
     }
     function getWinningColorKeys(reds) {
       const blacks = 5 - reds, winners = [];
-      if (reds >= 3)   for (let i = 3; i <= reds;   i++) winners.push(`${i}R`);
-      if (blacks >= 3) for (let i = 3; i <= blacks;  i++) winners.push(`${i}B`);
+      // Exact match rule
+      if (reds === 3) winners.push('3R');
+      if (reds === 4) winners.push('4R');
+      if (reds === 5) winners.push('5R');
+      if (blacks === 3) winners.push('3B');
+      if (blacks === 4) winners.push('4B');
+      if (blacks === 5) winners.push('5B');
       return winners;
     }
 

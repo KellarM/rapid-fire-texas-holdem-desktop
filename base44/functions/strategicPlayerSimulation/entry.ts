@@ -193,18 +193,13 @@ function runStrategy(handsToSimulate, FIXED_HANDS, rankPayoutMap, rankFrequencie
       const reds = flop.filter(c => c.color === 'red').length;
       const blacks = 3 - reds;
       let colorPayouts = 0;
-      if (reds >= 3) {
-        for (let i = 3; i <= reds; i++) {
-          const mult = rbPayoutMap[`${i}R`] || 1;
-          colorPayouts += colorBetAmount * (1 + mult);
-        }
-      }
-      if (blacks >= 3) {
-        for (let i = 3; i <= blacks; i++) {
-          const mult = rbPayoutMap[`${i}B`] || 1;
-          colorPayouts += colorBetAmount * (1 + mult);
-        }
-      }
+      // Exact match rule
+      if (reds === 3) { const mult = rbPayoutMap['3R'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
+      if (reds === 4) { const mult = rbPayoutMap['4R'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
+      if (reds === 5) { const mult = rbPayoutMap['5R'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
+      if (blacks === 3) { const mult = rbPayoutMap['3B'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
+      if (blacks === 4) { const mult = rbPayoutMap['4B'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
+      if (blacks === 5) { const mult = rbPayoutMap['5B'] || 1; colorPayouts += colorBetAmount * (1 + mult); }
       roundPayouts += colorPayouts;
     }
 

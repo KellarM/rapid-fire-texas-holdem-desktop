@@ -310,7 +310,7 @@ Deno.serve(async (req) => {
         if ((b2&3)===1||(b2&3)===2) reds++;
         if ((b3&3)===1||(b3&3)===2) reds++;
         if ((b4&3)===1||(b4&3)===2) reds++;
-        if ((colorIsRed ? reds : 5-reds) >= colorThreshold) {
+        if ((colorIsRed ? reds : 5-reds) === colorThreshold) {  // exact match rule
           won = true;
           profit = BET * (colorPayouts?.[betKey] ?? 0);
         }
