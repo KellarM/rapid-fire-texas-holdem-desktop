@@ -63,10 +63,10 @@ export const HAND_RANK_PAYOUTS = {
 // 5R wins only when exactly 5 reds show (unchanged from before — was always exact).
 // NOTE: 3R and 4R payouts below are PLACEHOLDER — run calibration to confirm final values.
 export const COLOR_BOARD_PAYOUTS = {
-  '3R': 0.91,  // PLACEHOLDER — needs recalibration (exact-3 is less frequent than >=3)
-  '3B': 0.91,  // PLACEHOLDER — needs recalibration
-  '4R': 4.75,  // PLACEHOLDER — needs recalibration (exact-4 is less frequent than >=4)
-  '4B': 4.75,  // PLACEHOLDER — needs recalibration
+  '3R': 1.87,  // PLACEHOLDER — needs recalibration (exact-3 is less frequent than >=3)
+  '3B': 1.87,  // PLACEHOLDER — needs recalibration
+  '4R': 5.65,  // PLACEHOLDER — needs recalibration (exact-4 is less frequent than >=4)
+  '4B': 5.65,  // PLACEHOLDER — needs recalibration
   '5R': 43.0,  // unchanged — exact-5 was already the only way to hit this
   '5B': 43.0,  // unchanged
 };
