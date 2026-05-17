@@ -73,7 +73,7 @@ export const COLOR_BOARD_PAYOUTS = {
 
 // ── LOW / HIGH PAYOUT ─────────────────────────────────────────
 // Win condition: river card rank — LOW = 2–7, HIGH = 8–A
-export const LOW_HIGH_PAYOUT = 0.91;
+export const LOW_HIGH_PAYOUT = 0.90;
 
 /**
  * Calculate total payout from bet and ratio
