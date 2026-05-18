@@ -306,12 +306,20 @@ function decodeBetParams(betType, betKey) {
     perHandRankCat = RANK_CAT_MAP[rankName] ?? -99;
   }
 
-  // lhState: betKey format = '<boardState>:<direction>'  e.g. '3L1H:LOW'
+  // lhState: betKey format = '<boardState>:<direction>'  e.g. '3H1L:LOW'
+  // boardState is stored as XL YH (e.g. '1L3H') but betKey uses XH YL (e.g. '3H1L').
+  // Normalise to XL YH format so it matches what the simulation generates.
   let lhStateBoardState = null, lhStateIsLow = false;
   if (betType === 'lhState') {
     const colonIdx = betKey.lastIndexOf(':');
-    lhStateBoardState = betKey.slice(0, colonIdx);   // e.g. '3L1H'
+    const rawState = betKey.slice(0, colonIdx);   // e.g. '3H1L' or '2L2H'
     lhStateIsLow = betKey.slice(colonIdx + 1) === 'LOW';
+    // Normalise: parse L and H counts and rebuild as '${L}L${H}H'
+    const lMatch = rawState.match(/(\d+)L/);
+    const hMatch = rawState.match(/(\d+)H/);
+    const lCount = lMatch ? parseInt(lMatch[1]) : 0;
+    const hCount = hMatch ? parseInt(hMatch[1]) : 0;
+    lhStateBoardState = `${lCount}L${hCount}H`;   // always XL YH, matches worker output
   }
 
   return { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat, lhStateBoardState, lhStateIsLow };
@@ -357,7 +365,7 @@ function evalWinFromBoard(b0, b1, b2, b3, b4, betType, betKey, params, handPayou
     oddsUsed = lhPayout;
     if (lhLow ? (b4>>2)<=5 : (b4>>2)>5) won = true;
   } else if (betType === 'lhState') {
-    // Determine the 4-card turn board state
+    // Determine the 4-card turn board state (always expressed as XL YH)
     let turnLow = 0;
     if ((b0>>2)<=5) turnLow++;
     if ((b1>>2)<=5) turnLow++;
@@ -372,6 +380,7 @@ function evalWinFromBoard(b0, b1, b2, b3, b4, betType, betKey, params, handPayou
   }
 
   return { won, oddsUsed, evalResult };
+
 }
 
 function evalHandRankCat(handIdx, b0, b1, b2, b3, b4) {
