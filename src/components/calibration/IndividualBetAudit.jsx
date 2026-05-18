@@ -488,7 +488,16 @@ export default function IndividualBetAudit() {
             handPayouts: livePayouts.handPayouts,
             rankPayouts: livePayouts.rankPayouts,
             colorPayouts: livePayouts.colorPayouts,
-            lhPayout: livePayouts.lhPayout,
+            // For lhState bets, pass the state-specific payout so the worker
+            // computes RTP against the correct odds, not the flat fallback.
+            lhPayout: def.betType === 'lhState'
+              ? (() => {
+                  const ci = def.betKey.lastIndexOf(':');
+                  const bs = def.betKey.slice(0, ci);   // e.g. '3L1H'
+                  const dir = def.betKey.slice(ci + 1); // 'LOW' | 'HIGH'
+                  return RIVER_STATE_PAYOUTS[bs]?.[dir] ?? livePayouts.lhPayout;
+                })()
+              : livePayouts.lhPayout,
             perHandRankPayouts: livePayouts.perHandRankPayouts,
             captureLog: false,
             resumeFrom: resumeFrom ? {
