@@ -73,7 +73,64 @@ export const COLOR_BOARD_PAYOUTS = {
 
 // ── LOW / HIGH PAYOUT ─────────────────────────────────────────
 // Win condition: river card rank — LOW = 2–7, HIGH = 8–A
+// Flat fallback payout (used when board state is unknown / pre-turn)
 export const LOW_HIGH_PAYOUT = 0.904;
+
+// ── RIVER STATE PAYOUTS ───────────────────────────────────────
+// Dynamic river payouts based on the exact 4-card turn board state.
+// The bet unlocks after the turn — all 4 community cards are visible.
+//
+// Deck composition: 32 cards — exactly 16 LOW (2–7) and 16 HIGH (8–A).
+// After seeing 4 community cards, 28 cards remain.
+//
+// Board state key: '<lowCount>L<highCount>H'
+//   e.g. '2L2H' = 2 low + 2 high showing after the turn
+//
+// Theoretical probabilities (32-card deck, exact):
+//   2L2H → LOW: 14/28 = 50.00%  HIGH: 14/28 = 50.00%
+//   3L1H → LOW: 13/28 = 46.43%  HIGH: 15/28 = 53.57%
+//   3H1L → LOW: 15/28 = 53.57%  HIGH: 13/28 = 46.43%  (mirror of 3L1H)
+//   4L0H → LOW: 12/28 = 42.86%  HIGH: 16/28 = 57.14%
+//   4H0L → LOW: 16/28 = 57.14%  HIGH: 12/28 = 42.86%  (mirror of 4L0H)
+//
+// NOTE: All values below are PLACEHOLDER (0.904) pending calibration.
+// After running the lhState audit tests, replace with calibrated values.
+export const RIVER_STATE_PAYOUTS = {
+  '2L2H': { LOW: 0.904, HIGH: 0.904 }, // balanced — symmetric
+  '3L1H': { LOW: 0.904, HIGH: 0.904 }, // HIGH more likely — PLACEHOLDER
+  '3H1L': { LOW: 0.904, HIGH: 0.904 }, // LOW more likely  — PLACEHOLDER
+  '4L0H': { LOW: 0.904, HIGH: 0.904 }, // HIGH strongly favoured — PLACEHOLDER
+  '4H0L': { LOW: 0.904, HIGH: 0.904 }, // LOW strongly favoured  — PLACEHOLDER
+};
+
+/**
+ * Get the river payout for a given board state and direction.
+ * Falls back to LOW_HIGH_PAYOUT if the state is not found.
+ * @param {string} boardState — e.g. '3L1H'
+ * @param {'LOW'|'HIGH'} direction
+ * @returns {number} payout ratio
+ */
+export function getRiverPayout(boardState, direction) {
+  const state = RIVER_STATE_PAYOUTS[boardState];
+  if (state && direction in state) return state[direction];
+  return LOW_HIGH_PAYOUT;
+}
+
+/**
+ * Compute the turn board state key from 4 community cards.
+ * Each card is an encoded integer: rank = card >> 2, suit bits determine color.
+ * Low = rank index 0–5 (2,3,4,5,6,7), High = rank index 6–12 (8,9,10,J,Q,K,A)
+ * @param {number[]} turnCards — array of 4 encoded card integers
+ * @returns {string} board state key e.g. '3L1H'
+ */
+export function getTurnBoardState(turnCards) {
+  let low = 0;
+  for (const c of turnCards) {
+    if ((c >> 2) <= 5) low++;
+  }
+  const high = 4 - low;
+  return `${low}L${high}H`;
+}
 
 /**
  * Calculate total payout from bet and ratio

@@ -306,11 +306,19 @@ function decodeBetParams(betType, betKey) {
     perHandRankCat = RANK_CAT_MAP[rankName] ?? -99;
   }
 
-  return { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat };
+  // lhState: betKey format = '<boardState>:<direction>'  e.g. '3L1H:LOW'
+  let lhStateBoardState = null, lhStateIsLow = false;
+  if (betType === 'lhState') {
+    const colonIdx = betKey.lastIndexOf(':');
+    lhStateBoardState = betKey.slice(0, colonIdx);   // e.g. '3L1H'
+    lhStateIsLow = betKey.slice(colonIdx + 1) === 'LOW';
+  }
+
+  return { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat, lhStateBoardState, lhStateIsLow };
 }
 
 function evalWinFromBoard(b0, b1, b2, b3, b4, betType, betKey, params, handPayouts, rankPayouts, colorPayouts, lhPayout, perHandRankPayouts) {
-  const { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat } = params;
+  const { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat, lhStateBoardState, lhStateIsLow } = params;
   const evalResult = evalAllHands(b0, b1, b2, b3, b4);
   const { strengths, winners, winnerCount } = evalResult;
   const isBoardWinMic = winnerCount === 10;
@@ -348,6 +356,19 @@ function evalWinFromBoard(b0, b1, b2, b3, b4, betType, betKey, params, handPayou
   } else if (betType === 'lh') {
     oddsUsed = lhPayout;
     if (lhLow ? (b4>>2)<=5 : (b4>>2)>5) won = true;
+  } else if (betType === 'lhState') {
+    // Determine the 4-card turn board state
+    let turnLow = 0;
+    if ((b0>>2)<=5) turnLow++;
+    if ((b1>>2)<=5) turnLow++;
+    if ((b2>>2)<=5) turnLow++;
+    if ((b3>>2)<=5) turnLow++;
+    const turnHigh = 4 - turnLow;
+    const thisBoardState = `${turnLow}L${turnHigh}H`;
+    if (thisBoardState === lhStateBoardState) {
+      oddsUsed = lhPayout;
+      if (lhStateIsLow ? (b4>>2)<=5 : (b4>>2)>5) won = true;
+    }
   }
 
   return { won, oddsUsed, evalResult };
@@ -375,19 +396,20 @@ function handleRun(payload) {
 
   // For perHandRank bets: `rounds` is the TARGET number of card-hand wins (adaptive mode).
   // For all other bet types: `rounds` is the fixed number of total rounds (unchanged).
-  const isAdaptive = betType === 'perHandRank';
+  const isAdaptive = betType === 'perHandRank' || betType === 'lhState';
 
   const params = decodeBetParams(betType, betKey);
-  const { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat } = params;
+  const { targetHandIdx, targetRankCat, colorThreshold, colorIsRed, lhLow, perHandRankHandIdx, perHandRankCat, lhStateBoardState, lhStateIsLow } = params;
   const BET = 100;
 
   let perHandRankPayout = 0;
-  if (isAdaptive) {
+  if (betType === 'perHandRank') {
     const colonIdx = betKey.indexOf(':');
     const rankName = betKey.slice(colonIdx + 1);
     const phr = (perHandRankPayouts != null) ? perHandRankPayouts[perHandRankHandIdx + 1] : null;
     perHandRankPayout = (phr != null) ? (phr[rankName] ?? 0) : 0;
   }
+  // lhState uses lhPayout directly — no perHandRankPayout needed
 
   // Buffer: for adaptive mode we don't know final round count, so cap at BUFFER_CAP
   initBuffer(isAdaptive ? BUFFER_CAP : rounds);
@@ -505,6 +527,25 @@ function handleRun(payload) {
         won = true;
         profit = BET * lhPayout;
       }
+    } else if (betType === 'lhState') {
+      // Adaptive: run until we've seen `rounds` qualifying turn boards
+      let turnLow = 0;
+      if ((b0>>2)<=5) turnLow++;
+      if ((b1>>2)<=5) turnLow++;
+      if ((b2>>2)<=5) turnLow++;
+      if ((b3>>2)<=5) turnLow++;
+      const turnHigh = 4 - turnLow;
+      const thisBoardState = `${turnLow}L${turnHigh}H`;
+
+      if (thisBoardState === lhStateBoardState) {
+        // Qualifying board — count it (reuses perHandRankHandWins as qualifying counter)
+        perHandRankHandWins++;
+        const isLow = (b4 >> 2) <= 5;
+        if (lhStateIsLow ? isLow : !isLow) {
+          won = true;
+          profit = BET * lhPayout;
+        }
+      }
     }
 
     if (won) {
@@ -546,7 +587,7 @@ function handleRun(payload) {
 
   // RTP for perHandRank: P(rank win | card win) × (payout + 1)
   const effectiveRtp = condFreq !== null
-    ? condFreq * (perHandRankPayout + 1)
+    ? condFreq * ((betType === 'lhState' ? lhPayout : perHandRankPayout) + 1)
     : (totalBet > 0 ? totalPaid / totalBet : 0);
   const effectiveHouseEdge = 1 - effectiveRtp;
 

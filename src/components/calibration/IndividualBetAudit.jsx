@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { runBetAuditWithAbort, runMicroscopeWithAbort, runExportWithAbort, resetPersistentWorker } from '@/lib/workerBridge';
 import { motion } from 'framer-motion';
 import { Play, RefreshCw, Trash2, FileDown, FileText, SkipForward, Microscope, ChevronDown, ChevronRight, Download, X, BarChart2 } from 'lucide-react';
-import { CARDED_HAND_PAYOUTS, HAND_RANK_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT } from '@/lib/payoutConstants';
+import { CARDED_HAND_PAYOUTS, HAND_RANK_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 import { PER_HAND_RANK_PAYOUTS } from '@/lib/perHandRankPayouts';
 import { jsPDF } from 'jspdf';
 import VerificationLog from './VerificationLog';
@@ -94,9 +94,31 @@ const BET_DEFINITIONS = [
   { betType: 'color', betKey: '5B', label: '5 Black (exact)',  group: 'Color Board', currentPayout: COLOR_BOARD_PAYOUTS['5B'] },
   { betType: 'lh', betKey: 'LOW',  label: 'River — LOW',  group: 'Low / High', currentPayout: LOW_HIGH_PAYOUT },
   { betType: 'lh', betKey: 'HIGH', label: 'River — HIGH', group: 'Low / High', currentPayout: LOW_HIGH_PAYOUT },
+
+  // ── River Board State Tests ─────────────────────────────────────────────
+  // Adaptive: each test runs until 100K qualifying turn boards are collected.
+  // Board state = composition of 4 community cards after the turn.
+  // Deck: 32 cards — exactly 16 LOW (2-7) and 16 HIGH (8-A).
+  // Within those qualifying boards, we measure how often the river is LOW vs HIGH.
+  //
+  // 2L2H (balanced baseline) ──────────────────────────────────
+  { betType: 'lhState', betKey: '2L2H:LOW',  label: 'River State 2L/2H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['2L2H'].LOW },
+  { betType: 'lhState', betKey: '2L2H:HIGH', label: 'River State 2L/2H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['2L2H'].HIGH },
+  // 3L1H (3 low showing — HIGH more likely) ───────────────────
+  { betType: 'lhState', betKey: '3L1H:LOW',  label: 'River State 3L/1H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3L1H'].LOW },
+  { betType: 'lhState', betKey: '3L1H:HIGH', label: 'River State 3L/1H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3L1H'].HIGH },
+  // 3H1L (3 high showing — LOW more likely) ───────────────────
+  { betType: 'lhState', betKey: '3H1L:LOW',  label: 'River State 3H/1L — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3H1L'].LOW },
+  { betType: 'lhState', betKey: '3H1L:HIGH', label: 'River State 3H/1L — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3H1L'].HIGH },
+  // 4L0H (4 low showing — HIGH strongly favoured) ─────────────
+  { betType: 'lhState', betKey: '4L0H:LOW',  label: 'River State 4L/0H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4L0H'].LOW },
+  { betType: 'lhState', betKey: '4L0H:HIGH', label: 'River State 4L/0H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4L0H'].HIGH },
+  // 4H0L (4 high showing — LOW strongly favoured) ─────────────
+  { betType: 'lhState', betKey: '4H0L:LOW',  label: 'River State 4H/0L — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4H0L'].LOW },
+  { betType: 'lhState', betKey: '4H0L:HIGH', label: 'River State 4H/0L — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4H0L'].HIGH },
 ];
 
-const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'Low / High'];
+const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'Low / High', 'River Board States'];
 
 const PLAIN_LABELS = {
   'hand:1':  'Hand 1 - A(Dia)/10(Hrt)',
@@ -115,10 +137,11 @@ function plainLabel(def) {
 }
 
 const GROUP_COLORS = {
-  'Carded Hands': 'text-blue-400',
-  'Hand Ranks':   'text-yellow-400',
-  'Color Board':  'text-red-400',
-  'Low / High':   'text-teal-400',
+  'Carded Hands':       'text-blue-400',
+  'Hand Ranks':         'text-yellow-400',
+  'Color Board':        'text-red-400',
+  'Low / High':         'text-teal-400',
+  'River Board States': 'text-purple-400',
 };
 
 // Per-hand rank group options (one per card hand)
@@ -134,6 +157,7 @@ const SELECTION_OPTIONS = [
   ...PER_HAND_GROUP_OPTIONS,
   { value: 'group:Color Board',    label: 'Group: Color Board' },
   { value: 'group:Low / High',     label: 'Group: Low / High' },
+  { value: 'group:River Board States', label: 'Group: River Board States' },
   ...BET_DEFINITIONS.map(d => ({ value: `single:${d.betType}:${d.betKey}`, label: `    ${d.label}` })),
 ];
 
@@ -223,19 +247,19 @@ function ResultRow({ def, r, onInspect, onExport, microscopeKey, microscopeRunni
           <span className="text-gray-600 ml-1">/ {(r.totalGames / 1000).toFixed(0)}K</span>
         </td>
         <td className="px-3 py-2.5 text-right font-mono text-xs cursor-pointer" onClick={() => setOpen(v => !v)}>
-          {def.betType === 'perHandRank' && r.perHandRankHandWins != null
+          {(def.betType === 'perHandRank' || def.betType === 'lhState') && r.perHandRankHandWins != null
             ? <span className="text-purple-400">{r.perHandRankHandWins.toLocaleString()}</span>
             : <span className="text-gray-700">—</span>
           }
         </td>
         <td className="px-3 py-2.5 text-right font-mono text-xs cursor-pointer" onClick={() => setOpen(v => !v)}>
-          {def.betType === 'perHandRank' && r.actualRounds
+          {(def.betType === 'perHandRank' || def.betType === 'lhState') && r.actualRounds
             ? <span className="text-slate-400">{r.actualRounds.toLocaleString()}</span>
             : <span className="text-gray-700">—</span>
           }
         </td>
         <td className="px-3 py-2.5 text-right text-gray-300 font-mono text-xs cursor-pointer" onClick={() => setOpen(v => !v)}>
-          {def.betType === 'perHandRank' && r.perHandRankHandWins
+          {(def.betType === 'perHandRank' || def.betType === 'lhState') && r.perHandRankHandWins
             ? `${((r.wins / r.perHandRankHandWins) * 100).toFixed(4)}%`
             : `${r.winFrequency}%`}
         </td>
@@ -441,6 +465,13 @@ export default function IndividualBetAudit() {
       else if (def.betType === 'perHandRank') livePayout = PER_HAND_RANK_PAYOUTS[def.handId]?.[def.rankName] ?? def.currentPayout;
       else if (def.betType === 'color') livePayout = livePayouts.colorPayouts[def.betKey];
       else if (def.betType === 'lh') livePayout = livePayouts.lhPayout;
+      else if (def.betType === 'lhState') {
+        // e.g. betKey = '3L1H:LOW' → look up RIVER_STATE_PAYOUTS['3L1H'].LOW
+        const colonIdx = def.betKey.lastIndexOf(':');
+        const boardState = def.betKey.slice(0, colonIdx);
+        const direction = def.betKey.slice(colonIdx + 1);
+        livePayout = RIVER_STATE_PAYOUTS[boardState]?.[direction] ?? livePayouts.lhPayout;
+      }
 
       try {
         const isAdaptive = def.betType === 'perHandRank';
@@ -471,7 +502,10 @@ export default function IndividualBetAudit() {
             if (done !== undefined) setBetDone(done);
             if (total !== undefined) setBetTotal(total);
             if (isAdaptive && done !== undefined && total !== undefined) {
-              setBetProgressLabel(`${done.toLocaleString()} / ${total.toLocaleString()} Card Wins`);
+              const adaptiveLabel = def.betType === 'lhState'
+                ? `${done.toLocaleString()} / ${total.toLocaleString()} Qualifying Boards`
+                : `${done.toLocaleString()} / ${total.toLocaleString()} Card Wins`;
+              setBetProgressLabel(adaptiveLabel);
             } else {
               setBetProgressLabel('');
             }
@@ -974,7 +1008,7 @@ export default function IndividualBetAudit() {
                         </th>
                         <th className="px-3 py-2.5 text-left">Bet</th>
                         <th className="px-3 py-2.5 text-right">Wins</th>
-                        <th className="px-3 py-2.5 text-right text-purple-400">Card Wins</th>
+                        <th className="px-3 py-2.5 text-right text-purple-400">Card / Qual. Wins</th>
                         <th className="px-3 py-2.5 text-right text-slate-400"># Rounds</th>
                         <th className="px-3 py-2.5 text-right">Win %</th>
                         <th className="px-3 py-2.5 text-right">House Edge %</th>
