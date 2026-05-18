@@ -11,6 +11,7 @@ import RankBreakdown from './RankBreakdown';
 const STORAGE_KEY = 'individualBetAudit_results';
 const PROGRESS_KEY = 'individualBetAudit_progress';
 const CHECKPOINT_KEY = 'individualBetAudit_checkpoint';
+const SELECTION_KEY = 'individualBetAudit_selection';
 
 function saveIBACheckpoint(betKey, data) {
   try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify({ betKey, ...data })); } catch {}
@@ -373,7 +374,9 @@ function ResultRow({ def, r, onInspect, onExport, microscopeKey, microscopeRunni
 export default function IndividualBetAudit() {
   const [running, setRunning] = useState(false);
   const [selectedSize, setSelectedSize] = useState(SAMPLE_SIZES[0]);
-  const [selection, setSelection] = useState('all');
+  const [selection, setSelection] = useState(() => {
+    try { return localStorage.getItem(SELECTION_KEY) || 'all'; } catch { return 'all'; }
+  });
   const [results, setResults] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
   });
@@ -430,10 +433,12 @@ export default function IndividualBetAudit() {
   const clearResults = () => {
     setResults({});
     setProgress(0);
+    setSelection('all');
     setMicroscopeLog(null);
     setMicroscopeKey(null);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(PROGRESS_KEY);
+    localStorage.removeItem(SELECTION_KEY);
     clearIBACheckpoint();
   };
 
@@ -857,12 +862,7 @@ export default function IndividualBetAudit() {
             value={selection}
             onChange={e => {
               setSelection(e.target.value);
-              setProgress(0);
-              setResults({});
-              setMicroscopeLog(null);
-              setMicroscopeKey(null);
-              localStorage.removeItem(STORAGE_KEY);
-              localStorage.removeItem(PROGRESS_KEY);
+              try { localStorage.setItem(SELECTION_KEY, e.target.value); } catch {}
             }}
             disabled={running}
             className="bg-slate-700 border border-slate-600 text-white text-sm rounded-lg px-3 py-1.5 focus:border-yellow-500 outline-none min-w-[220px]"
