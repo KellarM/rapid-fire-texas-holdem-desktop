@@ -97,10 +97,10 @@ export const LOW_HIGH_PAYOUT = 0.904;
 // After running the lhState audit tests, replace with calibrated values.
 export const RIVER_STATE_PAYOUTS = {
   '2L2H': { LOW: 0.904, HIGH: 0.904 }, // balanced — symmetric
-  '3L1H': { LOW: 0.904, HIGH: 0.904 }, // HIGH more likely — PLACEHOLDER
-  '3H1L': { LOW: 0.904, HIGH: 0.904 }, // LOW more likely  — PLACEHOLDER
-  '4L0H': { LOW: 0.904, HIGH: 0.904 }, // HIGH strongly favoured — PLACEHOLDER
-  '4H0L': { LOW: 0.904, HIGH: 0.904 }, // LOW strongly favoured  — PLACEHOLDER
+  '3L1H': { LOW: 1.06, HIGH: 0.79 }, // HIGH more likely — PLACEHOLDER
+  '3H1L': { LOW: 0.79, HIGH: 1.06 }, // LOW more likely  — PLACEHOLDER
+  '4L0H': { LOW: 1.23, HIGH: 0.68 }, // HIGH strongly favoured — PLACEHOLDER
+  '4H0L': { LOW: 0.68, HIGH: 1.23 }, // LOW strongly favoured  — PLACEHOLDER
 };
 
 /**
