@@ -93,8 +93,6 @@ export const LOW_HIGH_PAYOUT = 0.904;
 //   4L0H → LOW: 12/28 = 42.86%  HIGH: 16/28 = 57.14%
 //   0L4H → LOW: 16/28 = 57.14%  HIGH: 12/28 = 42.86%  (mirror of 4L0H)
 //
-// NOTE: All values below are PLACEHOLDER (0.904) pending calibration.
-// After running the lhState audit tests, replace with calibrated values.
 export const RIVER_STATE_PAYOUTS = {
   '2L2H': { LOW: 0.904, HIGH: 0.904 }, // balanced — symmetric (50/50)
   '3L1H': { LOW: 1.06,  HIGH: 0.79  }, // 3 low showing — HIGH more likely (53.57%)
