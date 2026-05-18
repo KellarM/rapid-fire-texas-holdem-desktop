@@ -420,10 +420,10 @@ export default function SideBets({
                   <span style={{ fontSize: '0.95rem', fontWeight: 900, lineHeight: 1, color: '#000' }}>
                     {type}
                   </span>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, lineHeight: 1.2, color: '#1a1a1a' }}>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 900, lineHeight: 1.1, color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                     {isLow ? '2–7' : '8–A'}
                   </span>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 900, lineHeight: 1, color: '#000' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, color: '#000' }}>
                     {isLow ? riverPayouts.LOW : riverPayouts.HIGH}:1
                   </span>
                 </div>
