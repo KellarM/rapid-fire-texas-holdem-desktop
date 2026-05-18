@@ -108,15 +108,15 @@ const BET_DEFINITIONS = [
   // 3L1H (3 low showing — HIGH more likely) ───────────────────
   { betType: 'lhState', betKey: '3L1H:LOW',  label: 'River State 3L/1H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3L1H'].LOW },
   { betType: 'lhState', betKey: '3L1H:HIGH', label: 'River State 3L/1H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3L1H'].HIGH },
-  // 3H1L (3 high showing — LOW more likely) ───────────────────
-  { betType: 'lhState', betKey: '3H1L:LOW',  label: 'River State 3H/1L — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3H1L'].LOW },
-  { betType: 'lhState', betKey: '3H1L:HIGH', label: 'River State 3H/1L — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['3H1L'].HIGH },
+  // 1L3H (3 high showing — LOW more likely) ───────────────────
+  { betType: 'lhState', betKey: '1L3H:LOW',  label: 'River State 1L/3H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['1L3H'].LOW },
+  { betType: 'lhState', betKey: '1L3H:HIGH', label: 'River State 1L/3H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['1L3H'].HIGH },
   // 4L0H (4 low showing — HIGH strongly favoured) ─────────────
   { betType: 'lhState', betKey: '4L0H:LOW',  label: 'River State 4L/0H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4L0H'].LOW },
   { betType: 'lhState', betKey: '4L0H:HIGH', label: 'River State 4L/0H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4L0H'].HIGH },
-  // 4H0L (4 high showing — LOW strongly favoured) ─────────────
-  { betType: 'lhState', betKey: '4H0L:LOW',  label: 'River State 4H/0L — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4H0L'].LOW },
-  { betType: 'lhState', betKey: '4H0L:HIGH', label: 'River State 4H/0L — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['4H0L'].HIGH },
+  // 0L4H (4 high showing — LOW strongly favoured) ─────────────
+  { betType: 'lhState', betKey: '0L4H:LOW',  label: 'River State 0L/4H — LOW',  group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['0L4H'].LOW },
+  { betType: 'lhState', betKey: '0L4H:HIGH', label: 'River State 0L/4H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['0L4H'].HIGH },
 ];
 
 const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'Low / High', 'River Board States'];

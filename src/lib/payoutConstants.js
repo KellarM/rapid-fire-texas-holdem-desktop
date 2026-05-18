@@ -89,18 +89,18 @@ export const LOW_HIGH_PAYOUT = 0.904;
 // Theoretical probabilities (32-card deck, exact):
 //   2L2H → LOW: 14/28 = 50.00%  HIGH: 14/28 = 50.00%
 //   3L1H → LOW: 13/28 = 46.43%  HIGH: 15/28 = 53.57%
-//   3H1L → LOW: 15/28 = 53.57%  HIGH: 13/28 = 46.43%  (mirror of 3L1H)
+//   1L3H → LOW: 15/28 = 53.57%  HIGH: 13/28 = 46.43%  (mirror of 3L1H)
 //   4L0H → LOW: 12/28 = 42.86%  HIGH: 16/28 = 57.14%
-//   4H0L → LOW: 16/28 = 57.14%  HIGH: 12/28 = 42.86%  (mirror of 4L0H)
+//   0L4H → LOW: 16/28 = 57.14%  HIGH: 12/28 = 42.86%  (mirror of 4L0H)
 //
 // NOTE: All values below are PLACEHOLDER (0.904) pending calibration.
 // After running the lhState audit tests, replace with calibrated values.
 export const RIVER_STATE_PAYOUTS = {
-  '2L2H': { LOW: 0.904, HIGH: 0.904 }, // balanced — symmetric
-  '3L1H': { LOW: 1.06, HIGH: 0.79 }, // HIGH more likely — PLACEHOLDER
-  '3H1L': { LOW: 0.79, HIGH: 1.06 }, // LOW more likely  — PLACEHOLDER
-  '4L0H': { LOW: 1.23, HIGH: 0.68 }, // HIGH strongly favoured — PLACEHOLDER
-  '4H0L': { LOW: 0.68, HIGH: 1.23 }, // LOW strongly favoured  — PLACEHOLDER
+  '2L2H': { LOW: 0.904, HIGH: 0.904 }, // balanced — symmetric (50/50)
+  '3L1H': { LOW: 1.06,  HIGH: 0.79  }, // 3 low showing — HIGH more likely (53.57%)
+  '1L3H': { LOW: 0.79,  HIGH: 1.06  }, // 3 high showing — LOW more likely (53.57%)
+  '4L0H': { LOW: 1.23,  HIGH: 0.68  }, // 4 low showing — HIGH strongly favoured (57.14%)
+  '0L4H': { LOW: 0.68,  HIGH: 1.23  }, // 4 high showing — LOW strongly favoured (57.14%)
 };
 
 /**
