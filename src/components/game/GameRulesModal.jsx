@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT } from '@/lib/payoutConstants';
+import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 
 const FIXED_HANDS = [
   { id: 1,  label: 'A♦ / 10♥', payout: CARDED_HAND_PAYOUTS[0] },
@@ -191,9 +191,40 @@ export default function GameRulesModal() {
                 {/* Low / High */}
                 <Section title="Low / High (River) Bet" defaultOpen={false}>
                   <Rule label="When available">After the Turn card is dealt. Requires a Rank Bet (Master Key).</Rule>
-                  <Rule label="LOW">River card is 2–7. Pays vary by board state (base {LOW_HIGH_PAYOUT}:1).</Rule>
-                  <Rule label="HIGH">River card is 8–Ace. Pays vary by board state (base {LOW_HIGH_PAYOUT}:1).</Rule>
+                  <Rule label="LOW">River card is 2–7.</Rule>
+                  <Rule label="HIGH">River card is 8–Ace.</Rule>
                   <Rule label="Applies">Regardless of which hand wins — board-state bet only.</Rule>
+
+                  {/* Board-state payout table */}
+                  <div className="mt-3 mb-1">
+                    <p className="text-yellow-400 font-bold text-xs mb-2 uppercase tracking-wide">Payouts by Turn Board State</p>
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                      {/* Header */}
+                      <span className="text-gray-400 font-semibold">Board After Turn</span>
+                      <span className="text-red-400 font-semibold text-center">LOW (2–7)</span>
+                      <span className="text-blue-300 font-semibold text-center">HIGH (8–A)</span>
+                      {/* 2L2H */}
+                      <span className="text-gray-300">2 Low + 2 High</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['2L2H'].LOW}:1</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['2L2H'].HIGH}:1</span>
+                      {/* 3L1H */}
+                      <span className="text-gray-300">3 Low + 1 High</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['3L1H'].LOW}:1</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['3L1H'].HIGH}:1</span>
+                      {/* 1L3H */}
+                      <span className="text-gray-300">1 Low + 3 High</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['1L3H'].LOW}:1</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['1L3H'].HIGH}:1</span>
+                      {/* 4L0H */}
+                      <span className="text-gray-300">4 Low + 0 High</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['4L0H'].LOW}:1</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['4L0H'].HIGH}:1</span>
+                      {/* 0L4H */}
+                      <span className="text-gray-300">0 Low + 4 High</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['0L4H'].LOW}:1</span>
+                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['0L4H'].HIGH}:1</span>
+                    </div>
+                  </div>
                 </Section>
 
                 {/* Poker Hands Reference */}
