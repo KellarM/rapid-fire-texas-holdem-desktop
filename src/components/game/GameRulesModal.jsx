@@ -191,8 +191,8 @@ export default function GameRulesModal() {
                 {/* Low / High */}
                 <Section title="Low / High (River) Bet" defaultOpen={false}>
                   <Rule label="When available">After the Turn card is dealt. Requires a Rank Bet (Master Key).</Rule>
-                  <Rule label="LOW">River card is 2–7. Pays {LOW_HIGH_PAYOUT}:1.</Rule>
-                  <Rule label="HIGH">River card is 8–Ace. Pays {LOW_HIGH_PAYOUT}:1.</Rule>
+                  <Rule label="LOW">River card is 2–7. Pays vary by board state (base {LOW_HIGH_PAYOUT}:1).</Rule>
+                  <Rule label="HIGH">River card is 8–Ace. Pays vary by board state (base {LOW_HIGH_PAYOUT}:1).</Rule>
                   <Rule label="Applies">Regardless of which hand wins — board-state bet only.</Rule>
                 </Section>
 

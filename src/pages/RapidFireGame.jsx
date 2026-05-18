@@ -10,7 +10,7 @@ import {
   calculateTiePayout,
   isSideBetGateOpen } from
 '@/lib/gameEngine';
-import { COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, calculatePayout } from '@/lib/payoutConstants';
+import { COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS, calculatePayout } from '@/lib/payoutConstants';
 import { getPerHandRankPayout } from '@/lib/perHandRankPayouts';
 import FixedHandCard from '@/components/game/FixedHandCard';
 import CommunityCards from '@/components/game/CommunityCards';
@@ -76,6 +76,22 @@ const PHASE_LABELS = {
   settlement: 'Settling...',
   winner: 'Round Complete'
 };
+
+// Low ranks for river board state detection
+const RIVER_LOW_RANKS = new Set(['2','3','4','5','6','7']);
+
+function getRiverBoardState(cards) {
+  if (!cards || cards.length < 4) return null;
+  const lowCount = cards.slice(0, 4).filter(c => RIVER_LOW_RANKS.has(c.rank)).length;
+  return `${lowCount}L${4 - lowCount}H`;
+}
+
+function getDynamicRiverPayout(finalComm, direction) {
+  const state = getRiverBoardState(finalComm);
+  if (state && RIVER_STATE_PAYOUTS[state]) return RIVER_STATE_PAYOUTS[state][direction];
+  return LOW_HIGH_PAYOUT;
+}
+
 
 export default function RapidFireGame() {
   const [playerCount, setPlayerCount] = useState(1);
@@ -1052,14 +1068,15 @@ export default function RapidFireGame() {
         }
       });
 
-      // Low/High
+      // Low/High — payout uses state-specific odds based on 4-card turn board
       if (plh && winLH === plh.type) {
-        const payout = calculatePayout(plh.amount, LOW_HIGH_PAYOUT);
+        const lhRatio = getDynamicRiverPayout(finalComm, plh.type);
+        const payout = calculatePayout(plh.amount, lhRatio);
         w += payout;
         wins.push({
           label: plh.type,
           bet: plh.amount,
-          odds: `${LOW_HIGH_PAYOUT}:1`,
+          odds: `${lhRatio}:1`,
           payout,
           boardType: 'river'
         });

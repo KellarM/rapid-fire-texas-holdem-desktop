@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cardColor } from '@/lib/gameEngine';
-import { COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT } from '@/lib/payoutConstants';
+import { COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 import { EnergyArcOverlay } from './GreedEngine';
 import Chip from './Chip';
 
@@ -25,6 +25,22 @@ const goldEmbossText = {
   textShadow: 'none',
   filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))',
 };
+
+// Low ranks: 2,3,4,5,6,7  High ranks: 8,9,10,J,Q,K,A
+const LOW_RANKS = new Set(['2','3','4','5','6','7']);
+
+/**
+ * Derive the river board-state key from the 4 community cards visible after the turn.
+ * Returns e.g. '3L1H', '2L2H', etc.
+ * Falls back to null if fewer than 4 cards are showing.
+ */
+function getTurnBoardStateFromCards(cards) {
+  if (!cards || cards.length < 4) return null;
+  const turnCards = cards.slice(0, 4);
+  const lowCount = turnCards.filter(c => LOW_RANKS.has(c.rank)).length;
+  return `${lowCount}L${4 - lowCount}H`;
+}
+
 
 export default function SideBets({
   communityCards,
@@ -57,6 +73,17 @@ export default function SideBets({
   const canBetLH = (gamePhase === 'lowHighBetting') && !disabled && !riverLocked;
 
   const reds = communityCards.filter(c => cardColor(c) === 'red').length;
+
+  // Dynamic river payout based on turn board state (4 cards visible after turn)
+  const turnBoardState = getTurnBoardStateFromCards(communityCards);
+  const riverPayouts = {
+    LOW:  (turnBoardState && RIVER_STATE_PAYOUTS[turnBoardState])
+            ? RIVER_STATE_PAYOUTS[turnBoardState].LOW
+            : LOW_HIGH_PAYOUT,
+    HIGH: (turnBoardState && RIVER_STATE_PAYOUTS[turnBoardState])
+            ? RIVER_STATE_PAYOUTS[turnBoardState].HIGH
+            : LOW_HIGH_PAYOUT,
+  };
   const blacks = communityCards.filter(c => cardColor(c) === 'black').length;
 
   const liveRedBlack = [];
@@ -397,7 +424,7 @@ export default function SideBets({
                     {isLow ? '2–7' : '8–A'}
                   </span>
                   <span style={{ fontSize: '0.68rem', fontWeight: 900, lineHeight: 1, color: '#000' }}>
-                    {LOW_HIGH_PAYOUT}:1
+                    {isLow ? riverPayouts.LOW : riverPayouts.HIGH}:1
                   </span>
                 </div>
 
