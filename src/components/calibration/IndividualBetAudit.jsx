@@ -93,8 +93,6 @@ const BET_DEFINITIONS = [
   { betType: 'color', betKey: '4B', label: '4 Black (exact)',  group: 'Color Board', currentPayout: COLOR_BOARD_PAYOUTS['4B'] },
   { betType: 'color', betKey: '5R', label: '5 Red (exact)',    group: 'Color Board', currentPayout: COLOR_BOARD_PAYOUTS['5R'] },
   { betType: 'color', betKey: '5B', label: '5 Black (exact)',  group: 'Color Board', currentPayout: COLOR_BOARD_PAYOUTS['5B'] },
-  { betType: 'lh', betKey: 'LOW',  label: 'River — LOW',  group: 'Low / High', currentPayout: LOW_HIGH_PAYOUT },
-  { betType: 'lh', betKey: 'HIGH', label: 'River — HIGH', group: 'Low / High', currentPayout: LOW_HIGH_PAYOUT },
 
   // ── River Board State Tests ─────────────────────────────────────────────
   // Adaptive: each test runs until 100K qualifying turn boards are collected.
@@ -119,7 +117,7 @@ const BET_DEFINITIONS = [
   { betType: 'lhState', betKey: '0L4H:HIGH', label: 'River State 0L/4H — HIGH', group: 'River Board States', currentPayout: RIVER_STATE_PAYOUTS['0L4H'].HIGH },
 ];
 
-const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'Low / High', 'River Board States'];
+const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'River Board States'];
 
 const PLAIN_LABELS = {
   'hand:1':  'Hand 1 - A(Dia)/10(Hrt)',
@@ -141,7 +139,6 @@ const GROUP_COLORS = {
   'Carded Hands':       'text-blue-400',
   'Hand Ranks':         'text-yellow-400',
   'Color Board':        'text-red-400',
-  'Low / High':         'text-teal-400',
   'River Board States': 'text-purple-400',
 };
 
@@ -157,7 +154,6 @@ const SELECTION_OPTIONS = [
   { value: 'group:Hand Ranks',     label: 'Group: All Hand Ranks' },
   ...PER_HAND_GROUP_OPTIONS,
   { value: 'group:Color Board',    label: 'Group: Color Board' },
-  { value: 'group:Low / High',     label: 'Group: Low / High' },
   { value: 'group:River Board States', label: 'Group: River Board States' },
   ...BET_DEFINITIONS.map(d => ({ value: `single:${d.betType}:${d.betKey}`, label: `    ${d.label}` })),
 ];
@@ -469,7 +465,6 @@ export default function IndividualBetAudit() {
       else if (def.betType === 'rank') livePayout = livePayouts.rankPayouts[def.betKey];
       else if (def.betType === 'perHandRank') livePayout = PER_HAND_RANK_PAYOUTS[def.handId]?.[def.rankName] ?? def.currentPayout;
       else if (def.betType === 'color') livePayout = livePayouts.colorPayouts[def.betKey];
-      else if (def.betType === 'lh') livePayout = livePayouts.lhPayout;
       else if (def.betType === 'lhState') {
         // e.g. betKey = '3L1H:LOW' → look up RIVER_STATE_PAYOUTS['3L1H'].LOW
         const colonIdx = def.betKey.lastIndexOf(':');

@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, RefreshCw, CheckCircle2, XCircle, AlertTriangle, ChevronDown, ChevronRight, Shield, SkipForward, FileDown, FileText, Trash2, Save, Timer, Award } from 'lucide-react';
 import { runBetAuditWithAbort } from '@/lib/workerBridge';
-import { CARDED_HAND_PAYOUTS, HAND_RANK_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT } from '@/lib/payoutConstants';
+import { CARDED_HAND_PAYOUTS, HAND_RANK_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 import { PER_HAND_RANK_PAYOUTS } from '@/lib/perHandRankPayouts';
 import { jsPDF } from 'jspdf';
 import { base44 } from '@/api/base44Client';
@@ -47,11 +47,20 @@ const ALL_BETS = [
   { betType:'color', betKey:'4B', label:'4 Black (exact)',  group:'Color Board' },
   { betType:'color', betKey:'5R', label:'5 Red (exact)',   group:'Color Board' },
   { betType:'color', betKey:'5B', label:'5 Black (exact)',  group:'Color Board' },
-  { betType:'lh', betKey:'LOW',  label:'River LOW',  group:'Low / High' },
-  { betType:'lh', betKey:'HIGH', label:'River HIGH', group:'Low / High' },
+  // River Board — state-dependent payouts (5 board states × 2 directions)
+  { betType:'lhState', betKey:'2L2H:LOW',  label:'River 2L/2H — LOW',  group:'River Board States' },
+  { betType:'lhState', betKey:'2L2H:HIGH', label:'River 2L/2H — HIGH', group:'River Board States' },
+  { betType:'lhState', betKey:'3L1H:LOW',  label:'River 3L/1H — LOW',  group:'River Board States' },
+  { betType:'lhState', betKey:'3L1H:HIGH', label:'River 3L/1H — HIGH', group:'River Board States' },
+  { betType:'lhState', betKey:'1L3H:LOW',  label:'River 1L/3H — LOW',  group:'River Board States' },
+  { betType:'lhState', betKey:'1L3H:HIGH', label:'River 1L/3H — HIGH', group:'River Board States' },
+  { betType:'lhState', betKey:'4L0H:LOW',  label:'River 4L/0H — LOW',  group:'River Board States' },
+  { betType:'lhState', betKey:'4L0H:HIGH', label:'River 4L/0H — HIGH', group:'River Board States' },
+  { betType:'lhState', betKey:'0L4H:LOW',  label:'River 0L/4H — LOW',  group:'River Board States' },
+  { betType:'lhState', betKey:'0L4H:HIGH', label:'River 0L/4H — HIGH', group:'River Board States' },
 ];
 
-const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'Low / High'];
+const GROUPS = ['Carded Hands', 'Hand Ranks', 'Color Board', 'River Board States'];
 
 const PLAIN_LABELS = {
   'hand:1':  'Hand 1 - A(Dia)/10(Hrt)',
