@@ -45,7 +45,7 @@ export default function FixedHandCard({
   let borderCls;
   if (isWinner) borderCls = 'border-yellow-400 shadow-yellow-400/60 shadow-xl winner-flash' + ' ' + 'bg-yellow-900/30';
   else if (isLeading) borderCls = 'border-yellow-300 shadow-yellow-300/40 shadow-lg bg-yellow-900/20';
-  else if (disabledByConstraint) borderCls = 'border-gray-700/50 bg-black/70 opacity-40';
+  else if (disabledByConstraint) borderCls = 'border-gray-700/50';
   else if (dragOver && isBettingPhase) borderCls = 'slot-border-active bg-yellow-900/20';
   else if (hovered && canBet) borderCls = 'slot-border-active bg-black/30';
   else borderCls = 'slot-border-dormant bg-black/25';
