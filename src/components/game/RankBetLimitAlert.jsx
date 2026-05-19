@@ -7,8 +7,8 @@ const ALERT_CONFIGS = {
     border: 'border-red-400',
     text: 'text-red-100',
     title: 'Rank Betting Closed',
-    body: '3 or more hands selected — Rank, Color, and River are locked.',
-    sub: 'Reduce to 1–2 hand selections to unlock side markets.',
+    body: 'Maximum 2 hands allowed — Rank, Color, and River are locked.',
+    sub: 'Only 1 or 2 hand selections are permitted per round.',
   },
   limit: {
     gradient: 'from-orange-600 to-orange-700',
@@ -47,8 +47,8 @@ const ALERT_CONFIGS = {
     border: 'border-red-400',
     text: 'text-red-100',
     title: 'Color Board Locked',
-    body: '3 or more hands selected — side markets are disabled.',
-    sub: 'Reduce to 1–2 hand selections to access Color bets.',
+    body: 'Maximum 2 hands allowed — side markets are disabled.',
+    sub: 'Only 1 or 2 hand selections are permitted per round.',
   },
   river_cap: {
     gradient: 'from-red-700 to-red-800',

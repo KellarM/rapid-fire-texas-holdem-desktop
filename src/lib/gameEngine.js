@@ -383,23 +383,23 @@ export const HAND_RANK_POSSIBILITY_MAP = HAND_RANK_MATRIX;
 // Grinder Path:      3–4 Hand bets → Kill Switch fires, ALL side markets LOCKED
 // Max Hand selections: 4 (once 4th is chosen, all others are locked for the round)
 
-export const MAX_HAND_BETS = 4;
+export const MAX_HAND_BETS = 2;
 
 export function getPlayerPath(handBetCount) {
   if (handBetCount === 0) return 'none';
-  if (handBetCount <= 3) return 'professional';
+  if (handBetCount <= 2) return 'professional';
   return 'grinder';
 }
 
 export function isProfessionalPath(handBetCount) {
-  return handBetCount >= 1 && handBetCount <= 3;
+  return handBetCount >= 1 && handBetCount <= 2;
 }
 
 export function isGrinderPath(handBetCount) {
-  return handBetCount >= 3;
+  return handBetCount > 2;
 }
 
-// Kill Switch: returns true when side markets must be locked (4 hands selected)
+// Kill Switch: returns true when side markets must be locked (3+ hands selected — impossible under new 2-hand max, kept for safety)
 export function isKillSwitchActive(handBetCount) {
   return isGrinderPath(handBetCount);
 }

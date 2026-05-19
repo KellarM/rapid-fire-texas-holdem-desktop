@@ -311,7 +311,7 @@ export default function RapidFireGame() {
     const existing = (handBets[pid] || {})[handId] || 0;
     const currentCount = Object.keys(handBets[pid] || {}).length;
 
-    // Enforce MAX_HAND_BETS (4)
+    // Enforce MAX_HAND_BETS (2) — maximum 2 hands per round
     if (existing === 0 && currentCount >= MAX_HAND_BETS) {
       setShowHandLimitAlert(true);
       return;
