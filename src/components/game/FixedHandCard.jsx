@@ -45,7 +45,7 @@ export default function FixedHandCard({
   let borderCls;
   if (isWinner) borderCls = 'border-yellow-400 shadow-yellow-400/60 shadow-xl winner-flash' + ' ' + 'bg-yellow-900/30';
   else if (isLeading) borderCls = 'border-yellow-300 shadow-yellow-300/40 shadow-lg bg-yellow-900/20';
-  else if (disabledByConstraint) borderCls = 'border-gray-700/50';
+  else if (disabledByConstraint) borderCls = 'slot-border-dormant bg-black/25';
   else if (dragOver && isBettingPhase) borderCls = 'slot-border-active bg-yellow-900/20';
   else if (hovered && canBet) borderCls = 'slot-border-active bg-black/30';
   else borderCls = 'slot-border-dormant bg-black/25';
@@ -181,14 +181,13 @@ export default function FixedHandCard({
         </motion.div>
       }
 
-      {/* Lock overlay — shown on all unselected hands once 2 hands are chosen */}
+      {/* Lock icon — cards stay visible, only a lock badge on top */}
       {disabledByConstraint &&
-      <div className="absolute inset-0 rounded-xl pointer-events-none flex flex-col items-center justify-center z-20"
-           style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(1.5px)' }}>
+      <div className="absolute inset-0 rounded-xl pointer-events-none flex flex-col items-center justify-center z-20">
         <div style={{
           fontSize: '2rem',
           lineHeight: 1,
-          filter: 'drop-shadow(0 0 6px rgba(0,0,0,0.9))',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.95))',
         }}>🔒</div>
         <span style={{
           color: '#ff4444',
@@ -197,7 +196,7 @@ export default function FixedHandCard({
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           marginTop: '4px',
-          textShadow: '0 1px 3px #000',
+          textShadow: '0 1px 4px #000, 0 0 8px #000',
         }}>LOCKED</span>
       </div>
       }
