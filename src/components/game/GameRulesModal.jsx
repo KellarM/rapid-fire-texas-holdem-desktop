@@ -118,15 +118,15 @@ export default function GameRulesModal() {
                 <Section title="How the Game Works">
                   <Rule label="Objective">Bet on which of the 10 hands wins the round.</Rule>
                   <Rule label="Minimum Bet">$5 per betting spot.</Rule>
-                  <Rule label="Hand Limits">Select 1 or 2 hands per round. Once 2 hands are chosen, all remaining hands lock automatically.</Rule>
+                  <Rule label="Hand Limits">Select 1 hand per round. Once a hand is chosen, all other 9 hands lock automatically. You may move your bet to a locked hand by dragging your chip onto it.</Rule>
                   <Rule label="Maximum Bet per Hand">$500 maximum bet per individual card hand.</Rule>
                 </Section>
 
                 {/* Unlocking Side Bets */}
                 <Section title="Unlocking Side Bets">
-                  <Rule label="1 or 2 hands selected">All side markets are available. To unlock Color and River, your total Rank bets must match your total Hand bets. A maximum of 2 hands may be selected — the remaining 8 hands lock once you pick your 2nd hand.</Rule>
+                  <Rule label="1 hand selected">All side markets are available. To unlock Color and River, your total Rank bets must match your total Hand bets. Only 1 hand may be selected per round — the remaining 9 hands lock once you place your first hand bet.</Rule>
                   
-                  <Rule label="Rank Slots">1 hand = 1 Rank slot. 2 hands = 2 Rank slots.</Rule>
+                  <Rule label="Rank Slots">1 hand = 1 Rank slot. Only 1 Rank bet may be placed per round.</Rule>
                 </Section>
 
                 {/* Snowball Caps */}

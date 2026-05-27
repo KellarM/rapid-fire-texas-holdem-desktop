@@ -275,11 +275,11 @@ export default function RapidFireGame() {
   // All 7 rank slots are available when kill-switch is off (any rank can win regardless of hand selection)
   const activeHandIds = Object.keys(pHandBets).map(Number);
 
-  // Max rank slots: 1 hand = 1 slot, 2 hands = 2 slots (only when 1–2 hands selected)
-  const maxRankSlots = handBetCount === 1 ? 1 : handBetCount === 2 ? 2 : 0;
+  // Max rank slots: 1 hand = 1 slot (only when exactly 1 hand selected)
+  const maxRankSlots = handBetCount === 1 ? 1 : 0;
 
-  // Phase Lock: exactly 2 hand bets + at least 1 rank bet → finalize selection, lock remaining hands
-  const phaseLockActive = handBetCount === 2 && isRankBetPlaced && !killSwitchActive;
+  // Phase Lock: exactly 1 hand bet + at least 1 rank bet → finalize selection, lock remaining hands
+  const phaseLockActive = handBetCount === 1 && isRankBetPlaced && !killSwitchActive;
   const handBetsLockedByRanks = phaseLockActive;
   const maxHandBetsAllowed = MAX_HAND_BETS;
 
@@ -311,7 +311,7 @@ export default function RapidFireGame() {
     const existing = (handBets[pid] || {})[handId] || 0;
     const currentCount = Object.keys(handBets[pid] || {}).length;
 
-    // Enforce MAX_HAND_BETS (2) — maximum 2 hands per round
+    // Enforce MAX_HAND_BETS (1) — maximum 1 hand per round
     if (existing === 0 && currentCount >= MAX_HAND_BETS) {
       setShowHandLimitAlert(true);
       return;
@@ -416,7 +416,7 @@ export default function RapidFireGame() {
 
     // Step 1: enforce rank slot limits and mathematical possibility
     const remainingHandCount = Object.keys(updatedHandBets).length;
-    const slotsAllowed = remainingHandCount === 1 ? 1 : 2;
+    const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
     let rankRefund = 0;
     let updatedRankBets = { ...(rankBets[pid] || {}) };
 
@@ -534,10 +534,10 @@ export default function RapidFireGame() {
       return;
     }
 
-    // Rank slot limit: 1 hand = 1 slot, 2 hands = 2 slots
+    // Rank slot limit: 1 hand = 1 slot (max 1 hand allowed per round)
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
     const currentRankSlots = Object.keys(pRankBets).length;
-    const slotsAllowed = currentHandCount === 1 ? 1 : 2;
+    const slotsAllowed = currentHandCount === 1 ? 1 : 0;
     if (!pRankBets[key] && currentRankSlots >= slotsAllowed) {
       setRankAlertType('limit');
       setShowRankLimitAlert(true);
@@ -601,7 +601,7 @@ export default function RapidFireGame() {
     if (fromAmt <= 0) return;
 
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
-    const slotsAllowed = currentHandCount === 1 ? 1 : 2;
+    const slotsAllowed = currentHandCount === 1 ? 1 : 0;
     const toAmt = currentRankBets[toKey] || 0;
 
     // Build the updated rank bets after the move
@@ -739,7 +739,7 @@ export default function RapidFireGame() {
         setBalances((b) => {const n = [...b];n[dragPid] += fromAmt + rankRefund + colorRefund + riverRefund;return n;});
       } else {
         const remainingHandCount = Object.keys(remainingHandBets).length;
-        const slotsAllowed = remainingHandCount === 1 ? 1 : 2;
+        const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
         let rankRefund = 0;
         let updatedRankBets = { ...(rankBets[dragPid] || {}) };
 
@@ -795,7 +795,7 @@ export default function RapidFireGame() {
       updatedHandBets[toHandId] = fromAmt;
 
       const remainingHandCount = Object.keys(updatedHandBets).length;
-      const slotsAllowed = remainingHandCount === 1 ? 1 : remainingHandCount === 2 ? 2 : 0;
+      const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
 
       let rankRefund = 0;
       let updatedRankBets = { ...(rankBets[dragPid] || {}) };
