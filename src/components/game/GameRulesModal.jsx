@@ -134,6 +134,7 @@ export default function GameRulesModal() {
                   <p className="text-gray-400 text-xs mb-3">Your previous bets determine the ceiling for each subsequent tier.</p>
                   <Rule label="Rank total">your total Rank bets cannot exceed your total Hand bets. To unlock Color and River bets, your total Rank bets must exactly equal your total Hand bets. If Rank bets are less than Hand bets, Color and River bets will remain locked.</Rule>
                   <Rule label="Color total">cannot exceed Hand + Rank bets combined.</Rule>
+                  <Rule label="Color side">you may only bet on Red OR Black in a single round — not both. Betting on one color locks the opposite color for the remainder of that round.</Rule>
                   <Rule label="River total">cannot exceed Hand + Rank + Color bets combined.</Rule>
                 </Section>
 
@@ -156,7 +157,7 @@ export default function GameRulesModal() {
                 <Section title="Winning">
                   <Rule label="Hand bets">pay if the hand you backed forms the highest 5-card poker rank from its 7 available cards (2 pocket + 5 community) and beats all 9 other hands at the table.</Rule>
                   <Rule label="Rank bets">pay if ANY hand wins the round by the rank you bet — you do not need to have bet on the winning hand. Payout odds are tied to the actual winning hand's per-hand rank table, revealed at settlement.</Rule>
-                  <Rule label="Color bets">pay based on the <strong>exact</strong> number of Red or Black cards in the 5 community cards. 3 Red wins only when exactly 3 red cards appear — not 4 or 5. 4 Red wins only when exactly 4 red cards appear. 5 Red wins only when exactly 5 red cards appear. The same applies for Black. Each tier is a distinct, independent bet.</Rule>
+                  <Rule label="Color bets">pay based on the <strong>exact</strong> number of Red or Black cards in the 5 community cards. 3 Red wins only when exactly 3 red cards appear — not 4 or 5. 4 Red wins only when exactly 4 red cards appear. 5 Red wins only when exactly 5 red cards appear. The same applies for Black. Each tier is a distinct, independent bet. <strong>You may only bet one color side per round</strong> — choosing Red locks Black, and choosing Black locks Red.</Rule>
                   <Rule label="River (Low/High) bets">pay based solely on the 5th community card — Low wins if it is a 2–7, High wins if it is an 8–A, regardless of which hand wins.</Rule>
                   <Rule label="Community Board Win">If the 5-card Community Board is stronger than all 10 carded hands at showdown, all Hand bets lose. Rank Board, Color Board, and River bets remain active and pay based on the board's final composition.</Rule>
                   <Rule label="Tie payouts">If two or more hands tie for the winning position, each winning hand will receive a modified payout to reflect the shared win.</Rule>

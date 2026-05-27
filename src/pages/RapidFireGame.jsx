@@ -28,6 +28,7 @@ import GameRulesModal from '@/components/game/GameRulesModal';
 import DetailedPayoutDisplay from '@/components/game/DetailedPayoutDisplay';
 import HandBetLimitAlert from '@/components/game/HandBetLimitAlert';
 import RankBetLimitAlert from '@/components/game/RankBetLimitAlert';
+import ColorSideAlert from '@/components/game/ColorSideAlert';
 import InsufficientFundsAlert from '@/components/game/InsufficientFundsAlert';
 import AutoTrimToast from '@/components/game/AutoTrimToast';
 import { useGreedEngineState } from '@/components/game/GreedEngine';
@@ -147,6 +148,7 @@ export default function RapidFireGame() {
   const [showHandLimitAlert, setShowHandLimitAlert] = useState(false);
   const [showRankLimitAlert, setShowRankLimitAlert] = useState(false);
   const [rankAlertType, setRankAlertType] = useState('limit');
+  const [showColorSideAlert, setShowColorSideAlert] = useState(false);
   // snowball cap alert: 'rank_cap' | 'color_cap' | 'river_cap'
   const [showCapAlert, setShowCapAlert] = useState(false);
   const [capAlertType, setCapAlertType] = useState('rank_cap');
@@ -647,6 +649,15 @@ export default function RapidFireGame() {
       setShowCapAlert(true);
       return;
     }
+
+    // Color Side Lock: player may only bet Red OR Black — not both
+    const currentColorBets = redBlackBets[pid] || {};
+    const hasRedBet  = ['3R','4R','5R'].some(k => (currentColorBets[k] || 0) > 0);
+    const hasBlackBet = ['3B','4B','5B'].some(k => (currentColorBets[k] || 0) > 0);
+    const isRedKey   = ['3R','4R','5R'].includes(key);
+    const isBlackKey = ['3B','4B','5B'].includes(key);
+    if (isRedKey && hasBlackBet) { setShowColorSideAlert(true); return; }
+    if (isBlackKey && hasRedBet) { setShowColorSideAlert(true); return; }
 
     // Snowball Color Cap: total color bets ≤ total hand bets + total rank bets (ADD only)
     if (!checkColorCap(handBets[pid] || {}, rankBets[pid] || {}, redBlackBets[pid] || {}, selectedChip)) {
@@ -1424,6 +1435,10 @@ export default function RapidFireGame() {
         alertType={capAlertType}
         currentHandBets={handBetCount} />
       
+      <ColorSideAlert
+        isOpen={showColorSideAlert}
+        onClose={() => setShowColorSideAlert(false)} />
+
       <InsufficientFundsAlert
         isVisible={showInsufficientFunds}
         onClose={() => setShowInsufficientFunds(false)} />
@@ -1751,6 +1766,8 @@ export default function RapidFireGame() {
               disabled={gamePhase === 'betting' ? balance < selectedChip : gamePhase === 'lowHighBetting' ? balance < selectedChip : true}
               killSwitchActive={killSwitchActive}
               rankBetActive={sideBetGateOpen}
+              activeColorSide={['3R','4R','5R'].some(k => (pRedBlackBets[k]||0) > 0) ? 'red' : ['3B','4B','5B'].some(k => (pRedBlackBets[k]||0) > 0) ? 'black' : null}
+              onColorSideConflict={() => setShowColorSideAlert(true)}
               playerCount={playerCount}
               totalInvestment={totalInvestment}
               hoveredRiverType={hoveredRiverType}

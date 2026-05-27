@@ -58,6 +58,8 @@ export default function SideBets({
   disabled,
   killSwitchActive,
   rankBetActive,
+  activeColorSide,
+  onColorSideConflict,
   playerCount,
   totalInvestment,
   hoveredRiverType,
@@ -70,6 +72,11 @@ export default function SideBets({
   const colorLocked = killSwitchActive || !rankBetActive;
   const riverLocked = !rankBetActive;
   const canBetRB = (gamePhase === 'betting') && !disabled && !colorLocked;
+  // Color side lock: if activeColorSide is set, the opposite side is locked
+  const redSideLocked  = colorLocked || activeColorSide === 'black';
+  const blackSideLocked = colorLocked || activeColorSide === 'red';
+  const canBetRed   = (gamePhase === 'betting') && !disabled && !redSideLocked;
+  const canBetBlack = (gamePhase === 'betting') && !disabled && !blackSideLocked;
   const canBetLH = (gamePhase === 'lowHighBetting') && !disabled && !riverLocked;
 
   const reds = communityCards.filter(c => cardColor(c) === 'red').length;
@@ -109,6 +116,10 @@ export default function SideBets({
       if (amt > 0) chipsHere.push({ pid: i, amt });
     }
 
+    // Per-side canBet: red cells use canBetRed, black cells use canBetBlack
+    const canBetThisCell = isRed ? canBetRed : canBetBlack;
+    const isSideLocked = isRed ? redSideLocked : blackSideLocked;
+
     let blockStyle;
     if (isWinner) {
       blockStyle = {
@@ -124,20 +135,27 @@ export default function SideBets({
       blockStyle = isRed
         ? { background: 'linear-gradient(160deg, #c01c1c 0%, #7a0909 100%)', border: '1px solid #111' }
         : { background: 'linear-gradient(160deg, #141414 0%, #000 100%)', border: '1px solid #333' };
-    } else if (canBetRB) {
+    } else if (canBetThisCell) {
       blockStyle = isRed
         ? { background: 'linear-gradient(160deg, #e02020 0%, #8c0e0e 100%)', border: '1px solid #111', cursor: 'pointer' }
         : { background: 'linear-gradient(160deg, #222 0%, #000 100%)', border: '1px solid #2a2a2a', cursor: 'pointer' };
     } else {
+      // Locked — dimmed; if locked by color-side rule, show a crossed cursor
       blockStyle = isRed
-        ? { background: 'linear-gradient(160deg, #8a1414 0%, #4a0505 100%)', border: '1px solid #111', opacity: 0.6 }
-        : { background: 'linear-gradient(160deg, #111 0%, #000 100%)', border: '1px solid #1a1a1a', opacity: 0.6 };
+        ? { background: 'linear-gradient(160deg, #8a1414 0%, #4a0505 100%)', border: '1px solid #111', opacity: 0.45, cursor: isSideLocked && !colorLocked ? 'not-allowed' : 'default' }
+        : { background: 'linear-gradient(160deg, #111 0%, #000 100%)', border: '1px solid #1a1a1a', opacity: 0.45, cursor: isSideLocked && !colorLocked ? 'not-allowed' : 'default' };
     }
 
     return (
       <motion.button
         key={opt.key}
-        onMouseDown={(e) => { if (e.button !== 0) return; if (gamePhase === 'betting') onRedBlackBet(opt.key); }}
+        onMouseDown={(e) => {
+          if (e.button !== 0) return;
+          if (gamePhase !== 'betting') return;
+          // If locked by color-side rule (opposite color chosen), fire the conflict alert
+          if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
+          onRedBlackBet(opt.key);
+        }}
         onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'betting') onRemoveRedBlackBet(opt.key); }}
         onDragOver={(e) => { if (gamePhase === 'betting') { e.preventDefault(); e.stopPropagation(); } }}
         onDrop={(e) => {
@@ -154,9 +172,9 @@ export default function SideBets({
             }
           } catch (_) {}
         }}
-        whileTap={canBetRB ? { scale: 0.95 } : {}}
+        whileTap={canBetThisCell ? { scale: 0.95 } : {}}
         style={{ ...blockStyle, borderRadius: '8px', position: 'relative', overflow: 'visible' }}
-        className={`relative flex-1 transition-all duration-300 ${canBetRB ? 'hover:brightness-110 lp-magnetic' : ''}`}
+        className={`relative flex-1 transition-all duration-300 ${canBetThisCell ? 'hover:brightness-110 lp-magnetic' : ''}`}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0 pointer-events-none z-0">
           <span style={{ ...goldEmbossText, fontSize: '1.25rem', fontWeight: 900, lineHeight: 1 }}>
