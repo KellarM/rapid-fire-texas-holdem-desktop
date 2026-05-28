@@ -169,7 +169,7 @@ export default function Observer({
       if (prevKeyRef.current === roundData.observerKey) return;
       prevKeyRef.current = roundData.observerKey;
       console.log('[Observer] saving round locally, roundId:', roundData.roundId);
-      lsSaveRound({
+      const roundRecord = {
         session_id: String(roundData.sessionId || 'live'),
         round_number: roundData.roundId,
         community_cards: (roundData.communityCards || []).map(c => (c?.rank ?? '') + (c?.suit ?? '')),
@@ -192,19 +192,31 @@ export default function Observer({
         reds_count: Number(roundData.redsCount) || 0,
         blacks_count: Number(roundData.blacksCount) || 0,
         river_card: roundData.riverCard ? String(roundData.riverCard) : null,
-      });
+      };
+      // Save locally first (instant, never fails)
+      lsSaveRound(roundRecord);
       onRoundCountChange(prev => prev + 1);
-      console.log('[Observer] round saved locally, total:', lsCount());
+      // Also persist to Base44 cloud — fire-and-forget so game is never blocked
+      base44.functions.invoke('observerAnalysis', { action: 'saveRound', roundData: roundRecord })
+        .catch(() => {}); // silent fail — local copy always exists as fallback
+      console.log('[Observer] round saved locally + queued to cloud, total:', lsCount());
     };
     return () => { if (onRoundSettledRef) onRoundSettledRef.current = null; };
   }, [observeOn, onRoundSettledRef, onRoundCountChange]);
 
-  // Load DB round count on first open
+  // Load round count on first open — prefer cloud total (cross-device), fall back to local
   useEffect(() => {
     if (!isOpen) return;
-    // Restore round count from localStorage on open
+    // Always apply local count immediately so counter shows fast
     const localCount = lsCount();
     if (localCount > roundCount) onRoundCountChange(localCount);
+    // Then query cloud for the true cross-device total
+    base44.functions.invoke('observerAnalysis', { action: 'status' })
+      .then(res => {
+        const cloudCount = res?.data?.roundsLoaded ?? 0;
+        if (cloudCount > localCount) onRoundCountChange(cloudCount);
+      })
+      .catch(() => {}); // silent fail — local count already applied above
   }, [isOpen]);
 
   // Scroll chat
@@ -214,7 +226,8 @@ export default function Observer({
   const runAnalysis = useCallback(async () => {
     setAnalyzing(true);
     try {
-      const rounds = lsGetRounds();
+      // Use empty rounds array — backend will pull all saved rounds from Base44 entity directly
+      const rounds = [];
       const res = await base44.functions.invoke('observerAnalysis', { action: 'analyze', rounds });
       setAnalysis(res?.data || null);
       if (res?.data?.recommendations?.length) {
@@ -240,7 +253,7 @@ export default function Observer({
     setChatHistory(prev => [...prev, { role: 'user', text: q }]);
     setChatLoading(true);
     try {
-      const rounds = lsGetRounds();
+      const rounds = []; // backend reads from cloud entity — includes all devices
       const res = await base44.functions.invoke('observerAnalysis', { action: 'ask', question: q, rounds });
       setChatHistory(prev => [...prev, { role: 'observer', text: res?.data?.partnerAnswer || res?.data?.error || 'No response.' }]);
     } catch (err) {
@@ -285,7 +298,9 @@ export default function Observer({
       lsClearRounds();
       onRoundCountChange(0);
       setAnalysis(null);
-      setChatHistory(prev => [...prev, { role: 'observer', text: `🗑 Cleared ${deleted} rounds from local storage. Starting fresh.` }]);
+      // Also clear cloud records so cross-device count resets too
+      await base44.functions.invoke('observerAnalysis', { action: 'clearRounds' }).catch(() => {});
+      setChatHistory(prev => [...prev, { role: 'observer', text: `🗑 Cleared ${deleted} rounds from local storage and cloud. Starting fresh.` }]);
     } catch (err) {
       setChatHistory(prev => [...prev, { role: 'observer', text: 'Clear failed: ' + (err.message || 'Unknown error') }]);
     } finally {
