@@ -140,14 +140,19 @@ export function shuffleDeck(deck) {
 
 // ── Secure board generation — canonical entry point for all deal operations ──
 // Returns a fresh 5-card board drawn from CONST.DEALER_DECK every invocation.
-// Clones the deck → crypto Fisher-Yates shuffle → slice first 5.
+// Replicates the standard casino burn protocol:
+//   Burn[0] | Flop[1,2,3] | Burn[4] | Turn[5] | Burn[6] | River[7]
+// Clones the deck → crypto Fisher-Yates shuffle → extract positions [1,2,3,5,7].
 export function getSecureRandomBoard() {
   const d = [...CONST.DEALER_DECK];
   for (let i = d.length - 1; i > 0; i--) {
     const j = secureRandInt(i);
     [d[i], d[j]] = [d[j], d[i]];
   }
-  return d.slice(0, 5);
+  // Position 0 = burn before flop
+  // Position 4 = burn before turn
+  // Position 6 = burn before river
+  return [d[1], d[2], d[3], d[5], d[7]];
 }
 
 const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
