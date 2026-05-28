@@ -12,6 +12,7 @@ import {
 '@/lib/gameEngine';
 import { COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS, calculatePayout } from '@/lib/payoutConstants';
 import { getPerHandRankPayout } from '@/lib/perHandRankPayouts';
+import { trackRoundOutcome } from '@/lib/analytics';
 import FixedHandCard from '@/components/game/FixedHandCard';
 import CommunityCards from '@/components/game/CommunityCards';
 import SideBets from '@/components/game/SideBets';
@@ -1296,6 +1297,8 @@ export default function RapidFireGame() {
     };
     console.log('[Observer] settle() dispatching round via ref, roundId:', roundId, 'handler present:', !!onRoundSettledRef.current);
     if (onRoundSettledRef.current) onRoundSettledRef.current(roundData);
+    // ── GA4 Event Tracking — card, rank, color, river outcomes ──────────────
+    trackRoundOutcome(roundData);
     // ─────────────────────────────────────────────────────────────────────────
 
     setHistory((prev) => [{
