@@ -102,11 +102,37 @@ export const FIXED_HANDS = [
 // Legacy alias — always points to the frozen CONST definition
 export const DEALER_DECK = CONST.DEALER_DECK;
 
-// ── Fisher-Yates shuffle — always clones CONST.DEALER_DECK, never mutates it ──
+// ── Crypto-grade random integer [0, max] using Web Crypto API ──────────────
+// Uses crypto.getRandomValues() — casino-standard CSPRNG available in all
+// modern browsers. Falls back to Math.random() only in non-browser environments
+// (e.g. Jest / Node.js test runners where crypto is unavailable).
+function secureRandInt(max) {
+  if (max === 0) return 0;
+  // Find the smallest power-of-2 bitmask >= max to eliminate modulo bias
+  let mask = 1;
+  while (mask <= max) mask = (mask << 1) | 1;
+  const arr = new Uint32Array(1);
+  let val;
+  do {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(arr);
+      val = arr[0] & mask;
+    } else {
+      // Fallback for non-browser environments (simulation/testing only)
+      val = Math.floor(Math.random() * (max + 1));
+      return val;
+    }
+  } while (val > max); // rejection sampling — guarantees uniform distribution
+  return val;
+}
+
+// ── Crypto Fisher-Yates shuffle ───────────────────────────────────────────────
+// Always clones the input array — never mutates the source (CONST.DEALER_DECK).
+// Uses secureRandInt() for each swap — every permutation is equally likely.
 export function shuffleDeck(deck) {
   const d = [...deck];
   for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandInt(i);
     [d[i], d[j]] = [d[j], d[i]];
   }
   return d;
@@ -114,11 +140,11 @@ export function shuffleDeck(deck) {
 
 // ── Secure board generation — canonical entry point for all deal operations ──
 // Returns a fresh 5-card board drawn from CONST.DEALER_DECK every invocation.
-// Clones the deck → Fisher-Yates shuffle → slice first 5.
+// Clones the deck → crypto Fisher-Yates shuffle → slice first 5.
 export function getSecureRandomBoard() {
   const d = [...CONST.DEALER_DECK];
   for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandInt(i);
     [d[i], d[j]] = [d[j], d[i]];
   }
   return d.slice(0, 5);
