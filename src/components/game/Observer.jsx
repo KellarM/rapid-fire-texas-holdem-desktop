@@ -151,7 +151,7 @@ export default function Observer({
   const [exporting, setExporting]             = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [chatHistory, setChatHistory]         = useState([
-    { role: 'observer', text: "I'm watching. Turn on OBSERVE to start collecting live round data. I need 250 rounds before Security mode unlocks.\n\nYou can close this panel and play freely — I'll keep recording in the background as long as OBSERVE is on." }
+    { role: 'observer', text: "Observer is ON by default and always recording — your setting is remembered across page refreshes.\n\nI need 250 rounds before Security mode unlocks. Close this panel and play freely — I'll keep recording in the background." }
   ]);
   const [chatInput, setChatInput]             = useState('');
   const [chatLoading, setChatLoading]         = useState(false);

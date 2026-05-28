@@ -124,8 +124,19 @@ export default function RapidFireGame() {
   const [showKsStrategyTest, setShowKsStrategyTest] = useState(false);
   const [showObserver, setShowObserver] = useState(false);
   const [observerRoundData, setObserverRoundData] = useState(null);
-  const [observeOn, setObserveOn] = useState(false);
+  // Observer persists across refreshes — ON by default, only OFF if user explicitly toggled it off
+  const [observeOn, setObserveOn] = useState(
+    () => localStorage.getItem('rfth_observer_on') !== 'false'
+  );
   const [observerRoundCount, setObserverRoundCount] = useState(0);
+  // Persist observe toggle to localStorage so state survives refresh
+  const handleObserveToggle = (valOrFn) => {
+    setObserveOn(prev => {
+      const next = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
+      try { localStorage.setItem('rfth_observer_on', String(next)); } catch {}
+      return next;
+    });
+  };
   const prevObserverRoundRef = useRef(null);
   const onRoundSettledRef = useRef(null);  // Observer registers its handler here
 
@@ -1498,7 +1509,7 @@ export default function RapidFireGame() {
         isOpen={showObserver}
         onClose={() => setShowObserver(false)}
         observeOn={observeOn}
-        onObserveToggle={setObserveOn}
+        onObserveToggle={handleObserveToggle}
         onRoundSettledRef={onRoundSettledRef}
         roundCount={observerRoundCount}
         onRoundCountChange={setObserverRoundCount}
