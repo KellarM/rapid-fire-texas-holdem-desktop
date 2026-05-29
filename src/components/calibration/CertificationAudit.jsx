@@ -854,12 +854,12 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
                              </td>
                              <td className="py-1.5 px-3 text-right text-gray-300 font-mono">{r.wins.toLocaleString()}</td>
                              <td className="py-1.5 px-3 text-right font-mono text-xs">
-                               {bet.betType === 'perHandRank' && r.perHandRankHandWins
+                               {(bet.betType === 'perHandRank' || bet.betType === 'lhState') && r.perHandRankHandWins
                                  ? <span className="text-purple-400">{r.perHandRankHandWins.toLocaleString()}</span>
                                  : <span className="text-gray-700">—</span>}
                              </td>
                              <td className="py-1.5 px-3 text-right font-mono text-xs">
-                               {bet.betType === 'perHandRank' && r.actualRounds
+                               {(bet.betType === 'perHandRank' || bet.betType === 'lhState') && r.actualRounds
                                  ? <span className="text-slate-400">{r.actualRounds.toLocaleString()}</span>
                                  : <span className="text-gray-700">—</span>}
                              </td>

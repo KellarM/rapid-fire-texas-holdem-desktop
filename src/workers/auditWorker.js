@@ -634,6 +634,7 @@ function handleRun(payload) {
       actualRounds: totalRounds,
       wins: totalWins,
       perHandRankHandWins: isAdaptive ? perHandRankHandWins : undefined,
+      actualRounds: isAdaptive ? totalRounds : undefined,
       winFrequency: (winFreq * 100).toFixed(4),
       rtp: (effectiveRtp * 100).toFixed(4),
       houseEdge: (effectiveHouseEdge * 100).toFixed(4),
