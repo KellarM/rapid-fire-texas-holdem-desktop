@@ -859,7 +859,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
                              <td className="py-1.5 px-3 text-right">
                                <RTPPill rtp={parseFloat(r.rtp).toFixed(2)} low={module.rtpLow} high={module.rtpHigh} />
                              </td>
-                             <td className="py-1.5 px-3 text-right text-gray-400">{livePayout}:1</td>
+                             <td className="py-1.5 px-3 text-right text-gray-400">{bet.betType === 'lhState' ? r.liveOdds : `${livePayout}:1`}</td>
                              <td className="py-1.5 px-3 text-right text-yellow-300 font-semibold">{r.for965}:1</td>
                              <td className="py-1.5 px-3 text-center">
                                <div className="flex flex-col items-center gap-1">
@@ -1052,7 +1052,7 @@ export default function CertificationAudit() {
 
           const rtp = parseFloat(r.rtp);
           const ok = rtp >= module.rtpLow && rtp <= module.rtpHigh;
-          const livePayout = getLivePayout(bet.betType, bet.betKey);
+          const livePayout = bet.betType === 'lhState' ? (r.liveOdds || getLivePayout(bet.betType, bet.betKey) + ':1') : getLivePayout(bet.betType, bet.betKey) + ':1';
 
           doc.setFillColor(255, 255, 255);
           doc.rect(10, y - ROW_H + 1, pageW - 20, ROW_H, 'F');
@@ -1073,7 +1073,7 @@ export default function CertificationAudit() {
           else doc.setTextColor(200, 0, 0);
           doc.text(parseFloat(r.rtp).toFixed(2) + '%', colX[5], y);
           doc.setTextColor(0, 0, 0);
-          doc.text(livePayout + ':1', colX[6], y);
+          doc.text(livePayout, colX[6], y);
           doc.setTextColor(160, 100, 0);
           doc.text(r.for965 + ':1', colX[7], y);
           doc.setTextColor(ok ? 0 : 180, ok ? 140 : 0, ok ? 60 : 0);
@@ -1133,7 +1133,7 @@ export default function CertificationAudit() {
           const ok = rtp >= module.rtpLow && rtp <= module.rtpHigh;
           const rtpColor = ok ? '#008000' : '#cc0000';
           const statusColor = ok ? '#008000' : '#cc0000';
-          const livePayout = getLivePayout(bet.betType, bet.betKey);
+          const livePayout = bet.betType === 'lhState' ? (r.liveOdds || getLivePayout(bet.betType, bet.betKey) + ':1') : getLivePayout(bet.betType, bet.betKey) + ':1';
           const td = (val, color = '#000') => `<td style="border:1px solid #ccc;padding:3px 6px;color:${color};font-weight:bold;">${val}</td>`;
           const cardWins = bet.betType === 'perHandRank' && r.perHandRankHandWins ? r.perHandRankHandWins.toLocaleString() : '—';
           const actualRounds = bet.betType === 'perHandRank' && r.actualRounds ? r.actualRounds.toLocaleString() : '—';
@@ -1144,7 +1144,7 @@ export default function CertificationAudit() {
             ${td(actualRounds, '#666688')}
             ${td(r.winFrequency + '%')}
             ${td(parseFloat(r.rtp).toFixed(2) + '%', rtpColor)}
-            ${td(livePayout + ':1')}
+            ${td(livePayout)}
             ${td(r.for965 + ':1', '#a06400')}
             ${td(ok ? 'PASS' : 'FAIL', statusColor)}
           </tr>`;
@@ -1563,7 +1563,7 @@ export default function CertificationAudit() {
       if (curY > dpH - 22) { startDataPage(); drawTableHeader(); }
       const rtp = parseFloat(r.rtp);
       const ok = rtp >= module.rtpLow && rtp <= module.rtpHigh;
-      const livePayout = getLivePayout(bet.betType, bet.betKey);
+      const livePayout = bet.betType === 'lhState' ? (r.liveOdds || getLivePayout(bet.betType, bet.betKey) + ':1') : getLivePayout(bet.betType, bet.betKey) + ':1';
       const isHandRank = bet.betType === 'perHandRank';
 
       // Alternating row fill — no accent bar
@@ -1609,7 +1609,7 @@ export default function CertificationAudit() {
       // Live odds
       doc.setTextColor(190, 195, 220);
       doc.setFont('helvetica', 'normal');
-      doc.text(livePayout + ':1', COL.odds, textY, { align: 'right' });
+      doc.text(livePayout, COL.odds, textY, { align: 'right' });
 
       // For 96.5%
       doc.setTextColor(220, 185, 80);
