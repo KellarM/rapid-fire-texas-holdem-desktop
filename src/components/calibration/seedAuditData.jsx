@@ -86,17 +86,7 @@ export const SEED_AUDIT_DATA = {
     "color:4B": { wins:16707,  perHandRankHandWins:null, actualRounds:100000, winFrequency:16.707, rtp:96.07, liveOdds:"4.75:1", for965:"4.78:1", passed:true, status:"complete" },
     "color:5R": { wins:2210,   perHandRankHandWins:null, actualRounds:100000, winFrequency:2.210,  rtp:97.24, liveOdds:"43:1",   for965:"42.67:1", passed:true, status:"complete" },
     "color:5B": { wins:2152,   perHandRankHandWins:null, actualRounds:100000, winFrequency:2.152,  rtp:94.69, liveOdds:"43:1",   for965:"43.84:1", passed:true, status:"complete" },
-    // River Board — placeholder pass values (re-run to get exact state-based results)
-    "lhState:2L2H:LOW":  { wins:49962, perHandRankHandWins:null, actualRounds:100000, winFrequency:49.962, rtp:95.43, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:2L2H:HIGH": { wins:50108, perHandRankHandWins:null, actualRounds:100000, winFrequency:50.108, rtp:95.71, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:3L1H:LOW":  { wins:49962, perHandRankHandWins:null, actualRounds:100000, winFrequency:49.962, rtp:95.43, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:3L1H:HIGH": { wins:50108, perHandRankHandWins:null, actualRounds:100000, winFrequency:50.108, rtp:95.71, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:LOW":  { wins:49962, perHandRankHandWins:null, actualRounds:100000, winFrequency:49.962, rtp:95.43, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:HIGH": { wins:50108, perHandRankHandWins:null, actualRounds:100000, winFrequency:50.108, rtp:95.71, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:LOW":  { wins:49962, perHandRankHandWins:null, actualRounds:100000, winFrequency:49.962, rtp:95.43, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:HIGH": { wins:50108, perHandRankHandWins:null, actualRounds:100000, winFrequency:50.108, rtp:95.71, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:LOW":  { wins:49962, perHandRankHandWins:null, actualRounds:100000, winFrequency:49.962, rtp:95.43, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:HIGH": { wins:50108, perHandRankHandWins:null, actualRounds:100000, winFrequency:50.108, rtp:95.71, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
+    // River Board — removed bogus placeholder data; re-run required for accurate adaptive results
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -183,17 +173,7 @@ export const SEED_AUDIT_DATA = {
     "color:4B": { wins:83460,  perHandRankHandWins:null, actualRounds:500000, winFrequency:16.692, rtp:95.98, liveOdds:"4.75:1", for965:"4.78:1", passed:true, status:"complete" },
     "color:5R": { wins:10933,  perHandRankHandWins:null, actualRounds:500000, winFrequency:2.187,  rtp:96.21, liveOdds:"43:1",   for965:"43.13:1", passed:true, status:"complete" },
     "color:5B": { wins:10752,  perHandRankHandWins:null, actualRounds:500000, winFrequency:2.150,  rtp:95.69, liveOdds:"43:1",   for965:"43.88:1", passed:true, status:"complete" },
-    // River Board — placeholder pass values
-    "lhState:2L2H:LOW":  { wins:250088, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.018, rtp:95.53, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:2L2H:HIGH": { wins:250210, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.042, rtp:95.58, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:3L1H:LOW":  { wins:250088, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.018, rtp:95.53, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:3L1H:HIGH": { wins:250210, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.042, rtp:95.58, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:LOW":  { wins:250088, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.018, rtp:95.53, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:HIGH": { wins:250210, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.042, rtp:95.58, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:LOW":  { wins:250088, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.018, rtp:95.53, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:HIGH": { wins:250210, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.042, rtp:95.58, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:LOW":  { wins:250088, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.018, rtp:95.53, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:HIGH": { wins:250210, perHandRankHandWins:null, actualRounds:500000, winFrequency:50.042, rtp:95.58, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
+    // River Board — removed bogus placeholder data; re-run required for accurate adaptive results
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -280,17 +260,7 @@ export const SEED_AUDIT_DATA = {
     "color:4B": { wins:166050, perHandRankHandWins:null, actualRounds:1000000, winFrequency:16.605, rtp:95.48, liveOdds:"4.75:1", for965:"4.81:1", passed:true, status:"complete" },
     "color:5R": { wins:21756,  perHandRankHandWins:null, actualRounds:1000000, winFrequency:2.176,  rtp:95.73, liveOdds:"43:1",   for965:"43.36:1", passed:true, status:"complete" },
     "color:5B": { wins:21774,  perHandRankHandWins:null, actualRounds:1000000, winFrequency:2.177,  rtp:95.81, liveOdds:"43:1",   for965:"43.32:1", passed:true, status:"complete" },
-    // River Board — placeholder pass values
-    "lhState:2L2H:LOW":  { wins:499772, perHandRankHandWins:null, actualRounds:1000000, winFrequency:49.977, rtp:95.46, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:2L2H:HIGH": { wins:500724, perHandRankHandWins:null, actualRounds:1000000, winFrequency:50.072, rtp:95.64, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:3L1H:LOW":  { wins:499772, perHandRankHandWins:null, actualRounds:1000000, winFrequency:49.977, rtp:95.46, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:3L1H:HIGH": { wins:500724, perHandRankHandWins:null, actualRounds:1000000, winFrequency:50.072, rtp:95.64, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:LOW":  { wins:499772, perHandRankHandWins:null, actualRounds:1000000, winFrequency:49.977, rtp:95.46, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:HIGH": { wins:500724, perHandRankHandWins:null, actualRounds:1000000, winFrequency:50.072, rtp:95.64, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:LOW":  { wins:499772, perHandRankHandWins:null, actualRounds:1000000, winFrequency:49.977, rtp:95.46, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:HIGH": { wins:500724, perHandRankHandWins:null, actualRounds:1000000, winFrequency:50.072, rtp:95.64, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:LOW":  { wins:499772, perHandRankHandWins:null, actualRounds:1000000, winFrequency:49.977, rtp:95.46, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:HIGH": { wins:500724, perHandRankHandWins:null, actualRounds:1000000, winFrequency:50.072, rtp:95.64, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
+    // River Board — removed bogus placeholder data; re-run required for accurate adaptive results
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -377,16 +347,6 @@ export const SEED_AUDIT_DATA = {
     "color:4B": { wins:333371,  perHandRankHandWins:null, actualRounds:2000000, winFrequency:16.669, rtp:95.84, liveOdds:"4.75:1", for965:"4.79:1", passed:true, status:"complete" },
     "color:5R": { wins:43521,   perHandRankHandWins:null, actualRounds:2000000, winFrequency:2.176,  rtp:95.75, liveOdds:"43:1",   for965:"43.35:1", passed:true, status:"complete" },
     "color:5B": { wins:43585,   perHandRankHandWins:null, actualRounds:2000000, winFrequency:2.179,  rtp:95.89, liveOdds:"43:1",   for965:"43.28:1", passed:true, status:"complete" },
-    // River Board — placeholder pass values
-    "lhState:2L2H:LOW":  { wins:999931, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.997, rtp:95.49, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:2L2H:HIGH": { wins:999472, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.974, rtp:95.45, liveOdds:"0.91:1", for965:"0.93:1", passed:true, status:"complete" },
-    "lhState:3L1H:LOW":  { wins:999931, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.997, rtp:95.49, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:3L1H:HIGH": { wins:999472, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.974, rtp:95.45, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:LOW":  { wins:999931, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.997, rtp:95.49, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:1L3H:HIGH": { wins:999472, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.974, rtp:95.45, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:LOW":  { wins:999931, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.997, rtp:95.49, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:4L0H:HIGH": { wins:999472, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.974, rtp:95.45, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:LOW":  { wins:999931, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.997, rtp:95.49, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
-    "lhState:0L4H:HIGH": { wins:999472, perHandRankHandWins:null, actualRounds:2000000, winFrequency:49.974, rtp:95.45, liveOdds:"0.91:1", for965:"—", passed:true, status:"complete" },
+    // River Board — removed bogus placeholder data; re-run required for accurate adaptive results
   },
 };
