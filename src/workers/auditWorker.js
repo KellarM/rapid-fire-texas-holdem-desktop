@@ -436,7 +436,14 @@ function handleRun(payload) {
     const phr = (perHandRankPayouts != null) ? perHandRankPayouts[perHandRankHandIdx + 1] : null;
     perHandRankPayout = (phr != null) ? (phr[rankName] ?? 0) : 0;
   }
-  // lhState uses lhPayout directly — no perHandRankPayout needed
+  // lhState: look up the exact per-state payout
+  let lhStatePayout = lhPayout; // fallback to flat
+  if (betType === 'lhState' && payload.riverStatePayouts) {
+    const stateEntry = payload.riverStatePayouts[lhStateBoardState];
+    if (stateEntry) {
+      lhStatePayout = lhStateIsLow ? stateEntry.LOW : stateEntry.HIGH;
+    }
+  }
 
   // Buffer: for adaptive mode we don't know final round count, so cap at BUFFER_CAP
   initBuffer(isAdaptive ? BUFFER_CAP : rounds);
@@ -570,7 +577,7 @@ function handleRun(payload) {
         const isLow = (b4 >> 2) <= 5;
         if (lhStateIsLow ? isLow : !isLow) {
           won = true;
-          profit = BET * lhPayout;
+          profit = BET * lhStatePayout;
         }
       }
     }
@@ -612,9 +619,9 @@ function handleRun(payload) {
   const winFreq = condFreq !== null ? condFreq : (totalRounds > 0 ? totalWins / totalRounds : 0);
   const oddsFreq = winFreq;
 
-  // RTP for perHandRank: P(rank win | card win) × (payout + 1)
+  // RTP for perHandRank / lhState: P(win | qualifying event) × (payout + 1)
   const effectiveRtp = condFreq !== null
-    ? condFreq * ((betType === 'lhState' ? lhPayout : perHandRankPayout) + 1)
+    ? condFreq * ((betType === 'lhState' ? lhStatePayout : perHandRankPayout) + 1)
     : (totalBet > 0 ? totalPaid / totalBet : 0);
   const effectiveHouseEdge = 1 - effectiveRtp;
 

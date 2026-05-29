@@ -385,6 +385,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
     colorPayouts: { ...COLOR_BOARD_PAYOUTS },
     lhPayout: LOW_HIGH_PAYOUT,
     perHandRankPayouts: PER_HAND_RANK_PAYOUTS,
+    riverStatePayouts: RIVER_STATE_PAYOUTS,
   };
 
   const showSaving = useCallback(() => {
@@ -431,6 +432,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
             colorPayouts: livePayouts.colorPayouts,
             lhPayout: livePayouts.lhPayout,
             perHandRankPayouts: livePayouts.perHandRankPayouts,
+            riverStatePayouts: livePayouts.riverStatePayouts,
             captureLog: false,
             resumeFrom: resumeFrom ? {
               totalRounds: resumeFrom.totalRounds,
@@ -523,6 +525,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
           colorPayouts: livePayouts.colorPayouts,
           lhPayout: livePayouts.lhPayout,
           perHandRankPayouts: livePayouts.perHandRankPayouts,
+          riverStatePayouts: livePayouts.riverStatePayouts,
           captureLog: false,
           resumeFrom: resumeFrom ? {
             totalRounds: resumeFrom.totalRounds,
