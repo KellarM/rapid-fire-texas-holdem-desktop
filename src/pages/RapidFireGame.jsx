@@ -1596,6 +1596,10 @@ export default function RapidFireGame() {
       />
 
       {/* Game Timing Modal */}
+
+      {/* Analytics Dashboard */}
+      <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
+
       <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
 
       {/* Main Layout: 3 columns, fills remaining height */}
@@ -1807,7 +1811,6 @@ export default function RapidFireGame() {
             )}
 
             {/* Tools */}
-            <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
             <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenAnalytics={() => setShowAnalytics(true)} onOpenGameTiming={() => setShowGameTiming(true)} toolsVisible={toolbarVisible} />
 
             {/* Game Rules — far right */}
