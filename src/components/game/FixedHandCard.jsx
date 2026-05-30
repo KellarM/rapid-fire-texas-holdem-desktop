@@ -173,7 +173,7 @@ export default function FixedHandCard({
       <motion.div
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-xs font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-10">
+        className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-black text-yellow-400 text-xs font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-10">
         
           WIN!
         </motion.div>
