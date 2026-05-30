@@ -29,56 +29,65 @@ Deno.serve(async (req) => {
       const wins         = settled.filter(e => (e.total_payout || 0) > (e.total_bet || 0)).length;
       const winRate      = wins / totalRounds;
 
-      // Board win rates: wins / rounds where player actually placed a bet on that board
-      const withCardBet  = settled.filter(e => Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0));
-      const withRankBet  = settled.filter(e => Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0));
-      const withColorBet = settled.filter(e => Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0));
-      const withRiverBet = settled.filter(e => (e.low_high_bet?.amount || 0) > 0);
+      // Helper: safely check if an object field has any positive value
+      // Handles cases where the field may be stored as a nested object or be null/undefined
+      const hasBet = (obj) => {
+        if (!obj || typeof obj !== 'object') return false;
+        return Object.values(obj).some(v => Number(v) > 0);
+      };
+      const hasRiverBet = (e) => {
+        const lh = e.low_high_bet;
+        if (!lh) return false;
+        if (typeof lh === 'object') return Number(lh.amount || 0) > 0;
+        return false;
+      };
 
-      // A card win means the player bet on a hand AND that hand won
+      // Board win rates: wins / rounds where player actually placed a bet on that board
+      const withCardBet  = settled.filter(e => hasBet(e.hand_bets));
+      const withRankBet  = settled.filter(e => hasBet(e.rank_bets));
+      const withColorBet = settled.filter(e => hasBet(e.color_bets));
+      const withRiverBet = settled.filter(e => hasRiverBet(e));
+
+      // Card win: player bet on a winning hand (their specific bet hand won)
       const cardWins  = withCardBet.filter(e => {
-        const winnerIds = e.winner_hand_ids || [];
-        return winnerIds.some(wid => (e.hand_bets[wid] || 0) > 0);
+        const winnerIds = (e.winner_hand_ids || []).map(String);
+        return winnerIds.some(wid => Number(e.hand_bets[wid] || e.hand_bets[Number(wid)] || 0) > 0);
       }).length;
-      const rankWins  = withRankBet.filter(e => e.rank_win).length;
-      const colorWins = withColorBet.filter(e => e.color_win).length;
-      const riverWins = withRiverBet.filter(e => e.river_win).length;
+      // Rank win: player had a rank bet and it matched the winning rank
+      const rankWins  = withRankBet.filter(e => !!e.rank_win).length;
+      // Color win: player had a color bet and a winning color matched their bet key
+      const colorWins = withColorBet.filter(e => {
+        const winColors = e.winning_colors || [];
+        return winColors.some(wc => Number(e.color_bets[wc] || 0) > 0);
+      }).length;
+      // River win: player had a river bet and won
+      const riverWins = withRiverBet.filter(e => !!e.river_win).length;
 
       const cardWinRate  = withCardBet.length  > 0 ? cardWins  / withCardBet.length  : null;
       const rankWinRate  = withRankBet.length  > 0 ? rankWins  / withRankBet.length  : null;
       const colorWinRate = withColorBet.length > 0 ? colorWins / withColorBet.length : null;
       const riverWinRate = withRiverBet.length > 0 ? riverWins / withRiverBet.length : null;
 
-      // Kill switch = rounds where the side bet gate was CLOSED (rank bets didn't match hand bets),
-      // meaning the player could NOT access color or river boards
-      // We detect this as: player had card + rank bets but NO color or river bets AND gate was not open
-      // Stored as kill_switch_active in the event data
+      // Kill switch: rounds where player had hand+rank bets but no color or river (gate was closed)
       const killSwitchRounds = settled.filter(e => e.kill_switch_active).length;
-      // Also: rounds where player had hand+rank bets but gate was closed (rank != hand total) — no color/river bets placed
       const gateClosedRounds = settled.filter(e => {
-        const hasHand  = Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0);
-        const hasRank  = Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0);
-        const hasColor = Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0);
-        const hasRiver = (e.low_high_bet?.amount || 0) > 0;
-        // Had hand and rank but gate was intentionally or inadvertently closed (no color/river)
-        return hasHand && hasRank && !hasColor && !hasRiver;
+        return hasBet(e.hand_bets) && hasBet(e.rank_bets) && !hasBet(e.color_bets) && !hasRiverBet(e);
       }).length;
       const killSwitchRate = totalRounds > 0 ? (killSwitchRounds + gateClosedRounds) / totalRounds : 0;
 
       // ── Betting Pattern Breakdown ─────────────────────────────────────────
-      // Categorize each round by which boards the player bet on
       const bettingPatterns = { cardsOnly: 0, cardsRank: 0, cardsRankColor: 0, cardsRankRiver: 0, allFour: 0, other: 0 };
       settled.forEach(e => {
-        const hasHand  = Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0);
-        const hasRank  = Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0);
-        const hasColor = Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0);
-        const hasRiver = (e.low_high_bet?.amount || 0) > 0;
+        const hasHand  = hasBet(e.hand_bets);
+        const hasRank  = hasBet(e.rank_bets);
+        const hasColor = hasBet(e.color_bets);
+        const hasRiver = hasRiverBet(e);
+        if (!hasHand) { bettingPatterns.other++; return; }
         if (hasHand && hasRank && hasColor && hasRiver) bettingPatterns.allFour++;
-        else if (hasHand && hasRank && hasColor && !hasRiver) bettingPatterns.cardsRankColor++;
-        else if (hasHand && hasRank && !hasColor && hasRiver) bettingPatterns.cardsRankRiver++;
-        else if (hasHand && hasRank && !hasColor && !hasRiver) bettingPatterns.cardsRank++;
-        else if (hasHand && !hasRank) bettingPatterns.cardsOnly++;
-        else bettingPatterns.other++;
+        else if (hasHand && hasRank && hasColor)        bettingPatterns.cardsRankColor++;
+        else if (hasHand && hasRank && hasRiver)        bettingPatterns.cardsRankRiver++;
+        else if (hasHand && hasRank)                    bettingPatterns.cardsRank++;
+        else                                            bettingPatterns.cardsOnly++;
       });
 
       // Rank breakdown

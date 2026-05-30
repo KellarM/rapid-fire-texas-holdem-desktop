@@ -9,7 +9,7 @@ import { X, TrendingUp, TrendingDown, BarChart2, RefreshCw, Trash2 } from 'lucid
 import { base44 } from '@/api/base44Client';
 
 const fmt = (n) => typeof n === 'number' ? n.toFixed(2) : '—';
-const fmtPct = (n) => typeof n === 'number' ? (n * 100).toFixed(1) + '%' : '—';
+const fmtPct = (n) => typeof n === 'number' ? (Math.min(n, 1) * 100).toFixed(1) + '%' : '—';
 const fmtC = (n) => typeof n === 'number' ? (n >= 0 ? '+$' : '-$') + Math.abs(n).toFixed(0) : '—';
 
 function StatCard({ label, value, sub, color = 'yellow' }) {
