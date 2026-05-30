@@ -153,35 +153,69 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Board Win Rates</div>
+                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Board Win Rates <span className="text-gray-600 normal-case font-normal">(wins / rounds where bet was placed)</span></div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {[
-                      { label: 'Card Board',  val: s.cardWinRate  },
-                      { label: 'Rank Board',  val: s.rankWinRate  },
-                      { label: 'Color Board', val: s.colorWinRate },
-                      { label: 'River Board', val: s.riverWinRate },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="flex justify-between text-xs py-1 border-b border-slate-800">
-                        <span className="text-gray-400">{label}</span>
-                        <span className={val > 0.5 ? 'text-green-400' : 'text-yellow-300'}>{fmtPct(val)}</span>
+                      { label: 'Card Board',  val: s.cardWinRate,  count: s.withCardBetCount  },
+                      { label: 'Rank Board',  val: s.rankWinRate,  count: s.withRankBetCount  },
+                      { label: 'Color Board', val: s.colorWinRate, count: s.withColorBetCount },
+                      { label: 'River Board', val: s.riverWinRate, count: s.withRiverBetCount },
+                    ].map(({ label, val, count }) => (
+                      <div key={label} className="flex justify-between items-center text-xs py-1 border-b border-slate-800">
+                        <span className="text-gray-400">{label}<span className="text-gray-600 ml-1">({count || 0}r)</span></span>
+                        <span className={val === null ? 'text-gray-600' : val > 0.5 ? 'text-green-400' : 'text-yellow-300'}>
+                          {val === null ? 'N/A' : fmtPct(val)}
+                        </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Kill Switch Activity</div>
-                  <div className="flex items-center gap-4">
+                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Side Bet Gate Closure (Kill Switch)</div>
+                  <div className="flex items-center gap-4 mb-1">
                     <div>
                       <span className="text-2xl font-bold text-orange-400">{fmtPct(s.killSwitchRate)}</span>
-                      <span className="text-xs text-gray-500 ml-2">of rounds with 3+ hands selected</span>
+                      <span className="text-xs text-gray-500 ml-2">of rounds where Color/River was blocked</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       {s.killSwitchRate > 0.3
-                        ? <><TrendingUp className="w-3 h-3 text-orange-400" /> High usage</>
+                        ? <><TrendingUp className="w-3 h-3 text-orange-400" /> High</>
                         : <><TrendingDown className="w-3 h-3 text-green-400" /> Normal</>}
                     </div>
                   </div>
+                  <div className="text-[10px] text-gray-600">Gate closes when Rank bet total ≠ Card bet total, locking out Color &amp; River boards.</div>
+                </div>
+
+                <div className="border border-yellow-700/20 rounded-xl p-3">
+                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Betting Patterns</div>
+                  {s.bettingPatterns && (() => {
+                    const total = s.totalRounds;
+                    const patterns = [
+                      { key: 'cardsOnly',      label: 'Cards Only',                color: '#6b7280' },
+                      { key: 'cardsRank',      label: 'Cards + Rank',              color: '#a78bfa' },
+                      { key: 'cardsRankColor', label: 'Cards + Rank + Color',      color: '#f59e0b' },
+                      { key: 'cardsRankRiver', label: 'Cards + Rank + River',      color: '#34d399' },
+                      { key: 'allFour',        label: 'All 4 Boards',              color: '#f87171' },
+                    ];
+                    return (
+                      <div className="space-y-1.5">
+                        {patterns.map(({ key, label, color }) => {
+                          const count = s.bettingPatterns[key] || 0;
+                          const pct = total > 0 ? (count / total) * 100 : 0;
+                          return (
+                            <div key={key} className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-400 w-36 flex-shrink-0">{label}</span>
+                              <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+                              </div>
+                              <span className="text-[10px] text-gray-300 w-12 text-right flex-shrink-0">{count} <span className="text-gray-600">({pct.toFixed(0)}%)</span></span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}

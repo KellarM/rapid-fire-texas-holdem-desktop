@@ -29,22 +29,57 @@ Deno.serve(async (req) => {
       const wins         = settled.filter(e => (e.total_payout || 0) > (e.total_bet || 0)).length;
       const winRate      = wins / totalRounds;
 
-      const cardWins     = settled.filter(e => e.card_win).length;
-      const rankWins     = settled.filter(e => e.rank_win).length;
-      const colorWins    = settled.filter(e => e.color_win).length;
-      const riverWins    = settled.filter(e => e.river_win).length;
+      // Board win rates: wins / rounds where player actually placed a bet on that board
+      const withCardBet  = settled.filter(e => Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0));
+      const withRankBet  = settled.filter(e => Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0));
+      const withColorBet = settled.filter(e => Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0));
+      const withRiverBet = settled.filter(e => (e.low_high_bet?.amount || 0) > 0);
 
-      const withRankBet  = settled.filter(e => e.rank_win !== undefined && Object.keys(e.rank_bets || {}).length > 0).length;
-      const withColorBet = settled.filter(e => Object.keys(e.color_bets || {}).length > 0).length;
-      const withRiverBet = settled.filter(e => e.low_high_bet?.amount > 0).length;
+      // A card win means the player bet on a hand AND that hand won
+      const cardWins  = withCardBet.filter(e => {
+        const winnerIds = e.winner_hand_ids || [];
+        return winnerIds.some(wid => (e.hand_bets[wid] || 0) > 0);
+      }).length;
+      const rankWins  = withRankBet.filter(e => e.rank_win).length;
+      const colorWins = withColorBet.filter(e => e.color_win).length;
+      const riverWins = withRiverBet.filter(e => e.river_win).length;
 
-      const cardWinRate  = cardWins / totalRounds;
-      const rankWinRate  = withRankBet > 0 ? rankWins / withRankBet : 0;
-      const colorWinRate = withColorBet > 0 ? colorWins / withColorBet : 0;
-      const riverWinRate = withRiverBet > 0 ? riverWins / withRiverBet : 0;
+      const cardWinRate  = withCardBet.length  > 0 ? cardWins  / withCardBet.length  : null;
+      const rankWinRate  = withRankBet.length  > 0 ? rankWins  / withRankBet.length  : null;
+      const colorWinRate = withColorBet.length > 0 ? colorWins / withColorBet.length : null;
+      const riverWinRate = withRiverBet.length > 0 ? riverWins / withRiverBet.length : null;
 
+      // Kill switch = rounds where the side bet gate was CLOSED (rank bets didn't match hand bets),
+      // meaning the player could NOT access color or river boards
+      // We detect this as: player had card + rank bets but NO color or river bets AND gate was not open
+      // Stored as kill_switch_active in the event data
       const killSwitchRounds = settled.filter(e => e.kill_switch_active).length;
-      const killSwitchRate   = killSwitchRounds / totalRounds;
+      // Also: rounds where player had hand+rank bets but gate was closed (rank != hand total) — no color/river bets placed
+      const gateClosedRounds = settled.filter(e => {
+        const hasHand  = Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0);
+        const hasRank  = Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0);
+        const hasColor = Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0);
+        const hasRiver = (e.low_high_bet?.amount || 0) > 0;
+        // Had hand and rank but gate was intentionally or inadvertently closed (no color/river)
+        return hasHand && hasRank && !hasColor && !hasRiver;
+      }).length;
+      const killSwitchRate = totalRounds > 0 ? (killSwitchRounds + gateClosedRounds) / totalRounds : 0;
+
+      // ── Betting Pattern Breakdown ─────────────────────────────────────────
+      // Categorize each round by which boards the player bet on
+      const bettingPatterns = { cardsOnly: 0, cardsRank: 0, cardsRankColor: 0, cardsRankRiver: 0, allFour: 0, other: 0 };
+      settled.forEach(e => {
+        const hasHand  = Object.keys(e.hand_bets || {}).some(k => (e.hand_bets[k] || 0) > 0);
+        const hasRank  = Object.keys(e.rank_bets || {}).some(k => (e.rank_bets[k] || 0) > 0);
+        const hasColor = Object.keys(e.color_bets || {}).some(k => (e.color_bets[k] || 0) > 0);
+        const hasRiver = (e.low_high_bet?.amount || 0) > 0;
+        if (hasHand && hasRank && hasColor && hasRiver) bettingPatterns.allFour++;
+        else if (hasHand && hasRank && hasColor && !hasRiver) bettingPatterns.cardsRankColor++;
+        else if (hasHand && hasRank && !hasColor && hasRiver) bettingPatterns.cardsRankRiver++;
+        else if (hasHand && hasRank && !hasColor && !hasRiver) bettingPatterns.cardsRank++;
+        else if (hasHand && !hasRank) bettingPatterns.cardsOnly++;
+        else bettingPatterns.other++;
+      });
 
       // Rank breakdown
       const rankBreakdown = {};
@@ -91,7 +126,12 @@ Deno.serve(async (req) => {
         totalRounds, totalBet, totalPayout, netResult, houseEdge,
         avgBet, avgPayout, winRate,
         cardWinRate, rankWinRate, colorWinRate, riverWinRate,
+        withCardBetCount: withCardBet.length,
+        withRankBetCount: withRankBet.length,
+        withColorBetCount: withColorBet.length,
+        withRiverBetCount: withRiverBet.length,
         killSwitchRate,
+        bettingPatterns,
         rankBreakdown, colorBreakdown, riverBreakdown,
         handWinBreakdown, handBetBreakdown,
       });
