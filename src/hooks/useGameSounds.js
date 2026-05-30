@@ -14,9 +14,10 @@ let ambientStarted = false;
 function play(key, volume) {
   const el = SOUNDS[key];
   if (!el) return;
-  el.volume = volume;
-  el.currentTime = 0;
-  el.play().catch(() => {});
+  // Clone the node so rapid calls don't interrupt each other
+  const clone = el.cloneNode();
+  clone.volume = volume;
+  clone.play().catch(() => {});
 }
 
 function startAmbient() {
