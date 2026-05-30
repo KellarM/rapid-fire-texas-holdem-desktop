@@ -159,7 +159,7 @@ export default function RapidFireGame() {
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [showPlayerSelector, setShowPlayerSelector] = useState(true);
   const [roundId, setRoundId] = useState(1);
-  const [resetBankVisible, setResetBankVisible] = useState(false);
+  const [resetBankVisible, setResetBankVisible] = useState(true);
 
   const [lastWinInfo, setLastWinInfo] = useState(null);
   const [winningRank, setWinningRank] = useState(null);
