@@ -1,0 +1,78 @@
+{
+  "name": "GameEvent",
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string"
+    },
+    "round_id": {
+      "type": "number"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "total_bet": {
+      "type": "number"
+    },
+    "total_payout": {
+      "type": "number"
+    },
+    "net_result": {
+      "type": "number"
+    },
+    "card_win": {
+      "type": "boolean"
+    },
+    "rank_win": {
+      "type": "boolean"
+    },
+    "color_win": {
+      "type": "boolean"
+    },
+    "river_win": {
+      "type": "boolean"
+    },
+    "winning_rank": {
+      "type": "string"
+    },
+    "winning_colors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "winning_low_high": {
+      "type": "string"
+    },
+    "winner_hand_ids": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "hand_bets": {
+      "type": "object"
+    },
+    "rank_bets": {
+      "type": "object"
+    },
+    "color_bets": {
+      "type": "object"
+    },
+    "low_high_bet": {
+      "type": "object"
+    },
+    "kill_switch_active": {
+      "type": "boolean"
+    },
+    "hand_bet_count": {
+      "type": "number"
+    },
+    "is_board_win": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "event_type"
+  ]
+}
