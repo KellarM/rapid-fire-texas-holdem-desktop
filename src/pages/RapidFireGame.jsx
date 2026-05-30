@@ -44,6 +44,7 @@ import GameTimingModal from '@/components/game/GameTimingModal';
 import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
+import { useGameSounds } from '@/hooks/useGameSounds';
 
 
 const STARTING_BALANCE = 10000;
@@ -181,6 +182,9 @@ export default function RapidFireGame() {
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
+
+  // Sound effects
+  const { playChipPlace, playChipRemove, playCardDeal } = useGameSounds();
 
   // Listen for timing updates from GameTimingModal
   useEffect(() => {
@@ -373,6 +377,7 @@ export default function RapidFireGame() {
 
     setHandBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [handId]: existing + selectedChip } }));
     setBalances((b) => {const n = [...b];n[pid] -= selectedChip;return n;});
+    playChipPlace();
 
     // Start countdown on first bet
     if (Object.keys(pHandBets).length === 0 && !timerActiveRef.current) {
@@ -424,6 +429,7 @@ export default function RapidFireGame() {
       setLowHighBets(newLowHighBets);
       setBalances((b) => {const n = [...b];n[pid] += removeAmount + rankRefund + colorRefund + riverRefund;return n;});
       if (colorRefund > 0 || riverRefund > 0) setShowAutoTrimToast(true);
+      playChipRemove();
       checkAndResetIfNoBets(newHandBets, newRedBlackBets, newRankBets, newLowHighBets);
       return;
     }
@@ -579,6 +585,7 @@ export default function RapidFireGame() {
 
     setRankBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [key]: existing + selectedChip } }));
     setBalances((b) => {const n = [...b];n[pid] -= selectedChip;return n;});
+    playChipPlace();
   }, [gamePhase, balance, selectedChip, pid, rankBets, handBets, pRankBets]);
 
   const handleRemoveRankBet = useCallback((key) => {
@@ -607,6 +614,7 @@ export default function RapidFireGame() {
       setRankBets((prev) => ({ ...prev, [pid]: remainingRankBets }));
       setBalances((b) => {const n = [...b];n[pid] += existing;return n;});
     }
+    playChipRemove();
   }, [gamePhase, pid, rankBets, handBets, redBlackBets, lowHighBets]);
 
   const handleMoveRankBet = useCallback((fromKey, toKey) => {
@@ -692,6 +700,7 @@ export default function RapidFireGame() {
 
     setRedBlackBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [key]: existing + selectedChip } }));
     setBalances((b) => {const n = [...b];n[pid] -= selectedChip;return n;});
+    playChipPlace();
   }, [gamePhase, balance, selectedChip, pid, redBlackBets, handBets, rankBets]);
 
   const handleRemoveRedBlackBet = useCallback((key) => {
@@ -700,6 +709,7 @@ export default function RapidFireGame() {
     if (existing <= 0) return;
     setRedBlackBets((prev) => {const n = { ...(prev[pid] || {}) };delete n[key];return { ...prev, [pid]: n };});
     setBalances((b) => {const n = [...b];n[pid] += existing;return n;});
+    playChipRemove();
   }, [gamePhase, pid, redBlackBets]);
 
   const handleLowHighBet = useCallback((type) => {
@@ -732,6 +742,7 @@ export default function RapidFireGame() {
     if (balance <= 0 || balance < addAmount) return;
     setLowHighBets((prev) => ({ ...prev, [pid]: { type, amount: (prev[pid]?.type === type ? prev[pid].amount : 0) + addAmount } }));
     setBalances((b) => {const n = [...b];n[pid] -= addAmount;return n;});
+    playChipPlace();
   }, [gamePhase, balance, selectedChip, handBets, redBlackBets, rankBets, pLowHighBet, pid]);
 
   const handleRemoveLowHighBet = useCallback(() => {
@@ -740,6 +751,7 @@ export default function RapidFireGame() {
     if (!pLowHighBet || pLowHighBet.amount <= 0) return;
     setBalances((b) => {const n = [...b];n[pid] += pLowHighBet.amount;return n;});
     setLowHighBets((prev) => ({ ...prev, [pid]: null }));
+    playChipRemove();
   }, [gamePhase, pid, pLowHighBet]);
 
   // Drag-drop: move a chip from one hand to another, or back to bank
@@ -932,6 +944,7 @@ export default function RapidFireGame() {
     setCommunityCards(flop);
     setDeck(board5);
     setDeckIndex(3);
+    playCardDeal();
 
     const leader = findLeadingHand(flop);
     setLeadingHandIds(leader ? leader.handIds : []);
@@ -953,6 +966,7 @@ export default function RapidFireGame() {
     const newComm = [...communityCards, turnCard];
     setCommunityCards(newComm);
     setDeckIndex((i) => i + 1);
+    playCardDeal();
 
     const leader = findLeadingHand(newComm);
     setLeadingHandIds(leader ? leader.handIds : []);
@@ -990,6 +1004,7 @@ export default function RapidFireGame() {
     const newComm = [...communityCards, riverCard];
     setCommunityCards(newComm);
     setDeckIndex((i) => i + 1);
+    playCardDeal();
 
     const leader = findLeadingHand(newComm);
     setLeadingHandIds([]);
