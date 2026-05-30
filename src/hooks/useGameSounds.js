@@ -1,101 +1,68 @@
 import { useRef, useCallback } from 'react';
 
-function createChipPlaceSound(ctx) {
-  // Short percussive click — chip landing on felt
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-
-  filter.type = 'bandpass';
-  filter.frequency.value = 1200;
-  filter.Q.value = 0.8;
-
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(900, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.06);
-
-  gain.gain.setValueAtTime(0.4, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.09);
-}
-
-function createChipRemoveSound(ctx) {
-  // Slightly lower, reversed sweep — chip being pulled back
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(400, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
-
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.08);
-}
-
-function createCardDealSound(ctx) {
-  // Quick crisp whoosh — card flip/deal
-  const bufferSize = ctx.sampleRate * 0.12;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
-  }
-
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'highpass';
-  filter.frequency.value = 2000;
-
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.6, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-
-  source.start(ctx.currentTime);
-}
+// Mixkit royalty-free casino sounds (Mixkit License — free for any use)
+// These are real recorded casino sounds — ceramic chips, card placements
+const SOUND_URLS = {
+  chipPlace:  'https://assets.mixkit.co/active_storage/sfx/1993/1993-preview.mp3', // Clinking coins
+  chipRemove: 'https://assets.mixkit.co/active_storage/sfx/2073/2073-preview.mp3', // Poker card flick
+  cardDeal:   'https://assets.mixkit.co/active_storage/sfx/2076/2076-preview.mp3', // Poker card placement
+};
 
 export function useGameSounds() {
+  const audioCache = useRef({});
   const ctxRef = useRef(null);
 
+  // Lazily create AudioContext (must be after user gesture)
   const getCtx = useCallback(() => {
     if (!ctxRef.current) {
       ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
     }
-    // Resume if suspended (autoplay policy)
     if (ctxRef.current.state === 'suspended') {
       ctxRef.current.resume();
     }
     return ctxRef.current;
   }, []);
 
-  const playChipPlace = useCallback(() => {
-    try { createChipPlaceSound(getCtx()); } catch (e) {}
+  // Load and decode a sound file into an AudioBuffer (cached)
+  const getBuffer = useCallback(async (key) => {
+    if (audioCache.current[key]) return audioCache.current[key];
+    const ctx = getCtx();
+    const response = await fetch(SOUND_URLS[key]);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    audioCache.current[key] = audioBuffer;
+    return audioBuffer;
   }, [getCtx]);
 
-  const playChipRemove = useCallback(() => {
-    try { createChipRemoveSound(getCtx()); } catch (e) {}
-  }, [getCtx]);
+  const play = useCallback((key, volume = 1.0, playbackRate = 1.0) => {
+    getBuffer(key).then((buffer) => {
+      const ctx = getCtx();
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = playbackRate;
 
-  const playCardDeal = useCallback(() => {
-    try { createCardDealSound(getCtx()); } catch (e) {}
-  }, [getCtx]);
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = volume;
 
-  return { playChipPlace, playChipRemove, playCardDeal };
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      source.start(ctx.currentTime);
+    }).catch(() => {});
+  }, [getBuffer, getCtx]);
+
+  // Pre-warm the cache on first user interaction
+  const preload = useCallback(() => {
+    Object.keys(SOUND_URLS).forEach(key => {
+      if (!audioCache.current[key]) {
+        getBuffer(key).catch(() => {});
+      }
+    });
+  }, [getBuffer]);
+
+  return {
+    playChipPlace:  () => play('chipPlace',  0.7),
+    playChipRemove: () => play('chipRemove', 0.5, 0.9),
+    playCardDeal:   () => play('cardDeal',   0.8),
+    preloadSounds:  preload,
+  };
 }

@@ -184,7 +184,7 @@ export default function RapidFireGame() {
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
 
   // Sound effects
-  const { playChipPlace, playChipRemove, playCardDeal } = useGameSounds();
+  const { playChipPlace, playChipRemove, playCardDeal, preloadSounds } = useGameSounds();
 
   // Listen for timing updates from GameTimingModal
   useEffect(() => {
@@ -1462,7 +1462,7 @@ export default function RapidFireGame() {
   }, [gamePhase, timing.endOfRound, handleNewRound]);
 
   return (
-    <div className="velvet-board h-screen w-screen overflow-hidden text-white flex flex-col">
+  <div className="velvet-board h-screen w-screen overflow-hidden text-white flex flex-col" onClick={preloadSounds} onTouchStart={preloadSounds}>
 
       {/* Countdown Clock */}
       <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
