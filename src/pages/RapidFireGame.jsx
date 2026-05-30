@@ -120,13 +120,7 @@ export default function RapidFireGame() {
   const [winnerHandIds, setWinnerHandIds] = useState([]);
   const [winningRedBlack, setWinningRedBlack] = useState([]);
   const [winningLowHigh, setWinningLowHigh] = useState(null);
-  const [history, setHistory] = useState(() => {
-    // Restore history from localStorage so it survives page refreshes on the live site
-    try {
-      const saved = localStorage.getItem('rfth_history');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  const [history, setHistory] = useState([]);
   const [playerStats, setPlayerStats] = useState({});
   const [showStatsPanel, setShowStatsPanel] = useState(false);
   const [showMollySimulator, setShowMollySimulator] = useState(false);
@@ -1356,6 +1350,7 @@ export default function RapidFireGame() {
 
     setHistory((prev) => {
       const next = [{
+        _key: `${Date.now()}_${Math.random()}`,
         roundId,
         isBoardWin,
         handRank: handResult?.name || 'No Hand',
@@ -1364,8 +1359,7 @@ export default function RapidFireGame() {
         colorResult,
         colorWinners: winRB,
         lowHighResult: winLH || '-'
-      }, ...prev].slice(0, 200); // cap at 200 entries to keep localStorage lean
-      try { localStorage.setItem('rfth_history', JSON.stringify(next)); } catch {}
+      }, ...prev].slice(0, 200);
       return next;
     });
 
@@ -1395,7 +1389,6 @@ export default function RapidFireGame() {
     setRoundsPlayed(0);
     setCasinoProfit(0);
     setHistory([]);
-    try { localStorage.removeItem('rfth_history'); } catch {}
     setPlayerStats({});
     setActivePlayer(0);
     setPlayerCount(1);
