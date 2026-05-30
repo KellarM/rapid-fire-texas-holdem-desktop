@@ -56,6 +56,7 @@ export default function HistoryRail({ history }) {
             )}
             {history.map((entry, idx) => {
               const isRecent = idx === 0;
+              const uniqueKey = `${entry.roundId}-${idx}`;
               const isRed = entry.colorResult?.includes('R');
               const rankColor =
                 entry.handRank === 'Royal Flush' ? 'text-gray-400' :
@@ -69,7 +70,7 @@ export default function HistoryRail({ history }) {
 
               return (
                 <motion.div
-                  key={entry.roundId}
+                  key={uniqueKey}
                   initial={isRecent ? { opacity: 0, y: -10 } : false}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
