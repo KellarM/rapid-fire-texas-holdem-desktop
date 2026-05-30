@@ -45,6 +45,7 @@ import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameSounds } from '@/hooks/useGameSounds';
+import VolumeControl from '@/components/game/VolumeControl';
 
 
 const STARTING_BALANCE = 10000;
@@ -184,7 +185,7 @@ export default function RapidFireGame() {
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
 
   // Sound effects
-  const { playChipPlace, playChipRemove, playCardDeal, preloadSounds } = useGameSounds();
+  const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
 
   // Listen for timing updates from GameTimingModal
   useEffect(() => {
@@ -1726,10 +1727,13 @@ export default function RapidFireGame() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Player Bank display — centered */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-yellow-500 bg-black flex-shrink-0">
-              <span className="text-yellow-400 text-xs font-black leading-none tracking-wider">P{activePlayer + 1}</span>
-              <span className="text-yellow-400 font-black text-lg leading-none tracking-tight" style={{ textShadow: '0 0 8px rgba(251,191,36,0.7)' }}>${(balances[activePlayer] ?? STARTING_BALANCE).toLocaleString()}</span>
+            {/* Player Bank display + Volume Control — centered */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <VolumeControl soundManager={soundManager} />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-yellow-500 bg-black">
+                <span className="text-yellow-400 text-xs font-black leading-none tracking-wider">P{activePlayer + 1}</span>
+                <span className="text-yellow-400 font-black text-lg leading-none tracking-tight" style={{ textShadow: '0 0 8px rgba(251,191,36,0.7)' }}>${(balances[activePlayer] ?? STARTING_BALANCE).toLocaleString()}</span>
+              </div>
             </div>
 
             {/* Spacer */}

@@ -1,35 +1,41 @@
-import { useRef, useCallback } from 'react';
-
-const SOUND_URLS = {
-  cardDeal:   'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/e1fc72793_CardTurning.mp3',
-  chipPlace:  'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/a202fbad7_oxidvideos-placing-poker-chips-522521.mp3',
-  chipRemove: 'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/df028b260_Removal-of-poker-chips-95810.mp3',
+// All Audio elements at module level — zero hooks, stable across hot-reloads
+const SOUNDS = {
+  cardDeal:   new Audio('https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/e1fc72793_CardTurning.mp3'),
+  chipPlace:  new Audio('https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/a202fbad7_oxidvideos-placing-poker-chips-522521.mp3'),
+  chipRemove: new Audio('https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/df028b260_Removal-of-poker-chips-95810.mp3'),
 };
 
-// Pre-create Audio elements once (avoids CORS issues with fetch/Web Audio)
-const audioPool = {};
-Object.entries(SOUND_URLS).forEach(([key, url]) => {
-  audioPool[key] = new Audio(url);
-  audioPool[key].preload = 'auto';
-});
+const AMBIENT = new Audio('https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/033e65cf3_freesound_community-poker-room-33521.mp3');
+AMBIENT.loop = true;
+AMBIENT.volume = 0.4;
+
+let ambientStarted = false;
+
+function play(key, volume) {
+  const el = SOUNDS[key];
+  if (!el) return;
+  el.volume = volume;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+
+function startAmbient() {
+  if (ambientStarted) return;
+  ambientStarted = true;
+  AMBIENT.play().catch(() => { ambientStarted = false; });
+}
 
 export function useGameSounds() {
-  const play = useCallback((key, volume = 1.0) => {
-    const el = audioPool[key];
-    if (!el) return;
-    el.volume = volume;
-    el.currentTime = 0;
-    el.play().catch(() => {});
-  }, []);
-
-  const preloadSounds = useCallback(() => {
-    Object.values(audioPool).forEach(el => el.load());
-  }, []);
-
   return {
     playChipPlace:  () => play('chipPlace',  0.8),
     playChipRemove: () => play('chipRemove', 0.7),
     playCardDeal:   () => play('cardDeal',   0.9),
-    preloadSounds,
+    // Called on first user interaction to start ambient loop
+    preloadSounds:  () => { startAmbient(); Object.values(SOUNDS).forEach(el => el.load()); },
+    // Called by VolumeControl
+    setAmbientVolume: (v) => { AMBIENT.volume = v; },
+    soundManager: {
+      setAmbientVolume: (v) => { AMBIENT.volume = v; },
+    },
   };
 }
