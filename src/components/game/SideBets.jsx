@@ -121,16 +121,14 @@ export default function SideBets({
     const isSideLocked = isRed ? redSideLocked : blackSideLocked;
 
     let blockStyle;
-    if (isWinner) {
+    const isActive = isWinner || isLive;
+    if (isActive) {
+      // Gold bg + black border — consistent with hand card and rank board treatment
       blockStyle = {
         background: 'linear-gradient(135deg, #f6d860 0%, #e8c22a 30%, #fef08a 55%, #c9960a 80%, #e8c22a 100%)',
-        boxShadow: '0 0 14px rgba(255,200,50,0.6), inset 0 1px 2px rgba(255,255,200,0.5)',
-        border: '1px solid #a07005',
+        boxShadow: '0 0 16px rgba(255,200,50,0.7), inset 0 1px 2px rgba(255,255,200,0.6)',
+        border: '3px solid #000000',
       };
-    } else if (isLive) {
-      blockStyle = isRed
-        ? { background: 'linear-gradient(160deg, #d32020 0%, #9a0f0f 100%)', boxShadow: '0 0 10px rgba(220,30,30,0.6)', border: '1px solid #111' }
-        : { background: 'linear-gradient(160deg, #1a1a1a 0%, #000000 100%)', boxShadow: '0 0 10px rgba(180,160,50,0.35)', border: '1px solid #333' };
     } else if (hasBet) {
       blockStyle = isRed
         ? { background: 'linear-gradient(160deg, #c01c1c 0%, #7a0909 100%)', border: '1px solid #111' }
@@ -177,10 +175,10 @@ export default function SideBets({
         className={`relative flex-1 transition-all duration-300 ${canBetThisCell ? 'hover:brightness-110 lp-magnetic' : ''}`}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0 pointer-events-none z-0">
-          <span style={{ ...goldEmbossText, fontSize: '1.25rem', fontWeight: 900, lineHeight: 1 }}>
+          <span style={isActive ? { color: '#000', fontWeight: 900, fontSize: '1.25rem', lineHeight: 1 } : { ...goldEmbossText, fontSize: '1.25rem', fontWeight: 900, lineHeight: 1 }}>
             {opt.number}
           </span>
-          <span style={{ ...goldEmbossText, fontSize: '0.72rem', fontWeight: 800, lineHeight: 1.1 }}>
+          <span style={isActive ? { color: '#000', fontWeight: 900, fontSize: '0.72rem', lineHeight: 1.1 } : { ...goldEmbossText, fontSize: '0.72rem', fontWeight: 800, lineHeight: 1.1 }}>
             {opt.payout}
           </span>
         </div>

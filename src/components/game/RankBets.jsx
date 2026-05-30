@@ -81,17 +81,16 @@ function RankSlot({
 
   let slotCls, textColor, oddsColor, buttonStyle, showDarkLock;
 
-  if (isWinner) {
-    slotCls = 'winner-flash border-yellow-400';
-    textColor = 'text-yellow-200';
-    oddsColor = 'text-yellow-200';
-    buttonStyle = { background: 'rgba(120,60,0,0.75)', boxShadow: '0 0 12px rgba(255,200,50,0.4)' };
-    showDarkLock = false;
-  } else if (isLeading) {
-    slotCls = 'slot-border-active shadow-md cursor-pointer';
-    textColor = 'text-yellow-100';
-    oddsColor = 'text-yellow-400/90 text-halo';
-    buttonStyle = redVelvet;
+  const isActive = isWinner || isLeading;
+  if (isActive) {
+    // Solid gold bg + black border + black bold text — consistent with hand card treatment
+    slotCls = 'border-black shadow-xl';
+    textColor = 'text-black';
+    oddsColor = 'text-black';
+    buttonStyle = {
+      background: 'linear-gradient(135deg, #f6d860 0%, #e8c22a 30%, #fef08a 55%, #c9960a 80%, #e8c22a 100%)',
+      boxShadow: '0 0 16px rgba(255,200,50,0.7), inset 0 1px 2px rgba(255,255,200,0.6)',
+    };
     showDarkLock = false;
   } else if (bet > 0) {
     slotCls = 'slot-border-active shadow-md cursor-pointer';
