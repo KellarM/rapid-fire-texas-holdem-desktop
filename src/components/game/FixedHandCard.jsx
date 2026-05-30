@@ -46,7 +46,7 @@ export default function FixedHandCard({
   // All other states retain their original styling
   const isActive = isLeading || isWinner;
   let borderCls;
-  if (isActive) borderCls = 'border-black shadow-black/60 shadow-xl bg-yellow-400';
+  if (isActive) borderCls = 'border-black shadow-black/60 shadow-xl';
   else if (disabledByConstraint) borderCls = 'slot-border-dormant bg-black/25';
   else if (dragOver && isBettingPhase) borderCls = 'slot-border-active bg-yellow-900/20';
   else if (hovered && canBet) borderCls = 'slot-border-active bg-black/30';
@@ -54,6 +54,7 @@ export default function FixedHandCard({
 
   return (
     <motion.div
+      style={isActive ? { background: 'linear-gradient(135deg, #b8860b 0%, #d4a017 30%, #c9900e 60%, #8B6914 100%)' } : undefined}
       className={`relative rounded-xl p-1.5 ${isActive ? 'border-[5px]' : 'border-[3px]'} cursor-pointer transition-colors duration-200 select-none flex flex-col justify-between ${borderCls}`}
       animate={isLeading && !isWinner ? { scale: [1, 1.02, 1] } : { scale: 1 }}
       transition={{ duration: 0.5, repeat: isLeading && !isWinner ? Infinity : 0, repeatDelay: 1.5 }}
