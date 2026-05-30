@@ -38,6 +38,7 @@ import ArchetypeBattle from '@/components/game/ArchetypeBattle';
 import ExploitHunter from '@/components/game/IndividualStrategyTest';
 import KillSwitchStrategyTest from '@/components/game/KillSwitchStrategyTest';
 import Observer from '@/components/game/Observer';
+import AnalyticsDashboard from '@/components/game/AnalyticsDashboard';
 import RegulatoryComplianceReport from '@/components/game/TwoHandRankTest';
 
 import GameTimingModal from '@/components/game/GameTimingModal';
@@ -134,6 +135,7 @@ export default function RapidFireGame() {
   const [showComplianceReport, setShowComplianceReport] = useState(false);
   const [showKsStrategyTest, setShowKsStrategyTest] = useState(false);
   const [showObserver, setShowObserver] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [observerRoundData, setObserverRoundData] = useState(null);
   // Observer persists across refreshes — ON by default, only OFF if user explicitly toggled it off
   const [observeOn, setObserveOn] = useState(
@@ -1323,6 +1325,33 @@ export default function RapidFireGame() {
     if (onRoundSettledRef.current) onRoundSettledRef.current(roundData);
     // ── GA4 Event Tracking — card, rank, color, river outcomes ──────────────
     trackRoundOutcome(roundData);
+    // ── Analytics DB — fire-and-forget save to GameEvent entity ──────────────
+    base44.functions.invoke('gameAnalytics', {
+      action: 'saveEvent',
+      eventData: {
+        event_type: 'round_settled',
+        round_id: roundData.roundId,
+        session_id: String(roundData.sessionId || 'live'),
+        total_bet: roundData.totalBet || 0,
+        total_payout: roundData.totalPayout || 0,
+        net_result: (roundData.totalPayout || 0) - (roundData.totalBet || 0),
+        card_win: (roundData.winnerHandIds || []).length > 0 || roundData.isBoardWin,
+        rank_win: !!(roundData.winningRank && Object.values(roundData.rankBets || {}).some(v => v > 0)),
+        color_win: (roundData.winningColors || []).length > 0,
+        river_win: !!(roundData.winningLowHigh),
+        winning_rank: roundData.winningRank || null,
+        winning_colors: roundData.winningColors || [],
+        winning_low_high: roundData.winningLowHigh || null,
+        winner_hand_ids: roundData.winnerHandIds || [],
+        hand_bets: roundData.handBets || {},
+        rank_bets: roundData.rankBets || {},
+        color_bets: roundData.colorBets || {},
+        low_high_bet: roundData.lowHighBet || null,
+        kill_switch_active: roundData.killSwitchActive || false,
+        hand_bet_count: roundData.handBetCount || 0,
+        is_board_win: roundData.isBoardWin || false,
+      }
+    }).catch(() => {}); // silent fail — never blocks gameplay
     // ─────────────────────────────────────────────────────────────────────────
 
     setHistory((prev) => {
@@ -1778,7 +1807,8 @@ export default function RapidFireGame() {
             )}
 
             {/* Tools */}
-            <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenGameTiming={() => setShowGameTiming(true)} toolsVisible={toolbarVisible} />
+            <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
+            <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenAnalytics={() => setShowAnalytics(true)} onOpenGameTiming={() => setShowGameTiming(true)} toolsVisible={toolbarVisible} />
 
             {/* Game Rules — far right */}
             <div className="border-l border-yellow-700/20 pl-2 flex-shrink-0">
