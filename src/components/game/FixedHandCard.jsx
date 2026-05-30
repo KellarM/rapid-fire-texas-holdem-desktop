@@ -42,9 +42,11 @@ export default function FixedHandCard({
   const cardDisplayName = hand.cards.map((c) => `${c.rank}${SUITS[c.suit]}`).join('/');
 
   // Border class
+  // isLeading/isWinner = gold bg, black border, black text
+  // All other states retain their original styling
+  const isActive = isLeading || isWinner;
   let borderCls;
-  if (isWinner) borderCls = 'border-yellow-400 shadow-yellow-400/60 shadow-xl winner-flash' + ' ' + 'bg-yellow-900/30';
-  else if (isLeading) borderCls = 'border-yellow-300 shadow-yellow-300/40 shadow-lg bg-yellow-900/20';
+  if (isActive) borderCls = 'border-black shadow-black/60 shadow-xl bg-yellow-400';
   else if (disabledByConstraint) borderCls = 'slot-border-dormant bg-black/25';
   else if (dragOver && isBettingPhase) borderCls = 'slot-border-active bg-yellow-900/20';
   else if (hovered && canBet) borderCls = 'slot-border-active bg-black/30';
@@ -88,22 +90,18 @@ export default function FixedHandCard({
         } catch (e) {}
       }}>
       
-      {(isLeading || isWinner) && !isWinner &&
-      <div className="absolute inset-0 rounded-xl pointer-events-none">
-          <div className="absolute inset-0 rounded-xl animate-pulse bg-yellow-300/5" />
-        </div>
-      }
+      {/* Gold bg replaces the old pulse overlay — no overlay needed */}
 
       {/* Payout — top center */}
       <div className="mb-1 flex items-center justify-center">
         <span style={{
-          color: '#e8b84b',
+          color: isActive ? '#000000' : '#e8b84b',
           fontFamily: 'Oswald, sans-serif',
           fontWeight: 700,
           fontSize: '0.85rem',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          textShadow: '0 0 2px #000, 1px 1px 2px #000, -1px -1px 2px #000, 2px 2px 0 #000',
+          textShadow: isActive ? 'none' : '0 0 2px #000, 1px 1px 2px #000, -1px -1px 2px #000, 2px 2px 0 #000',
         }}>{hand.payout}:1</span>
       </div>
 
@@ -124,7 +122,7 @@ export default function FixedHandCard({
 
       {/* Current eval — always occupies the same space to prevent layout shift */}
       <div className={`text-center text-xs font-semibold leading-none mt-0.5 truncate
-          ${isLeading || isWinner ? 'text-yellow-300' : 'text-yellow-100/60'}`}>
+          ${isActive ? 'text-black' : 'text-yellow-100/60'}`}>
         {currentEval && currentEval.name !== 'No Hand' && currentEval.name !== 'High Card'
           ? currentEval.name
           : '\u00A0'}
