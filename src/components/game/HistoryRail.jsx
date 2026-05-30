@@ -50,7 +50,7 @@ export default function HistoryRail({ history }) {
         </div>
 
         <div className="flex flex-col overflow-y-auto flex-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {history.length === 0 && (
               <div className="text-green-400/30 text-xs text-center py-4">No hands yet</div>
             )}
@@ -70,8 +70,9 @@ export default function HistoryRail({ history }) {
               return (
                 <motion.div
                   key={entry.roundId}
-                  initial={{ opacity: 0, y: -8 }}
+                  initial={isRecent ? { opacity: 0, y: -10 } : false}
                   animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
                   className={`flex items-center px-1 py-0.5 border-b border-green-900/30 gap-0 ${isRecent ? 'bg-green-900/20' : ''}`}
                 >
                   {/* Slot A — primary winner (or "Board" label) */}
