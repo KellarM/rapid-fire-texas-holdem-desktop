@@ -102,6 +102,8 @@ export default function RapidFireGame() {
   const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP);
   // handBets[playerId][handId], redBlackBets[playerId][key], rankBets[playerId][key]
   const [handBets, setHandBets] = useState({}); // { [pid]: { handId: amount } }
+  // handDisplayOrder — which hand id occupies each grid slot (shuffled each round after round 1)
+  const [handDisplayOrder, setHandDisplayOrder] = useState([1,2,3,4,5,6,7,8,9,10]);
   const [redBlackBets, setRedBlackBets] = useState({}); // { [pid]: { key: amount } }
   const [rankBets, setRankBets] = useState({}); // { [pid]: { key: amount } }
   const [lowHighBets, setLowHighBets] = useState({}); // { [pid]: { type, amount } }
@@ -1371,6 +1373,17 @@ export default function RapidFireGame() {
     setDealerMessage("Bets open — Place Hand, Rank & Color bets now.");
     setGamePhase('betting');
     setActivePlayer(0);
+    // Shuffle hand display order — crypto Fisher-Yates on [1..10] so grid positions randomize each round
+    setHandDisplayOrder(prev => {
+      const ids = [...prev];
+      for (let i = ids.length - 1; i > 0; i--) {
+        const arr = new Uint32Array(1);
+        crypto.getRandomValues(arr);
+        const j = arr[0] % (i + 1);
+        [ids[i], ids[j]] = [ids[j], ids[i]];
+      }
+      return ids;
+    });
     // NOTE: history is intentionally NOT cleared here — it accumulates across rounds
   }, [stopTimer]);
 
@@ -1597,7 +1610,10 @@ export default function RapidFireGame() {
           {/* 10 Fixed Hands Grid */}
           <div className="flex-1 min-h-0 w-full">
             <div className="grid grid-cols-5 gap-1.5 h-full auto-rows-fr">
-              {FIXED_HANDS.map((hand) =>
+              {handDisplayOrder.map((hid) => {
+              const hand = FIXED_HANDS.find(h => h.id === hid);
+              if (!hand) return null;
+              return (
               <FixedHandCard
                 key={hand.id}
                 hand={hand}
@@ -1615,8 +1631,8 @@ export default function RapidFireGame() {
                 disabled={balance < selectedChip && !pHandBets[hand.id]}
                 disabledByConstraint={handBetsLockedByRanks && !pHandBets[hand.id] || handBetCount >= maxHandBetsAllowed && !pHandBets[hand.id]}
                 onAttemptLockedBet={() => setShowHandLimitAlert(true)} />
-
-              )}
+              );
+            })}
             </div>
           </div>
 
