@@ -1,11 +1,9 @@
 import { useRef, useCallback } from 'react';
 
-// Mixkit royalty-free casino sounds (Mixkit License — free for any use)
-// These are real recorded casino sounds — ceramic chips, card placements
 const SOUND_URLS = {
-  chipPlace:  'https://assets.mixkit.co/active_storage/sfx/1993/1993-preview.mp3', // Clinking coins
-  chipRemove: 'https://assets.mixkit.co/active_storage/sfx/2073/2073-preview.mp3', // Poker card flick
-  cardDeal:   'https://assets.mixkit.co/active_storage/sfx/2076/2076-preview.mp3', // Poker card placement
+  cardDeal:   'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/e1fc72793_CardTurning.mp3',
+  chipPlace:  'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/a202fbad7_oxidvideos-placing-poker-chips-522521.mp3',
+  chipRemove: 'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/df028b260_Removal-of-poker-chips-95810.mp3',
 };
 
 export function useGameSounds() {
