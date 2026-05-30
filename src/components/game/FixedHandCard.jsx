@@ -54,7 +54,7 @@ export default function FixedHandCard({
 
   return (
     <motion.div
-      className={`relative rounded-xl p-1.5 border-[3px] cursor-pointer transition-colors duration-200 select-none flex flex-col justify-between ${borderCls}`}
+      className={`relative rounded-xl p-1.5 ${isActive ? 'border-[5px]' : 'border-[3px]'} cursor-pointer transition-colors duration-200 select-none flex flex-col justify-between ${borderCls}`}
       animate={isLeading && !isWinner ? { scale: [1, 1.02, 1] } : { scale: 1 }}
       transition={{ duration: 0.5, repeat: isLeading && !isWinner ? Infinity : 0, repeatDelay: 1.5 }}
       onMouseDown={(e) => {
@@ -97,7 +97,7 @@ export default function FixedHandCard({
         <span style={{
           color: isActive ? '#000000' : '#e8b84b',
           fontFamily: 'Oswald, sans-serif',
-          fontWeight: 700,
+          fontWeight: isActive ? 900 : 700,
           fontSize: '0.85rem',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
@@ -121,8 +121,8 @@ export default function FixedHandCard({
       </div>
 
       {/* Current eval — always occupies the same space to prevent layout shift */}
-      <div className={`text-center text-xs font-semibold leading-none mt-0.5 truncate
-          ${isActive ? 'text-black' : 'text-yellow-100/60'}`}>
+      <div className={`text-center text-xs leading-none mt-0.5 truncate
+          ${isActive ? 'text-black font-black' : 'text-yellow-100/60 font-semibold'}`}>
         {currentEval && currentEval.name !== 'No Hand' && currentEval.name !== 'High Card'
           ? currentEval.name
           : '\u00A0'}
