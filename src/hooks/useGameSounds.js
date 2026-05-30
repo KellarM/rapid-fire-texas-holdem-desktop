@@ -9,22 +9,31 @@ const AMBIENT = new Audio('https://media.base44.com/files/public/6a1a6f6e670be2c
 AMBIENT.loop = true;
 AMBIENT.volume = 0.4;
 
-let ambientStarted = false;
+let preloaded = false;
 
 function play(key, volume) {
   const el = SOUNDS[key];
   if (!el) return;
-  // Clone the node so rapid calls don't interrupt each other
   const clone = el.cloneNode();
   clone.volume = volume;
   clone.play().catch(() => {});
 }
 
 function startAmbient() {
-  // If ambient is already playing, nothing to do
   if (!AMBIENT.paused) return;
-  ambientStarted = true;
-  AMBIENT.play().catch(() => { ambientStarted = false; });
+  AMBIENT.play().catch(() => {});
+}
+
+function preloadOnce() {
+  if (preloaded) {
+    // Only restart ambient if it stopped — never reload the source elements
+    startAmbient();
+    return;
+  }
+  preloaded = true;
+  // Load source elements only once so they are buffered for cloning
+  Object.values(SOUNDS).forEach(el => el.load());
+  startAmbient();
 }
 
 export function useGameSounds() {
@@ -32,9 +41,7 @@ export function useGameSounds() {
     playChipPlace:  () => play('chipPlace',  0.8),
     playChipRemove: () => play('chipRemove', 0.7),
     playCardDeal:   () => play('cardDeal',   0.9),
-    // Called on first user interaction to start ambient loop
-    preloadSounds:  () => { startAmbient(); Object.values(SOUNDS).forEach(el => el.load()); },
-    // Called by VolumeControl
+    preloadSounds:  preloadOnce,
     setAmbientVolume: (v) => { AMBIENT.volume = v; },
     soundManager: {
       setAmbientVolume: (v) => { AMBIENT.volume = v; },
