@@ -21,7 +21,8 @@ function play(key, volume) {
 }
 
 function startAmbient() {
-  if (ambientStarted) return;
+  // If ambient is already playing, nothing to do
+  if (!AMBIENT.paused) return;
   ambientStarted = true;
   AMBIENT.play().catch(() => { ambientStarted = false; });
 }
