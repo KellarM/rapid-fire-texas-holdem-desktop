@@ -248,11 +248,13 @@ function RankSlot({
         </div>
       )}
 
-      {isLeading && !isWinner && (
-        <div className="absolute inset-0 rounded-lg bg-white/10 animate-pulse pointer-events-none" />
-      )}
       {isWinner && (
-        <div className="absolute inset-0 rounded-lg bg-yellow-400/10 animate-pulse pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute -top-2.5 -right-2.5 bg-black text-yellow-400 text-xs font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-20 pointer-events-none">
+          WIN!
+        </motion.div>
       )}
     </motion.button>
   );

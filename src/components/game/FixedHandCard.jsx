@@ -171,10 +171,9 @@ export default function FixedHandCard({
       {/* Winner banner */}
       {isWinner &&
       <motion.div
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-black text-yellow-400 text-xs font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-10">
-        
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="absolute -top-2.5 -right-2.5 bg-black text-yellow-400 text-xs font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-20">
           WIN!
         </motion.div>
       }
