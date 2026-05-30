@@ -119,7 +119,13 @@ export default function RapidFireGame() {
   const [winnerHandIds, setWinnerHandIds] = useState([]);
   const [winningRedBlack, setWinningRedBlack] = useState([]);
   const [winningLowHigh, setWinningLowHigh] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(() => {
+    // Restore history from localStorage so it survives page refreshes on the live site
+    try {
+      const saved = localStorage.getItem('rfth_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [playerStats, setPlayerStats] = useState({});
   const [showStatsPanel, setShowStatsPanel] = useState(false);
   const [showMollySimulator, setShowMollySimulator] = useState(false);
@@ -1319,16 +1325,20 @@ export default function RapidFireGame() {
     trackRoundOutcome(roundData);
     // ─────────────────────────────────────────────────────────────────────────
 
-    setHistory((prev) => [{
-      roundId,
-      isBoardWin,
-      handRank: handResult?.name || 'No Hand',
-      cardsA: winnerHandA?.cards || [],
-      cardsB: winnerHandB?.cards || [],
-      colorResult,
-      colorWinners: winRB,
-      lowHighResult: winLH || '-'
-    }, ...prev]);
+    setHistory((prev) => {
+      const next = [{
+        roundId,
+        isBoardWin,
+        handRank: handResult?.name || 'No Hand',
+        cardsA: winnerHandA?.cards || [],
+        cardsB: winnerHandB?.cards || [],
+        colorResult,
+        colorWinners: winRB,
+        lowHighResult: winLH || '-'
+      }, ...prev].slice(0, 200); // cap at 200 entries to keep localStorage lean
+      try { localStorage.setItem('rfth_history', JSON.stringify(next)); } catch {}
+      return next;
+    });
 
     // Auto-progression to new round is handled by useEffect watching gamePhase
     timerActiveRef.current = true;
@@ -1356,6 +1366,7 @@ export default function RapidFireGame() {
     setRoundsPlayed(0);
     setCasinoProfit(0);
     setHistory([]);
+    try { localStorage.removeItem('rfth_history'); } catch {}
     setPlayerStats({});
     setActivePlayer(0);
     setPlayerCount(1);
