@@ -588,4 +588,5 @@ export function resolveRankBetWin(playerHandBets, playerRankBets, winnerHandIds,
     }
   }
   return { payingRanks, winningHandId };
-}
+}// v12 force-sync 1780166354
+// v12 force-sync 1780166359
