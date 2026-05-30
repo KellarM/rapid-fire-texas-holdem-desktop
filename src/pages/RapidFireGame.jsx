@@ -1373,13 +1373,21 @@ export default function RapidFireGame() {
     setDealerMessage("Bets open — Place Hand, Rank & Color bets now.");
     setGamePhase('betting');
     setActivePlayer(0);
-    // Shuffle hand display order — crypto Fisher-Yates on [1..10] so grid positions randomize each round
-    setHandDisplayOrder(prev => {
-      const ids = [...prev];
+    // Shuffle hand display order — guaranteed new arrangement every round.
+    // Always starts from a fresh [1..10] so no hand can carry over its old slot.
+    // Uses rejection-sampling (no modulo bias) so every permutation is equally likely.
+    setHandDisplayOrder(() => {
+      const ids = [1,2,3,4,5,6,7,8,9,10];
+      const buf = new Uint32Array(1);
+      const randBelow = (n) => {
+        // Largest multiple of n that fits in Uint32 — rejection above it removes bias
+        const limit = Math.floor(4294967296 / n) * n;
+        let v;
+        do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+        return v % n;
+      };
       for (let i = ids.length - 1; i > 0; i--) {
-        const arr = new Uint32Array(1);
-        crypto.getRandomValues(arr);
-        const j = arr[0] % (i + 1);
+        const j = randBelow(i + 1);
         [ids[i], ids[j]] = [ids[j], ids[i]];
       }
       return ids;
