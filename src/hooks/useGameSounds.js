@@ -6,61 +6,30 @@ const SOUND_URLS = {
   chipRemove: 'https://media.base44.com/files/public/6a1a6f6e670be2c42b2d0a99/df028b260_Removal-of-poker-chips-95810.mp3',
 };
 
-export function useGameSounds() {
-  const audioCache = useRef({});
-  const ctxRef = useRef(null);
+// Pre-create Audio elements once (avoids CORS issues with fetch/Web Audio)
+const audioPool = {};
+Object.entries(SOUND_URLS).forEach(([key, url]) => {
+  audioPool[key] = new Audio(url);
+  audioPool[key].preload = 'auto';
+});
 
-  // Lazily create AudioContext (must be after user gesture)
-  const getCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (ctxRef.current.state === 'suspended') {
-      ctxRef.current.resume();
-    }
-    return ctxRef.current;
+export function useGameSounds() {
+  const play = useCallback((key, volume = 1.0) => {
+    const el = audioPool[key];
+    if (!el) return;
+    el.volume = volume;
+    el.currentTime = 0;
+    el.play().catch(() => {});
   }, []);
 
-  // Load and decode a sound file into an AudioBuffer (cached)
-  const getBuffer = useCallback(async (key) => {
-    if (audioCache.current[key]) return audioCache.current[key];
-    const ctx = getCtx();
-    const response = await fetch(SOUND_URLS[key]);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-    audioCache.current[key] = audioBuffer;
-    return audioBuffer;
-  }, [getCtx]);
-
-  const play = useCallback((key, volume = 1.0, playbackRate = 1.0) => {
-    getBuffer(key).then((buffer) => {
-      const ctx = getCtx();
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.playbackRate.value = playbackRate;
-
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = volume;
-
-      source.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      source.start(ctx.currentTime);
-    }).catch(() => {});
-  }, [getBuffer, getCtx]);
-
-  // Pre-warm the cache on first user interaction
-  const preload = useCallback(() => {
-    Object.keys(SOUND_URLS).forEach(key => {
-      if (!audioCache.current[key]) {
-        getBuffer(key).catch(() => {});
-      }
-    });
-  }, [getBuffer]);
+  const preloadSounds = useCallback(() => {
+    Object.values(audioPool).forEach(el => el.load());
+  }, []);
 
   return {
-    playChipPlace:  () => play('chipPlace',  0.7),
-    playChipRemove: () => play('chipRemove', 0.5, 0.9),
-    playCardDeal:   () => play('cardDeal',   0.8),
-    preloadSounds:  preload,
+    playChipPlace:  () => play('chipPlace',  0.8),
+    playChipRemove: () => play('chipRemove', 0.7),
+    playCardDeal:   () => play('cardDeal',   0.9),
+    preloadSounds,
   };
 }
