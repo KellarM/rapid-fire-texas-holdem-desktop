@@ -199,7 +199,7 @@ export default function GameRulesModal() {
                     {Object.entries(RIVER_STATE_PAYOUTS).map(([state, odds]) => (
                       <div key={state} className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
                         <span className="text-gray-300 text-xs font-medium">Board: {state}</span>
-                        <span className="text-yellow-400 font-bold text-xs">Low {odds.Low}:1 / High {odds.High}:1</span>
+                        <span className="text-yellow-400 font-bold text-xs">Low {odds.LOW}:1 / High {odds.HIGH}:1</span>
                       </div>
                     ))}
                   </div>
