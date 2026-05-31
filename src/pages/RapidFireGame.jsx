@@ -46,6 +46,7 @@ import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameSounds } from '@/hooks/useGameSounds';
+import MobileGameLayout from '@/components/game/MobileGameLayout';
 import VolumeControl from '@/components/game/VolumeControl';
 
 
@@ -76,6 +77,17 @@ const PLAYER_TAB_STYLES = [
 { active: 'border-violet-400 bg-violet-500 text-white', inactive: 'border-violet-700/40 bg-violet-900/20 text-violet-400' },
 { active: 'border-amber-400 bg-amber-500 text-black', inactive: 'border-amber-700/40 bg-amber-900/20 text-amber-400' }];
 
+
+// ── Mobile detection ─────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+}
 
 // Phases: 'betting' | 'flop' | 'turn' | 'lowHighBetting' | 'river' | 'settlement' | 'winner'
 const PHASE_LABELS = {
@@ -181,6 +193,7 @@ export default function RapidFireGame() {
   const [displayWindowVisible, setDisplayWindowVisible] = useState(false);
   const [previousBets, setPreviousBets] = useState(null); // { handBets, redBlackBets, rankBets, totalBet }
   const [repeatUsedThisRound, setRepeatUsedThisRound] = useState(false);
+  const isMobile = useIsMobile();
   const [boardTheme, setBoardTheme] = useState(() => {
     try { return localStorage.getItem('rfth_theme') || 'red'; } catch { return 'red'; }
   });
@@ -1411,6 +1424,14 @@ export default function RapidFireGame() {
   };
   settleRef.current = settle;
 
+  // Reset Bank handler — shared by desktop and mobile
+  const handleResetBank = () => {
+    setBalances(Array(10).fill(STARTING_BALANCE));
+    setRoundId(1);
+    setCasinoProfit(0);
+    setRoundsPlayed(0);
+  };
+
   const handleResetGame = () => {
     setBalances(Array(10).fill(STARTING_BALANCE));
     setHandBets({});
@@ -1537,6 +1558,114 @@ export default function RapidFireGame() {
     return () => clearTimeout(timer);
   }, [gamePhase, timing.endOfRound, handleNewRound]);
 
+  // ── Mobile portrait layout ──────────────────────────────────────────────
+  // Compute activeColorSide for this player's color bets
+  const pRedBlackBetsMobile = redBlackBets[activePlayer] || {};
+  const activeColorSide = ['3R','4R','5R'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
+    ? 'red'
+    : ['3B','4B','5B'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
+    ? 'black'
+    : null;
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Tool modals — same as desktop */}
+        <PlayerStatsPanel isOpen={showStatsPanel} onClose={() => setShowStatsPanel(false)} playerStats={playerStats} playerCount={playerCount} />
+        <AnimatePresence>
+          {showMollySimulator && <MollySimulator onClose={() => setShowMollySimulator(false)} />}
+          {showArchetypeBattle && <ArchetypeBattle onClose={() => setShowArchetypeBattle(false)} />}
+          {showExploitHunter && <ExploitHunter onClose={() => setShowExploitHunter(false)} />}
+          {showComplianceReport && <RegulatoryComplianceReport onClose={() => setShowComplianceReport(false)} />}
+          {showKsStrategyTest && <KillSwitchStrategyTest onClose={() => setShowKsStrategyTest(false)} />}
+        </AnimatePresence>
+        <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
+        <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
+        <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
+
+        <MobileGameLayout
+          gamePhase={gamePhase}
+          communityCards={communityCards}
+          dealerMessage={dealerMessage}
+          leadingHandIds={leadingHandIds}
+          winnerHandIds={winnerHandIds}
+          winningRedBlack={winningRedBlack}
+          winningLowHigh={winningLowHigh}
+          winningRank={winningRank}
+          leadingRank={leadingRank}
+          history={history}
+          lastWinInfo={lastWinInfo}
+          playerCount={playerCount}
+          activePlayer={activePlayer}
+          balances={balances}
+          selectedChip={selectedChip}
+          handBets={handBets}
+          redBlackBets={redBlackBets}
+          rankBets={rankBets}
+          lowHighBets={lowHighBets}
+          countdownTime={countdownTime}
+          countdownActive={countdownActive}
+          killSwitchActive={killSwitchActive}
+          sideBetGateOpen={sideBetGateOpen}
+          handBetCount={handBetCount}
+          rankBetCount={rankBetCount}
+          maxRankSlots={maxRankSlots}
+          luminosityClass={luminosityClass}
+          hoveredRankRow={hoveredRankRow}
+          hoveredRiverType={hoveredRiverType}
+          riverWinFlash={riverWinFlash}
+          isRankBetPlaced={isRankBetPlaced}
+          totalBet={totalBet}
+          showHandLimitAlert={showHandLimitAlert}
+          showRankLimitAlert={showRankLimitAlert}
+          rankAlertType={rankAlertType}
+          showCapAlert={showCapAlert}
+          capAlertType={capAlertType}
+          showInsufficientFunds={showInsufficientFunds}
+          showAutoTrimToast={showAutoTrimToast}
+          showColorSideAlert={showColorSideAlert}
+          onHandBet={handleHandBet}
+          onRemoveHandBet={handleRemoveHandBet}
+          onDropChip={handleDropChip}
+          onRankBet={handleRankBet}
+          onRemoveRankBet={handleRemoveRankBet}
+          onMoveRankBet={handleMoveRankBet}
+          onRedBlackBet={handleRedBlackBet}
+          onRemoveRedBlackBet={handleRemoveRedBlackBet}
+          onLowHighBet={handleLowHighBet}
+          onRemoveLowHighBet={handleRemoveLowHighBet}
+          onSelectChip={setSelectedChip}
+          onClearBets={clearBets}
+          onCloseHandAlert={() => setShowHandLimitAlert(false)}
+          onCloseRankAlert={() => setShowRankLimitAlert(false)}
+          onCloseCapAlert={() => setShowCapAlert(false)}
+          onCloseInsufficientFunds={() => setShowInsufficientFunds(false)}
+          onHideAutoTrimToast={() => setShowAutoTrimToast(false)}
+          onCloseColorSideAlert={() => setShowColorSideAlert(false)}
+          onOpenStats={() => setShowStatsPanel(true)}
+          onOpenMollySimulator={() => setShowMollySimulator(true)}
+          onOpenArchetypeBattle={() => setShowArchetypeBattle(true)}
+          onOpenExploitHunter={() => setShowExploitHunter(true)}
+          onOpenComplianceReport={() => setShowComplianceReport(true)}
+          onOpenKsStrategyTest={() => setShowKsStrategyTest(true)}
+          onOpenObserver={() => setShowObserver(true)}
+          onOpenGameTiming={() => setShowGameTiming(true)}
+          onOpenAnalytics={() => setShowAnalytics(true)}
+          toolsVisible={toolbarVisible}
+          onSetHoveredRankRow={setHoveredRankRow}
+          onSetHoveredRiverType={setHoveredRiverType}
+          handDisplayOrder={handDisplayOrder}
+          boardTheme={boardTheme}
+          soundManager={soundManager}
+          resetBankVisible={resetBankVisible}
+          onResetBank={handleResetBank}
+          activeColorSide={activeColorSide}
+        />
+      </>
+    );
+  }
+
+  // ── Desktop layout ────────────────────────────────────────────────────────
   return (
   <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
