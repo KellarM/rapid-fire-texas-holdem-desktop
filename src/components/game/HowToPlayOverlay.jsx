@@ -7,8 +7,8 @@ const STEPS = [
     step: 1,
     title: 'Select Your Hand',
     icon: '🃏',
-    description: 'Choose 1 of the 10 fixed player hands on the board. Place your Hand Bet — this is required to play. You can bet up to 4 hands per round.',
-    highlight: 'Your Hand Bet is the foundation of every round.',
+    description: 'Choose 1 of the 10 fixed player hands on the board. Place your Hand Bet — this is required to play.',
+    highlight: 'One hand per round. Your Hand Bet is the foundation of every round.',
   },
   {
     step: 2,
