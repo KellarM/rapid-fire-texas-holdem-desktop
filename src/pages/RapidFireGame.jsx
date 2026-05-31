@@ -57,6 +57,12 @@ const PLAYER_COUNT_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const MIN_BET = 5;
 
+const LOGO_URLS = {
+  red:   'https://media.base44.com/images/public/69f3a45ad82dff5b772d4de2/2667063a3_image.png',
+  blue:  'https://base44.app/api/apps/69fbe99a6a81578f42265ae6/files/mp/public/69fbe99a6a81578f42265ae6/f79922844_12cba61b1_RapidFireBlueLogo.png',
+  green: 'https://base44.app/api/apps/69fbe99a6a81578f42265ae6/files/mp/public/69fbe99a6a81578f42265ae6/1c8b70f1a_864b277e3_RapidFireGreenLogo.png',
+};
+
 // Must match PLAYER_CHIP_COLORS in child components
 const PLAYER_TAB_STYLES = [
 { active: 'border-yellow-400 bg-yellow-500 text-black', inactive: 'border-yellow-700/40 bg-yellow-900/20 text-yellow-400' },
@@ -175,6 +181,9 @@ export default function RapidFireGame() {
   const [displayWindowVisible, setDisplayWindowVisible] = useState(false);
   const [previousBets, setPreviousBets] = useState(null); // { handBets, redBlackBets, rankBets, totalBet }
   const [repeatUsedThisRound, setRepeatUsedThisRound] = useState(false);
+  const [boardTheme, setBoardTheme] = useState(() => {
+    try { return localStorage.getItem('rfth_theme') || 'red'; } catch { return 'red'; }
+  });
 
   const {
     hoveredHandId, setHoveredHandId,
@@ -182,6 +191,13 @@ export default function RapidFireGame() {
     riverWinFlash, triggerRiverWin
   } = useGreedEngineState();
   const [hoveredRankRow, setHoveredRankRow] = useState(null);
+
+  // Listen for theme changes dispatched by GameRulesModal
+  useEffect(() => {
+    const handler = (e) => setBoardTheme(e.detail.theme);
+    window.addEventListener('rfth:themechange', handler);
+    return () => window.removeEventListener('rfth:themechange', handler);
+  }, []);
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
@@ -1496,7 +1512,7 @@ export default function RapidFireGame() {
   }, [gamePhase, timing.endOfRound, handleNewRound]);
 
   return (
-  <div className="velvet-board h-screen w-screen overflow-hidden text-white flex flex-col" onClick={preloadSounds} onTouchStart={preloadSounds}>
+  <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
       {/* Countdown Clock */}
       <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
@@ -1654,14 +1670,14 @@ export default function RapidFireGame() {
             
             {/* Logo — left side */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
-              <img src="https://media.base44.com/images/public/69f3a45ad82dff5b772d4de2/2667063a3_image.png" alt="Rapid Fire Texas Hold'em" style={{ width: '72px', height: 'auto', display: 'block', borderRadius: '8px' }} />
+              <img src={LOGO_URLS[boardTheme]} alt="Rapid Fire Texas Hold'em" style={{ width: '72px', height: 'auto', display: 'block', borderRadius: '8px' }} />
             </div>
 
             <CommunityCards cards={communityCards} phase={gamePhase} />
 
             {/* Mirror logo — right side */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
-              <img src="https://media.base44.com/images/public/69f3a45ad82dff5b772d4de2/2667063a3_image.png" alt="Rapid Fire Texas Hold'em" style={{ width: '72px', height: 'auto', display: 'block', borderRadius: '8px' }} />
+              <img src={LOGO_URLS[boardTheme]} alt="Rapid Fire Texas Hold'em" style={{ width: '72px', height: 'auto', display: 'block', borderRadius: '8px' }} />
             </div>
           </div>
 

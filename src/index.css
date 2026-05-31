@@ -299,3 +299,19 @@
   background-clip: text;
   animation: gold-shimmer 2.5s linear infinite;
 }
+/* ── Board Color Themes ─────────────────────────────────────────── */
+
+/* RED (default — matches existing .velvet-board) */
+body.theme-red .velvet-board {
+  background: radial-gradient(circle at center, #b30000 0%, #7a0000 60%, #3d0000 100%);
+}
+
+/* BLUE */
+body.theme-blue .velvet-board {
+  background: radial-gradient(circle at center, #0d3b8c 0%, #071e52 60%, #020b2a 100%);
+}
+
+/* GREEN */
+body.theme-green .velvet-board {
+  background: radial-gradient(circle at center, #0d6e2e 0%, #074a1c 60%, #022610 100%);
+}

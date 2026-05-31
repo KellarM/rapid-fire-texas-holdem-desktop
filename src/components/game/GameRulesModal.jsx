@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, BookOpen, ChevronDown, ChevronUp, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 
@@ -35,6 +35,12 @@ const COLOR_BETS = [
   { key: '5 Black', payout: `${COLOR_BOARD_PAYOUTS['5B']}:1` },
 ];
 
+const THEMES = [
+  { id: 'red',   label: 'Red',   dot: '#b30000' },
+  { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
+  { id: 'green', label: 'Green', dot: '#0a4a1e' },
+];
+
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -62,6 +68,26 @@ function Rule({ label, children }) {
 
 export default function GameRulesModal() {
   const [open, setOpen] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('rfth_theme') || 'red'; } catch { return 'red'; }
+  });
+
+  // Apply theme class to body whenever it changes
+  useEffect(() => {
+    document.body.classList.remove('theme-red', 'theme-blue', 'theme-green');
+    document.body.classList.add(`theme-${theme}`);
+    try { localStorage.setItem('rfth_theme', theme); } catch {}
+    // Dispatch event so RapidFireGame can update the logo
+    window.dispatchEvent(new CustomEvent('rfth:themechange', { detail: { theme } }));
+  }, [theme]);
+
+  // Apply saved theme on mount
+  useEffect(() => {
+    document.body.classList.remove('theme-red', 'theme-blue', 'theme-green');
+    document.body.classList.add(`theme-${theme}`);
+    window.dispatchEvent(new CustomEvent('rfth:themechange', { detail: { theme } }));
+  }, []);
 
   return (
     <>
@@ -81,7 +107,7 @@ export default function GameRulesModal() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
+              onClick={() => { setOpen(false); setShowColorPicker(false); }}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
 
@@ -103,18 +129,64 @@ export default function GameRulesModal() {
                   </div>
                   <p className="text-gray-400 text-xs mt-0.5">Everything you need to know to play</p>
                 </div>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                {/* Right side: Color Picker + Close */}
+                <div className="flex items-center gap-2">
+
+                  {/* Color Picker Button */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowColorPicker(v => !v); }}
+                      className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-yellow-400 transition-colors"
+                      title="Change board color"
+                    >
+                      <Palette className="w-5 h-5" />
+                    </button>
+
+                    {/* Dropdown */}
+                    <AnimatePresence>
+                      {showColorPicker && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="absolute right-0 top-10 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl p-2 flex flex-col gap-1 min-w-[110px] z-50"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <p className="text-gray-400 text-xs font-semibold px-2 pb-1 border-b border-slate-700">Board Color</p>
+                          {THEMES.map(t => (
+                            <button
+                              key={t.id}
+                              onClick={() => { setTheme(t.id); setShowColorPicker(false); }}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all
+                                ${theme === t.id ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' : 'text-gray-300 hover:bg-slate-700'}`}
+                            >
+                              <span
+                                className="w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
+                                style={{ background: t.dot }}
+                              />
+                              {t.label}
+                              {theme === t.id && <span className="ml-auto text-yellow-400 text-xs">✓</span>}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Close button */}
+                  <button
+                    onClick={() => { setOpen(false); setShowColorPicker(false); }}
+                    className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Scrollable content */}
               <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
 
-                {/* Overview */}
                 <Section title="How the Game Works">
                   <Rule label="Objective">Bet on which of the 10 hands wins the round.</Rule>
                   <Rule label="Minimum Bet">$5 per betting spot.</Rule>
@@ -122,14 +194,11 @@ export default function GameRulesModal() {
                   <Rule label="Maximum Bet per Hand">$500 maximum bet per individual card hand.</Rule>
                 </Section>
 
-                {/* Unlocking Side Bets */}
                 <Section title="Unlocking Side Bets">
                   <Rule label="1 hand selected">All side markets are available. To unlock Color and River, your total Rank bets must match your total Hand bets. Only 1 hand may be selected per round — the remaining 9 hands lock once you place your first hand bet.</Rule>
-                  
                   <Rule label="Rank Slots">1 hand = 1 Rank slot. Only 1 Rank bet may be placed per round.</Rule>
                 </Section>
 
-                {/* Snowball Caps */}
                 <Section title="Snowball Caps">
                   <p className="text-gray-400 text-xs mb-3">Your previous bets determine the ceiling for each subsequent tier.</p>
                   <Rule label="Rank total">your total Rank bets cannot exceed your total Hand bets. To unlock Color and River bets, your total Rank bets must exactly equal your total Hand bets. If Rank bets are less than Hand bets, Color and River bets will remain locked.</Rule>
@@ -138,7 +207,6 @@ export default function GameRulesModal() {
                   <Rule label="River total">cannot exceed Hand + Rank + Color bets combined.</Rule>
                 </Section>
 
-                {/* Rank Betting */}
                 <Section title="Rank Betting — Payouts">
                   <p className="text-gray-400 text-xs mb-3">Bet on what poker rank will win the round — it doesn't matter which hand wins, as long as the winning hand achieves the rank you bet. Odds are revealed in the win display and are tied to the actual winning hand. One Pair is the minimum qualifying rank.</p>
                   <div className="space-y-1.5">
@@ -153,97 +221,45 @@ export default function GameRulesModal() {
                   </div>
                 </Section>
 
-                {/* Dependent Payouts */}
                 <Section title="Winning">
                   <Rule label="Hand bets">pay if the hand you backed forms the highest 5-card poker rank from its 7 available cards (2 pocket + 5 community) and beats all 9 other hands at the table.</Rule>
                   <Rule label="Rank bets">pay if ANY hand wins the round by the rank you bet — you do not need to have bet on the winning hand. Payout odds are tied to the actual winning hand's per-hand rank table, revealed at settlement.</Rule>
                   <Rule label="Color bets">pay based on the <strong>exact</strong> number of Red or Black cards in the 5 community cards. 3 Red wins only when exactly 3 red cards appear — not 4 or 5. 4 Red wins only when exactly 4 red cards appear. 5 Red wins only when exactly 5 red cards appear. The same applies for Black. Each tier is a distinct, independent bet. <strong>You may only bet one color side per round</strong> — choosing Red locks Black, and choosing Black locks Red.</Rule>
                   <Rule label="River (Low/High) bets">pay based solely on the 5th community card — Low wins if it is a 2–7, High wins if it is an 8–A, regardless of which hand wins.</Rule>
                   <Rule label="Community Board Win">If the 5-card Community Board is stronger than all 10 carded hands at showdown, all Hand bets lose. Rank Board, Color Board, and River bets remain active and pay based on the board's final composition.</Rule>
-                  <Rule label="Tie payouts">If two or more hands tie for the winning position, each winning hand will receive a modified payout to reflect the shared win.</Rule>
                 </Section>
 
-                {/* Card Hand Bets */}
-                <Section title="Card Hand Bets — Payouts" defaultOpen={false}>
-                  <p className="text-gray-400 text-xs mb-3">Bet on one (or more) of the 10 fixed starting hands.</p>
-                  <div className="grid grid-cols-2 gap-1.5">
+                <Section title="Card Hand Payouts">
+                  <p className="text-gray-400 text-xs mb-3">Each hand pays at fixed odds when it wins the round outright.</p>
+                  <div className="grid grid-cols-2 gap-2">
                     {FIXED_HANDS.map(h => (
                       <div key={h.id} className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
-                        <span className="text-white font-semibold text-xs">Hand {h.id} — {h.label}</span>
-                        <span className="text-yellow-400 font-bold text-xs ml-2">{h.payout}:1</span>
+                        <span className="text-gray-300 text-xs font-medium">{h.label}</span>
+                        <span className="text-yellow-400 font-bold text-xs">{h.payout}:1</span>
                       </div>
                     ))}
                   </div>
                 </Section>
 
-                {/* Color Board */}
-                <Section title="Color Board Bets — Payouts" defaultOpen={false}>
-                  <p className="text-gray-400 text-xs mb-3">Bet on how many Red or Black cards appear in the 5 community cards. Requires a Rank Bet (Master Key).</p>
-                  <div className="grid grid-cols-3 gap-1.5">
+                <Section title="Color Board Payouts">
+                  <p className="text-gray-400 text-xs mb-3">Exact count of Red or Black cards in the 5 community cards.</p>
+                  <div className="grid grid-cols-2 gap-2">
                     {COLOR_BETS.map(c => (
                       <div key={c.key} className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
-                        <span className={`font-bold text-xs ${c.key.includes('Red') ? 'text-red-400' : 'text-gray-300'}`}>{c.key}</span>
+                        <span className="text-gray-300 text-xs font-medium">{c.key}</span>
                         <span className="text-yellow-400 font-bold text-xs">{c.payout}</span>
                       </div>
                     ))}
                   </div>
                 </Section>
 
-                {/* Low / High */}
-                <Section title="Low / High (River) Bet" defaultOpen={false}>
-                  <Rule label="When available">After the Turn card is dealt. Requires a Rank Bet (Master Key).</Rule>
-                  <Rule label="LOW">River card is 2–7.</Rule>
-                  <Rule label="HIGH">River card is 8–Ace.</Rule>
-                  <Rule label="Applies">Regardless of which hand wins — board-state bet only.</Rule>
-
-                  {/* Board-state payout table */}
-                  <div className="mt-3 mb-1">
-                    <p className="text-yellow-400 font-bold text-xs mb-2 uppercase tracking-wide">Payouts by Turn Board State</p>
-                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
-                      {/* Header */}
-                      <span className="text-gray-400 font-semibold">Board After Turn</span>
-                      <span className="text-red-400 font-semibold text-center">LOW (2–7)</span>
-                      <span className="text-blue-300 font-semibold text-center">HIGH (8–A)</span>
-                      {/* 2L2H */}
-                      <span className="text-gray-300">2 Low + 2 High</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['2L2H'].LOW}:1</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['2L2H'].HIGH}:1</span>
-                      {/* 3L1H */}
-                      <span className="text-gray-300">3 Low + 1 High</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['3L1H'].LOW}:1</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['3L1H'].HIGH}:1</span>
-                      {/* 1L3H */}
-                      <span className="text-gray-300">1 Low + 3 High</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['1L3H'].LOW}:1</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['1L3H'].HIGH}:1</span>
-                      {/* 4L0H */}
-                      <span className="text-gray-300">4 Low + 0 High</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['4L0H'].LOW}:1</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['4L0H'].HIGH}:1</span>
-                      {/* 0L4H */}
-                      <span className="text-gray-300">0 Low + 4 High</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['0L4H'].LOW}:1</span>
-                      <span className="text-yellow-400 font-bold text-center">{RIVER_STATE_PAYOUTS['0L4H'].HIGH}:1</span>
-                    </div>
-                  </div>
-                </Section>
-
-                {/* Poker Hands Reference */}
-                <Section title="Poker Hand Rankings (Highest to Lowest)" defaultOpen={false}>
+                <Section title="River (Low / High) Payouts">
+                  <p className="text-gray-400 text-xs mb-3">Odds adjust dynamically based on the 4-card turn board composition.</p>
                   <div className="space-y-1.5">
-                    {[
-                      ['Royal Flush',     'A, K, Q, J, 10 — all same suit'],
-                      ['Four of a Kind',  'Four cards of the same rank — highest Rank Board bet'],
-                      ['Full House',      'Three of a kind + a pair'],
-                      ['Flush',           'Five cards of the same suit (not consecutive)'],
-                      ['Straight',        'Five consecutive cards (mixed suits)'],
-                      ['Three of a Kind', 'Three cards of the same rank'],
-                      ['Two Pair',        'Two different pairs'],
-                      ['One Pair',        'One pair — minimum qualifying rank'],
-                    ].map(([name, desc]) => (
-                      <div key={name} className="flex gap-3 items-start">
-                        <span className="text-yellow-400 font-bold text-xs w-36 flex-shrink-0">{name}</span>
-                        <span className="text-gray-400 text-xs">{desc}</span>
+                    {Object.entries(RIVER_STATE_PAYOUTS).map(([state, odds]) => (
+                      <div key={state} className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
+                        <span className="text-gray-300 text-xs font-medium">Board: {state}</span>
+                        <span className="text-yellow-400 font-bold text-xs">Low {odds.Low}:1 / High {odds.High}:1</span>
                       </div>
                     ))}
                   </div>
@@ -252,11 +268,11 @@ export default function GameRulesModal() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-3 border-t border-yellow-700/20 bg-slate-900/60 flex-shrink-0 flex justify-between items-center">
+              <div className="flex items-center justify-between px-6 py-3 border-t border-yellow-700/20 bg-slate-900/80 flex-shrink-0">
                 <span className="text-gray-500 text-xs">Rapid Fire Texas Hold'em — RTP 96.5%</span>
                 <button
-                  onClick={() => setOpen(false)}
-                  className="px-5 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-black font-black text-sm transition-all"
+                  onClick={() => { setOpen(false); setShowColorPicker(false); }}
+                  className="px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-sm transition-colors"
                 >
                   Got It!
                 </button>
