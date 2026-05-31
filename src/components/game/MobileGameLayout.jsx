@@ -297,13 +297,19 @@ export default function MobileGameLayout({
           })}
         </div>
 
-        {/* Clock — sits between hand grid and rank/color boards */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, height: 54, pointerEvents: 'none' }}>
-          <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
-        </div>
-
-        {/* Rank + Color/River */}
-        <div className="flex-1 min-h-0 flex gap-1.5">
+        {/* Rank + Color/River — clock floats at the top boundary overlapping both */}
+        <div className="flex-1 min-h-0 flex gap-1.5" style={{ position: 'relative' }}>
+          {/* Clock overlaps bottom of hand grid and top of rank/color boards */}
+          <div style={{
+            position: 'absolute',
+            top: -26,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 30,
+            pointerEvents: 'none',
+          }}>
+            <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
+          </div>
 
           {/* Rank board */}
           <div className="flex-1 min-h-0 flex flex-col border rounded-xl slot-border-dormant overflow-hidden" style={{ background: 'rgba(0,0,0,0.45)', padding: '6px' }}>
