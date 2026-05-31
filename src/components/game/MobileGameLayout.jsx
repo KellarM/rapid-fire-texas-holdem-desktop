@@ -1,5 +1,6 @@
 import React from 'react';
 import { getCardImageUrl } from '@/lib/cardImages';
+import HistoryRail from './HistoryRail';
 import { evaluateBestHand, FIXED_HANDS } from '@/lib/gameEngine';
 import CommunityCards from './CommunityCards';
 import RankBets from './RankBets';
@@ -221,6 +222,7 @@ export default function MobileGameLayout({
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
   const [gearMenuOpen, setGearMenuOpen] = React.useState(false);
+  const [showHistory, setShowHistory] = React.useState(false);
   const [muted, setMuted] = React.useState(false);
   const [volume, setVolume] = React.useState(0.4);
   React.useEffect(() => {
@@ -532,6 +534,65 @@ export default function MobileGameLayout({
                 <GameRulesModal asMenuItem />
               </div>
 
+              <div style={{ borderTop: '1px solid rgba(234,179,8,0.12)', margin: '2px 0' }} />
+
+              {/* HISTORY RAIL */}
+              <div style={{ padding: '6px 12px' }}>
+                <button
+                  onClick={() => { setShowHistory(true); setGearMenuOpen(false); }}
+                  style={{
+                    width: '100%', padding: '7px 0', borderRadius: 8,
+                    border: '1px solid rgba(234,179,8,0.4)',
+                    background: 'rgba(234,179,8,0.08)',
+                    color: '#fde047', fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: '0.04em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  📜 Hand History
+                </button>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── History Rail Overlay ── */}
+          {showHistory && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 200,
+              background: 'rgba(0,0,0,0.92)',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              {/* Header bar */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderBottom: '1px solid rgba(234,179,8,0.3)',
+                background: 'rgba(20,8,0,0.95)',
+                flexShrink: 0,
+              }}>
+                <span style={{ color: '#fde047', fontWeight: 800, fontSize: 14, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  📜 Hand History
+                </span>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    border: '1px solid rgba(234,179,8,0.5)',
+                    background: 'rgba(234,179,8,0.15)',
+                    color: '#fde047', fontSize: 18, fontWeight: 900,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    lineHeight: 1,
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Rail content */}
+              <div style={{ flex: 1, minHeight: 0, padding: '12px 12px', overflowY: 'auto' }}>
+                <HistoryRail history={history} />
+              </div>
             </div>
           )}
           <ToolsMenu
