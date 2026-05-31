@@ -1660,6 +1660,7 @@ export default function RapidFireGame() {
           resetBankVisible={resetBankVisible}
           onResetBank={handleResetBank}
           activeColorSide={activeColorSide}
+          preloadSounds={preloadSounds}
         />
       </>
     );

@@ -214,6 +214,7 @@ export default function MobileGameLayout({
   resetBankVisible,
   onResetBank,
   activeColorSide,
+  preloadSounds,
 }) {
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
@@ -230,6 +231,8 @@ export default function MobileGameLayout({
     <div
       className={`velvet-board w-full flex flex-col text-white overflow-hidden theme-${boardTheme || 'red'}`}
       style={{ height: '100dvh' }}
+      onClick={preloadSounds}
+      onTouchStart={preloadSounds}
     >
       {/* ── Alerts ── */}
       <HandBetLimitAlert isOpen={showHandLimitAlert} onClose={onCloseHandAlert} />
