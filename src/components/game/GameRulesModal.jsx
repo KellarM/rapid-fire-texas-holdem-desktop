@@ -172,11 +172,22 @@ export default function GameRulesModal() {
 
                 <Section title="Color Board Payouts">
                   <p className="text-gray-400 text-xs mb-3">Exact count of Red or Black cards in the 5 community cards.</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {COLOR_BETS.map(c => (
-                      <div key={c.key} className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
-                        <span className="text-gray-300 text-xs font-medium">{c.key}</span>
-                        <span className="text-yellow-400 font-bold text-xs">{c.payout}</span>
+                  {/* 3-row x 2-col layout: Red left, Black right, matched by tier */}
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { red: { key: '3 Red',   payout: `${COLOR_BOARD_PAYOUTS['3R']}:1` }, black: { key: '3 Black', payout: `${COLOR_BOARD_PAYOUTS['3B']}:1` } },
+                      { red: { key: '4 Red',   payout: `${COLOR_BOARD_PAYOUTS['4R']}:1` }, black: { key: '4 Black', payout: `${COLOR_BOARD_PAYOUTS['4B']}:1` } },
+                      { red: { key: '5 Red',   payout: `${COLOR_BOARD_PAYOUTS['5R']}:1` }, black: { key: '5 Black', payout: `${COLOR_BOARD_PAYOUTS['5B']}:1` } },
+                    ].map(row => (
+                      <div key={row.red.key} className="grid grid-cols-2 gap-2">
+                        <div className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
+                          <span className="text-red-400 text-xs font-medium">{row.red.key}</span>
+                          <span className="text-yellow-400 font-bold text-xs">{row.red.payout}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-slate-800/60 rounded-lg px-3 py-1.5">
+                          <span className="text-gray-300 text-xs font-medium">{row.black.key}</span>
+                          <span className="text-yellow-400 font-bold text-xs">{row.black.payout}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
