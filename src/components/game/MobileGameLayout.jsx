@@ -10,6 +10,7 @@ import Chip from './Chip';
 import CountdownClock from './CountdownClock';
 import DetailedPayoutDisplay from './DetailedPayoutDisplay';
 import GameRulesModal from './GameRulesModal';
+import HowToPlayOverlay from './HowToPlayOverlay';
 import ToolsMenu from './ToolsMenu';
 import HandBetLimitAlert from './HandBetLimitAlert';
 import RankBetLimitAlert from './RankBetLimitAlert';
@@ -218,11 +219,13 @@ export default function MobileGameLayout({
   activeColorSide,
   preloadSounds,
   onSetTheme,
+  onOpenHelp,
 }) {
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
   const [gearMenuOpen, setGearMenuOpen] = React.useState(false);
   const [showHistory, setShowHistory] = React.useState(false);
+  const [showHowToPlay, setShowHowToPlay] = React.useState(false);
   const [muted, setMuted] = React.useState(false);
   const [volume, setVolume] = React.useState(0.4);
   React.useEffect(() => {
@@ -552,8 +555,37 @@ export default function MobileGameLayout({
                 </button>
               </div>
 
+              <div style={{ borderTop: '1px solid rgba(234,179,8,0.12)', margin: '2px 0' }} />
+
+              {/* HOW TO PLAY */}
+              <div style={{ padding: '6px 12px' }}>
+                <button
+                  onClick={() => {
+                    if (onOpenHelp) onOpenHelp();
+                    else setShowHowToPlay(true);
+                    setGearMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%', padding: '7px 0', borderRadius: 8,
+                    border: '1px solid rgba(234,179,8,0.4)',
+                    background: 'rgba(234,179,8,0.08)',
+                    color: '#fde047', fontSize: 11, fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: '0.04em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  ❓ How to Play
+                </button>
+              </div>
+
             </div>
           )}
+
+          {/* ── How To Play Overlay ── */}
+          <HowToPlayOverlay
+            forceOpen={showHowToPlay}
+            onClose={() => setShowHowToPlay(false)}
+          />
 
           {/* ── History Rail Overlay ── */}
           {showHistory && (
@@ -611,3 +643,4 @@ export default function MobileGameLayout({
     </div>
   );
 }
+
