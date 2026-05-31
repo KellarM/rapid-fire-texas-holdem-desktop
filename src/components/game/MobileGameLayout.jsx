@@ -275,7 +275,15 @@ export default function MobileGameLayout({
           className="flex-shrink-0 relative grid gap-1"
           style={{ gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', height: '36%' }}
         >
-          <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
+          {/* Clock sits at the seam between row 1 and row 2 — centred horizontally */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 20,
+            pointerEvents: 'none',
+          }}>
             <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
           </div>
 
