@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, BookOpen, ChevronDown, ChevronUp, Palette } from 'lucide-react';
+import { X, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 
@@ -35,11 +35,6 @@ const COLOR_BETS = [
   { key: '5 Black', payout: `${COLOR_BOARD_PAYOUTS['5B']}:1` },
 ];
 
-const THEMES = [
-  { id: 'red',   label: 'Red',   dot: '#b30000' },
-  { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
-  { id: 'green', label: 'Green', dot: '#0a4a1e' },
-];
 
 function Section({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -68,26 +63,6 @@ function Rule({ label, children }) {
 
 export default function GameRulesModal() {
   const [open, setOpen] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('rfth_theme') || 'red'; } catch { return 'red'; }
-  });
-
-  // Apply theme class to body whenever it changes
-  useEffect(() => {
-    document.body.classList.remove('theme-red', 'theme-blue', 'theme-green');
-    document.body.classList.add(`theme-${theme}`);
-    try { localStorage.setItem('rfth_theme', theme); } catch {}
-    // Dispatch event so RapidFireGame can update the logo
-    window.dispatchEvent(new CustomEvent('rfth:themechange', { detail: { theme } }));
-  }, [theme]);
-
-  // Apply saved theme on mount
-  useEffect(() => {
-    document.body.classList.remove('theme-red', 'theme-blue', 'theme-green');
-    document.body.classList.add(`theme-${theme}`);
-    window.dispatchEvent(new CustomEvent('rfth:themechange', { detail: { theme } }));
-  }, []);
 
   return (
     <>
@@ -107,7 +82,7 @@ export default function GameRulesModal() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => { setOpen(false); setShowColorPicker(false); }}
+              onClick={() => setOpen(false)}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
 
@@ -130,58 +105,12 @@ export default function GameRulesModal() {
                   <p className="text-gray-400 text-xs mt-0.5">Everything you need to know to play</p>
                 </div>
 
-                {/* Right side: Color Picker + Close */}
-                <div className="flex items-center gap-2">
-
-                  {/* Color Picker Button */}
-                  <div className="relative">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowColorPicker(v => !v); }}
-                      className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-yellow-400 transition-colors"
-                      title="Change board color"
-                    >
-                      <Palette className="w-5 h-5" />
-                    </button>
-
-                    {/* Dropdown */}
-                    <AnimatePresence>
-                      {showColorPicker && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          className="absolute right-0 top-10 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl p-2 flex flex-col gap-1 min-w-[110px] z-50"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <p className="text-gray-400 text-xs font-semibold px-2 pb-1 border-b border-slate-700">Board Color</p>
-                          {THEMES.map(t => (
-                            <button
-                              key={t.id}
-                              onClick={() => { setTheme(t.id); setShowColorPicker(false); }}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all
-                                ${theme === t.id ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' : 'text-gray-300 hover:bg-slate-700'}`}
-                            >
-                              <span
-                                className="w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
-                                style={{ background: t.dot }}
-                              />
-                              {t.label}
-                              {theme === t.id && <span className="ml-auto text-yellow-400 text-xs">✓</span>}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Close button */}
-                  <button
-                    onClick={() => { setOpen(false); setShowColorPicker(false); }}
-                    className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Scrollable content */}
@@ -271,7 +200,7 @@ export default function GameRulesModal() {
               <div className="flex items-center justify-between px-6 py-3 border-t border-yellow-700/20 bg-slate-900/80 flex-shrink-0">
                 <span className="text-gray-500 text-xs">Rapid Fire Texas Hold'em — RTP 96.5%</span>
                 <button
-                  onClick={() => { setOpen(false); setShowColorPicker(false); }}
+                  onClick={() => setOpen(false)}
                   className="px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-sm transition-colors"
                 >
                   Got It!

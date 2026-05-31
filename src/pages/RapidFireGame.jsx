@@ -184,6 +184,7 @@ export default function RapidFireGame() {
   const [boardTheme, setBoardTheme] = useState(() => {
     try { return localStorage.getItem('rfth_theme') || 'red'; } catch { return 'red'; }
   });
+  const [showBoardColorPicker, setShowBoardColorPicker] = useState(false);
 
   const {
     hoveredHandId, setHoveredHandId,
@@ -192,12 +193,19 @@ export default function RapidFireGame() {
   } = useGreedEngineState();
   const [hoveredRankRow, setHoveredRankRow] = useState(null);
 
-  // Listen for theme changes dispatched by GameRulesModal
+  // Listen for theme changes dispatched by GameRulesModal (kept for compatibility)
   useEffect(() => {
     const handler = (e) => setBoardTheme(e.detail.theme);
     window.addEventListener('rfth:themechange', handler);
     return () => window.removeEventListener('rfth:themechange', handler);
   }, []);
+
+  // Apply theme class to body whenever it changes
+  useEffect(() => {
+    document.body.classList.remove('theme-red', 'theme-blue', 'theme-green');
+    document.body.classList.add('theme-' + boardTheme);
+    try { localStorage.setItem('rfth_theme', boardTheme); } catch {}
+  }, [boardTheme]);
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
@@ -1665,8 +1673,82 @@ export default function RapidFireGame() {
               border: '3px solid',
               background: 'rgba(0,0,0,0.35)',
               boxSizing: 'border-box',
-              overflow: 'visible'
+              overflow: 'visible',
+              position: 'relative',
             }}>
+
+            {/* ── Board Color Picker ── top-right corner of dealer box */}
+            <div style={{ position: 'absolute', top: '6px', right: '8px', zIndex: 50 }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowBoardColorPicker(v => !v); }}
+                title="Change board color"
+                style={{
+                  background: 'rgba(0,0,0,0.55)',
+                  border: '1px solid rgba(202,138,4,0.5)',
+                  borderRadius: '6px',
+                  padding: '4px 6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#facc15',
+                  fontSize: '14px',
+                  lineHeight: 1,
+                }}
+              >
+                🎨
+              </button>
+              {showBoardColorPicker && (
+                <div
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '32px',
+                    right: 0,
+                    background: '#1e293b',
+                    border: '1px solid #475569',
+                    borderRadius: '10px',
+                    padding: '6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    minWidth: '100px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: 600, padding: '0 6px 4px', borderBottom: '1px solid #334155', margin: 0 }}>Board Color</p>
+                  {[
+                    { id: 'red',   label: 'Red',   dot: '#b30000' },
+                    { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
+                    { id: 'green', label: 'Green', dot: '#0a4a1e' },
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => { setBoardTheme(t.id); setShowBoardColorPicker(false); }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 10px',
+                        borderRadius: '7px',
+                        border: boardTheme === t.id ? '1px solid rgba(234,179,8,0.5)' : '1px solid transparent',
+                        background: boardTheme === t.id ? 'rgba(234,179,8,0.15)' : 'transparent',
+                        color: boardTheme === t.id ? '#fde047' : '#cbd5e1',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        width: '100%',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.dot, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                      {t.label}
+                      {boardTheme === t.id && <span style={{ marginLeft: 'auto', color: '#facc15', fontSize: '11px' }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             
             {/* Logo — left side */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
