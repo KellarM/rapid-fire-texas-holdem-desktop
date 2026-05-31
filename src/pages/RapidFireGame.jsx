@@ -304,6 +304,22 @@ export default function RapidFireGame() {
   // Phase 4 gate: Color Board and River require total rank === total hand bets
   const sideBetGateOpen = !killSwitchActive && isSideBetGateOpen(pHandBets, pRankBets);
 
+  // Unlock flash state
+  const [showUnlockFlash, setShowUnlockFlash] = useState(false);
+  const prevGateRef = useRef(false);
+  useEffect(() => {
+    if (sideBetGateOpen && !prevGateRef.current) {
+      setShowUnlockFlash(true);
+      const t = setTimeout(() => setShowUnlockFlash(false), 3000);
+      prevGateRef.current = true;
+      return () => clearTimeout(t);
+    }
+    if (!sideBetGateOpen) {
+      prevGateRef.current = false;
+      setShowUnlockFlash(false);
+    }
+  }, [sideBetGateOpen]);
+
   // Greed Engine: live total investment for active player
   const totalInvestment =
   Object.values(pHandBets).reduce((s, v) => s + v, 0) +
@@ -1663,7 +1679,9 @@ export default function RapidFireGame() {
 
   // ── Desktop layout ────────────────────────────────────────────────────────
   return (
-  <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
+  <>
+      <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}`}</style>
+      <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
       {/* Countdown Clock */}
       <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
@@ -1789,10 +1807,30 @@ export default function RapidFireGame() {
               borderRadius: '0.5rem',
               border: '1px solid rgba(202,138,4,0.4)',
               background: 'linear-gradient(90deg, rgba(78,47,0,0.5) 0%, rgba(83,37,0,0.5) 100%)',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              position: 'relative',
             }}>
-            
             <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
+            {showUnlockFlash && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                borderRadius: '0.5rem',
+                background: 'linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(25,12,0,0.97) 100%)',
+                border: '1.5px solid #eab308',
+                animation: 'rfUnlockFadeOut 3s ease forwards',
+                pointerEvents: 'none',
+              }}>
+                <span style={{ fontSize: 10, fontWeight: 900, color: '#eab308', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>🔓 Bonus Bets Unlocked</span>
+                <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700, whiteSpace: 'nowrap' }}>🔴 Color Board</span>
+                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, whiteSpace: 'nowrap' }}>🌊 River Bet</span>
+              </div>
+            )}
           </div>
 
           {/* Community Cards — expanded canvas for labels, assets stay fixed size */}
@@ -2115,6 +2153,7 @@ export default function RapidFireGame() {
           </div>
         </div>
       </div>
-    </div>);
+    </div>
+  </>);
 
 }
