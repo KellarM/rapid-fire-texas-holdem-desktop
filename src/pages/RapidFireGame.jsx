@@ -1202,8 +1202,26 @@ export default function RapidFireGame() {
       playerWinnings.push(w);
 
       // Build payout display data (net = payout - bet)
+      // Build placed-bets snapshot for non-winning quadrant display
+      const placedBets = {
+        card: Object.entries(ph)
+          .filter(([, amt]) => amt > 0)
+          .map(([hid, amt]) => {
+            const hand = FIXED_HANDS.find(h => h.id === parseInt(hid));
+            return { label: hand ? `Hand ${hand.id}` : `Hand ${hid}`, bet: amt };
+          }),
+        color: Object.entries(prb)
+          .filter(([, amt]) => amt > 0)
+          .map(([key, amt]) => ({ label: key, bet: amt })),
+        rank: Object.entries(prk)
+          .filter(([, amt]) => amt > 0)
+          .map(([key, amt]) => ({ label: key, bet: amt })),
+        river: plh && plh.amount > 0 ? [{ label: plh.type, bet: plh.amount }] : [],
+      };
+
       playerPayouts.push({
         wins,
+        placedBets,
         totalBet: playerTotalBet,
         netWin: w - playerTotalBet
       });

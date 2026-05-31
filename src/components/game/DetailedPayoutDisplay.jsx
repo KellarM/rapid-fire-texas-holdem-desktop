@@ -42,14 +42,15 @@ function getCardLabel(label) {
 // ─── Quadrant ────────────────────────────────────────────────────────────────
 // A fixed-height cell that shows wins for one board type, or a "no bet" state.
 
-function Quadrant({ title, wins, accentColor }) {
-  const hasBet  = wins.length > 0;
+function Quadrant({ title, wins, placedBets = [], accentColor }) {
+  const hasWin  = wins.length > 0;
+  const hasBet  = hasWin || placedBets.length > 0;
 
   return (
     <div
       style={{
         background: 'rgba(0,0,0,0.35)',
-        border: `1.5px solid ${hasBet ? accentColor : 'rgba(255,255,255,0.1)'}`,
+        border: `1.5px solid ${hasWin ? accentColor : hasBet ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
         borderRadius: '10px',
         padding: '6px 8px',
         display: 'flex',
@@ -67,7 +68,7 @@ function Quadrant({ title, wins, accentColor }) {
           fontWeight: 700,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          color: hasBet ? accentColor : 'rgba(255,255,255,0.25)',
+          color: hasWin ? accentColor : hasBet ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',
           marginBottom: '4px',
           flexShrink: 0,
           whiteSpace: 'nowrap',
@@ -80,7 +81,32 @@ function Quadrant({ title, wins, accentColor }) {
 
       {!hasBet ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>No bet</span>
+          <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', fontStyle: 'italic' }}>No bet</span>
+        </div>
+      ) : !hasWin ? (
+        /* Lost bets — show what was wagered, no payout */
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden', justifyContent: 'center' }}>
+          {placedBets.map((b, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: '6px',
+                padding: '4px 7px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <span style={{ fontSize: '0.63rem', fontWeight: 700, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60%' }}>
+                {b.label && b.label.startsWith('Hand ') ? getCardLabel(b.label) : b.label}
+              </span>
+              <span style={{ fontSize: '0.63rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                ${b.bet.toFixed(2)}
+              </span>
+            </div>
+          ))}
         </div>
       ) : (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
@@ -360,10 +386,10 @@ export default function DetailedPayoutDisplay({ winInfo, playerCount = 1 }) {
                     padding: '6px',
                   }}
                 >
-                  <Quadrant title="Card Board Win"  wins={cardWins}  accentColor={accent} />
-                  <Quadrant title="Color Board Win"  wins={colorWins} accentColor={accent} />
-                  <Quadrant title="Rank Board Win"   wins={rankWins}  accentColor={accent} />
-                  <Quadrant title="River Board Win"  wins={riverWins} accentColor={accent} />
+                  <Quadrant title="Card Board Win"  wins={cardWins}  placedBets={payout.placedBets?.card  || []} accentColor={accent} />
+                  <Quadrant title="Color Board Win"  wins={colorWins} placedBets={payout.placedBets?.color || []} accentColor={accent} />
+                  <Quadrant title="Rank Board Win"   wins={rankWins}  placedBets={payout.placedBets?.rank  || []} accentColor={accent} />
+                  <Quadrant title="River Board Win"  wins={riverWins} placedBets={payout.placedBets?.river || []} accentColor={accent} />
                 </div>
 
                 {/* ── Row 3: Totals bar ── */}
