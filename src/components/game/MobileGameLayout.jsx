@@ -275,18 +275,6 @@ export default function MobileGameLayout({
           className="flex-shrink-0 relative grid gap-1"
           style={{ gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', height: '36%' }}
         >
-          {/* Clock sits at the seam between row 1 and row 2 — centred horizontally */}
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 20,
-            pointerEvents: 'none',
-          }}>
-            <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
-          </div>
-
           {displayOrder.map(hid => {
             const hand = FIXED_HANDS.find(h => h.id === hid);
             if (!hand) return null;
@@ -307,6 +295,11 @@ export default function MobileGameLayout({
               />
             );
           })}
+        </div>
+
+        {/* Clock — sits between hand grid and rank/color boards */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, height: 54, pointerEvents: 'none' }}>
+          <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
         </div>
 
         {/* Rank + Color/River */}
