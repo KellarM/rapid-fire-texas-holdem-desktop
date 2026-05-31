@@ -324,9 +324,6 @@ export default function MobileGameLayout({
 
           {/* Rank board */}
           <div className="flex-1 min-h-0 flex flex-col border rounded-xl slot-border-dormant overflow-hidden" style={{ background: 'rgba(0,0,0,0.45)', padding: '6px' }}>
-            <div className="text-center text-yellow-300 font-black flex-shrink-0" style={{ fontSize: '0.6rem', letterSpacing: '0.08em', textShadow: '0 0 4px rgba(0,0,0,0.9)', marginBottom: 3 }}>
-              HAND RANK BOARD
-            </div>
             <div className="flex-1 min-h-0 overflow-hidden">
               <RankBets
                 rankBets={pRankBets}

@@ -275,7 +275,7 @@ export default function RankBets({
     <div className="relative flex flex-col h-full" style={{ overflow: 'visible' }}>
       {/* Header */}
       <div
-        className="text-xs font-bold tracking-wider uppercase mb-1 text-center flex-shrink-0 transition-all duration-500"
+        className="text-xs font-bold tracking-wider uppercase mb-0.5 text-center flex-shrink-0 transition-all duration-500"
         style={{
           background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
           WebkitBackgroundClip: 'text',
