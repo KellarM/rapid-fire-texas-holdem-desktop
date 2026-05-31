@@ -445,7 +445,6 @@ export default function MobileGameLayout({
               borderRadius: 12, padding: '8px 0',
               boxShadow: '0 -4px 24px rgba(0,0,0,0.7)',
               zIndex: 100,
-              overflowY: 'auto', maxHeight: 260,
             }}>
               {/* Header */}
               <div style={{ padding: '2px 12px 8px', borderBottom: '1px solid rgba(234,179,8,0.2)', marginBottom: 4 }}>
