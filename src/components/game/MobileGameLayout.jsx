@@ -1,3 +1,4 @@
+import React from 'react';
 import { getCardImageUrl } from '@/lib/cardImages';
 import { evaluateBestHand, FIXED_HANDS } from '@/lib/gameEngine';
 import CommunityCards from './CommunityCards';
@@ -215,9 +216,16 @@ export default function MobileGameLayout({
   onResetBank,
   activeColorSide,
   preloadSounds,
+  onSetTheme,
 }) {
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
+  const [gearMenuOpen, setGearMenuOpen] = React.useState(false);
+  const [muted, setMuted] = React.useState(false);
+  const [volume, setVolume] = React.useState(0.4);
+  React.useEffect(() => {
+    if (soundManager) soundManager.setAmbientVolume(muted ? 0 : volume);
+  }, [muted, volume, soundManager]);
   const pHandBets = handBets[pid] || {};
   const pRedBlackBets = redBlackBets[pid] || {};
   const pRankBets = rankBets[pid] || {};
@@ -407,20 +415,128 @@ export default function MobileGameLayout({
           </span>
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Gear menu button + dropdown */}
+        <div className="flex items-center gap-1 flex-shrink-0" style={{ position: 'relative' }}>
           {gamePhase === 'betting' && totalBet > 0 && (
             <button onClick={onClearBets} className="px-2 py-1 rounded-lg border border-red-700/50 bg-red-900/30 text-red-300 font-semibold" style={{ fontSize: '0.65rem' }}>
               Clear
             </button>
           )}
-          {resetBankVisible && (
-            <button onClick={onResetBank} className="px-2 py-1 rounded-lg border border-yellow-700/50 bg-yellow-900/20 text-yellow-300 font-semibold" style={{ fontSize: '0.65rem' }}>
-              Reset
-            </button>
+
+          {/* ⚙️ Gear button */}
+          <button
+            onClick={() => setGearMenuOpen(o => !o)}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(234,179,8,0.5)',
+              background: gearMenuOpen ? 'rgba(234,179,8,0.2)' : 'rgba(0,0,0,0.5)',
+              color: '#fde047', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, fontSize: 16,
+            }}
+          >
+            ⚙️
+          </button>
+
+          {/* Gear dropdown — scrollable, pops up above */}
+          {gearMenuOpen && (
+            <div style={{
+              position: 'absolute', bottom: '110%', right: 0,
+              width: 180,
+              background: 'linear-gradient(160deg, rgba(30,10,0,0.97) 0%, rgba(50,20,0,0.97) 100%)',
+              border: '1px solid rgba(234,179,8,0.4)',
+              borderRadius: 12, padding: '8px 0',
+              boxShadow: '0 -4px 24px rgba(0,0,0,0.7)',
+              zIndex: 100,
+              overflowY: 'auto', maxHeight: 260,
+            }}>
+              {/* Header */}
+              <div style={{ padding: '2px 12px 8px', borderBottom: '1px solid rgba(234,179,8,0.2)', marginBottom: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#fde047', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Settings</span>
+              </div>
+
+              {/* COLOR THEME */}
+              <div style={{ padding: '6px 12px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(253,224,71,0.6)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 5 }}>Board Color</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[
+                    { id: 'red',   label: 'Red',   dot: '#dc2626' },
+                    { id: 'blue',  label: 'Blue',  dot: '#2563eb' },
+                    { id: 'green', label: 'Green', dot: '#16a34a' },
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => { if (onSetTheme) onSetTheme(t.id); }}
+                      style={{
+                        flex: 1, padding: '4px 2px', borderRadius: 6,
+                        border: boardTheme === t.id ? '1.5px solid #fde047' : '1px solid rgba(234,179,8,0.25)',
+                        background: boardTheme === t.id ? 'rgba(234,179,8,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: boardTheme === t.id ? '#fde047' : '#94a3b8',
+                        fontSize: 9, fontWeight: 700, cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                      }}
+                    >
+                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: t.dot, display: 'block', border: boardTheme === t.id ? '1.5px solid #fde047' : '1px solid rgba(255,255,255,0.2)' }} />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(234,179,8,0.12)', margin: '2px 0' }} />
+
+              {/* SOUND */}
+              <div style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#cbd5e1' }}>Sound</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    onClick={() => setMuted(m => !m)}
+                    style={{
+                      width: 28, height: 28, borderRadius: 6,
+                      border: '1px solid rgba(234,179,8,0.35)',
+                      background: muted ? 'rgba(220,38,38,0.2)' : 'rgba(234,179,8,0.1)',
+                      color: muted ? '#f87171' : '#fde047',
+                      fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    {muted ? '🔇' : '🔊'}
+                  </button>
+                  <input
+                    type="range" min="0" max="1" step="0.05"
+                    value={volume}
+                    onChange={e => { setVolume(parseFloat(e.target.value)); setMuted(false); }}
+                    style={{ width: 60, accentColor: '#eab308' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(234,179,8,0.12)', margin: '2px 0' }} />
+
+              {/* RESET BANK */}
+              {resetBankVisible && (
+                <div style={{ padding: '6px 12px' }}>
+                  <button
+                    onClick={() => { onResetBank(); setGearMenuOpen(false); }}
+                    style={{
+                      width: '100%', padding: '7px 0', borderRadius: 8,
+                      border: '1px solid rgba(234,179,8,0.4)',
+                      background: 'rgba(234,179,8,0.08)',
+                      color: '#fde047', fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', letterSpacing: '0.04em',
+                    }}
+                  >
+                    💰 Reset Bank
+                  </button>
+                </div>
+              )}
+
+              <div style={{ borderTop: '1px solid rgba(234,179,8,0.12)', margin: '2px 0' }} />
+
+              {/* GAME RULES */}
+              <div style={{ padding: '6px 12px' }}>
+                <GameRulesModal asMenuItem />
+              </div>
+
+            </div>
           )}
-          {soundManager && <VolumeControl soundManager={soundManager} />}
-          <GameRulesModal />
           <ToolsMenu
             onOpenStats={onOpenStats}
             onOpenMollySimulator={onOpenMollySimulator}

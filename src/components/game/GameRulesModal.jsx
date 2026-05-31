@@ -61,11 +61,26 @@ function Rule({ label, children }) {
   );
 }
 
-export default function GameRulesModal() {
+export default function GameRulesModal({ asMenuItem = false }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
+      {asMenuItem ? (
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            width: '100%', padding: '7px 0', borderRadius: 8,
+            border: '1px solid rgba(59,130,246,0.4)',
+            background: 'rgba(59,130,246,0.08)',
+            color: '#93c5fd', fontSize: 11, fontWeight: 700,
+            cursor: 'pointer', letterSpacing: '0.04em',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+          }}
+        >
+          📖 Game Rules
+        </button>
+      ) : (
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-700/50 bg-blue-900/20 text-blue-300 text-xs font-bold hover:border-blue-500 hover:bg-blue-900/40 transition-all"
@@ -73,6 +88,7 @@ export default function GameRulesModal() {
         <BookOpen className="w-3.5 h-3.5" />
         Game Rules
       </button>
+      )}
 
       <AnimatePresence>
         {open && (

@@ -1661,6 +1661,7 @@ export default function RapidFireGame() {
           onResetBank={handleResetBank}
           activeColorSide={activeColorSide}
           preloadSounds={preloadSounds}
+          onSetTheme={setBoardTheme}
         />
       </>
     );
