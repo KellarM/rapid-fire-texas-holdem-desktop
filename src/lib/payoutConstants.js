@@ -31,7 +31,7 @@
 // ── CARDED HANDS ──────────────────────────────────────────────
 // Win condition: this hand must be the table winner (highest 7-card rank)
 export const CARDED_HAND_PAYOUTS = [
-  20.3,   // Hand 1:  A♦/10♥
+  1,     // Hand 1:  A♦/10♥
   4.35,    // Hand 2:  K♣/K♠
   15.8,  // Hand 3:  Q♣/J♠
   9.0,   // Hand 4:  Q♠/10♠
