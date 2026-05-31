@@ -275,7 +275,7 @@ export default function MobileGameLayout({
           className="flex-shrink-0 relative grid gap-1"
           style={{ gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', height: '36%' }}
         >
-          <div className="absolute z-10" style={{ bottom: -18, left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none' }}>
+          <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
             <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
           </div>
 
