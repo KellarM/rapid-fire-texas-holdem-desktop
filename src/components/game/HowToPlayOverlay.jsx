@@ -7,29 +7,36 @@ const STEPS = [
     step: 1,
     title: 'Select Your Hand',
     icon: '🃏',
-    description: 'Choose 1 of the 10 fixed player hands on the board. Place your Hand Bet — this is required to play.',
+    description: 'Pick 1 of the 10 fixed hands on the board. Place your Hand Bet — this is required to play.',
     highlight: 'One hand per round. Your Hand Bet is the foundation of every round.',
   },
   {
     step: 2,
     title: 'Unlock Your Bonus Bets',
     icon: '🔓',
-    description: 'Place a Rank Bet equal to your Hand Bet to unlock two bonus markets simultaneously: the Color Board Bet (Red/Black distribution) and the River Bet (High/Low on the final card).',
+    description: 'Place a Rank Bet equal to your Hand Bet to unlock two bonus markets simultaneously: the Color Board Bet and the River Bet.',
     highlight: 'Rank Bet = unlocks Color Board AND River Bet at the same time.',
   },
   {
     step: 3,
-    title: 'Community Cards Are Dealt',
-    icon: '🎴',
-    description: '5 community cards are dealt in sequence — Flop (3 cards), Turn (1 card), River (1 card). Your selected hand competes against the board to form the best poker hand.',
-    highlight: 'If the Board beats all player hands, the house collects all hand bets.',
+    title: 'Place Your Color Board Bet',
+    icon: '🔴',
+    description: 'Before the Flop is dealt, bet on whether the 5 community cards will show more Red or more Black. Choose 3, 4, or 5 cards of one color. This bet resolves purely on the color distribution of the board — independent of your hand ranking.',
+    highlight: '3 Red only wins if exactly 3 Red cards appear on the community board. Same rule applies for Black.',
   },
   {
     step: 4,
-    title: 'Get Paid — New Round Starts',
+    title: 'The River Bet Opens',
+    icon: '🌊',
+    description: 'After the Turn card is revealed, the River Bet window opens. Based on the 4 community cards showing, decide whether the 5th and final card will be High (8 or above) or Low (7 or below).',
+    highlight: 'This is your only bet placed after cards are dealt. One decision. One card.',
+  },
+  {
+    step: 5,
+    title: 'All Bets Resolve',
     icon: '💰',
-    description: 'All bets resolve simultaneously at the end of the round. Winnings are added to your bank instantly. A new round begins automatically.',
-    highlight: 'Up to 80 rounds per hour. Fast, automatic, continuous action.',
+    description: 'The River card is dealt. All markets settle simultaneously — your Hand and Rank result, your Color Board result, and your River result. A new round begins automatically.',
+    highlight: 'If the Board beats all player hands, hand bets are collected. Color Board and River bets resolve independently.',
   },
 ];
 
@@ -45,9 +52,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
     }
     try {
       const seen = localStorage.getItem(STORAGE_KEY);
-      if (!seen) {
-        setVisible(true);
-      }
+      if (!seen) setVisible(true);
     } catch {
       setVisible(true);
     }
