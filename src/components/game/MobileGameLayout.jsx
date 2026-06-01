@@ -245,6 +245,250 @@ export default function MobileGameLayout({
     ? handDisplayOrder
     : FIXED_HANDS.map(h => h.id);
 
+
+  // ── Landscape mode — phone tipped sideways → 3-column layout ─────────────
+  const [isLandscape, setIsLandscape] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth > window.innerHeight && window.innerWidth < 1024;
+  });
+  React.useEffect(() => {
+    const handler = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight && window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handler);
+    window.addEventListener('orientationchange', handler);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('orientationchange', handler);
+    };
+  }, []);
+
+  if (isLandscape) {
+    return (
+      <div
+        className={`velvet-board text-white overflow-hidden theme-${boardTheme || 'red'}`}
+        style={{ width: '100dvw', height: '100dvh', display: 'flex', flexDirection: 'column' }}
+        onClick={preloadSounds}
+        onTouchStart={preloadSounds}
+      >
+        {/* Alerts */}
+        <HandBetLimitAlert isOpen={showHandLimitAlert} onClose={onCloseHandAlert} />
+        <RankBetLimitAlert isOpen={showRankLimitAlert} onClose={onCloseRankAlert} currentHandBets={handBetCount} alertType={rankAlertType} maxRankSlots={maxRankSlots} />
+        <RankBetLimitAlert isOpen={showCapAlert} onClose={onCloseCapAlert} alertType={capAlertType} currentHandBets={handBetCount} />
+        <InsufficientFundsAlert isVisible={showInsufficientFunds} onClose={onCloseInsufficientFunds} />
+        <AutoTrimToast isVisible={showAutoTrimToast} onHide={onHideAutoTrimToast} />
+        <ColorSideAlert isOpen={!!showColorSideAlert} onClose={onCloseColorSideAlert} />
+
+        {/* Unlock flash */}
+        {showUnlockFlash && (
+          <div style={{
+            position: 'fixed', top: '15%', left: '50%', transform: 'translateX(-50%)',
+            zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            borderRadius: '0.5rem',
+            background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
+            border: '2px solid #eab308', boxShadow: '0 0 20px rgba(234,179,8,0.5)',
+            animation: 'rfUnlockFadeOut 4s ease forwards', pointerEvents: 'none',
+            padding: '8px 18px', gap: 3,
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: '#eab308', letterSpacing: '0.1em', textTransform: 'uppercase' }}>🔓 Bonus Bets Unlocked</span>
+            <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700 }}>🔴 Color Board Open</span>
+            <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700 }}>🌊 River Bet — After Turn</span>
+          </div>
+        )}
+
+        {/* ── Dealer bar — top strip ── */}
+        <div style={{ flexShrink: 0, height: 22, display: 'flex', alignItems: 'center',
+          padding: '0 8px', background: 'linear-gradient(90deg, rgba(78,47,0,0.6) 0%, rgba(83,37,0,0.6) 100%)',
+          borderBottom: '1px solid rgba(202,138,4,0.3)', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
+        </div>
+
+        {/* ── 3-column body ── */}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 4, padding: '4px 4px 0 4px' }}>
+
+          {/* LEFT — history (narrow) */}
+          <div style={{ width: '13%', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            background: 'rgba(0,0,0,0.4)', borderRadius: 8, border: '1px solid rgba(202,138,4,0.2)' }}>
+            <div style={{ fontSize: 8, fontWeight: 800, color: 'rgba(253,224,71,0.7)', textAlign: 'center',
+              letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 0', flexShrink: 0,
+              borderBottom: '1px solid rgba(202,138,4,0.15)' }}>History</div>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <HistoryRail history={history} compact />
+            </div>
+          </div>
+
+          {/* CENTER — community cards + hands grid */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+            {/* Community cards row */}
+            <div className="slot-border-dormant" style={{
+              flexShrink: 0, height: '28%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              borderRadius: 8, border: '2px solid', background: 'rgba(0,0,0,0.35)',
+              padding: '3px 8px', position: 'relative',
+            }}>
+              <img src={LOGO_URLS[boardTheme] || LOGO_URLS.red} alt="logo"
+                style={{ width: 24, height: 'auto', borderRadius: 4, flexShrink: 0 }} />
+              <CommunityCards cards={communityCards} phase={gamePhase} />
+              <img src={LOGO_URLS[boardTheme] || LOGO_URLS.red} alt="logo"
+                style={{ width: 24, height: 'auto', borderRadius: 4, flexShrink: 0 }} />
+            </div>
+
+            {/* Win display */}
+            <div style={{ flexShrink: 0 }}>
+              <DetailedPayoutDisplay winInfo={lastWinInfo} playerCount={playerCount} />
+            </div>
+
+            {/* 10-hand grid — 5x2 */}
+            <div style={{ flex: 1, minHeight: 0, display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 3 }}>
+              {displayOrder.map(hid => {
+                const hand = FIXED_HANDS.find(h => h.id === hid);
+                if (!hand) return null;
+                return (
+                  <MobileHandCard
+                    key={hand.id}
+                    hand={hand}
+                    isLeading={leadingHandIds.includes(hand.id)}
+                    isWinner={winnerHandIds.includes(hand.id)}
+                    communityCards={communityCards}
+                    betAmount={pHandBets[hand.id] || 0}
+                    onBet={onHandBet}
+                    onRemoveBet={onRemoveHandBet}
+                    gamePhase={gamePhase}
+                    disabled={balance < selectedChip && !pHandBets[hand.id]}
+                    disabledByConstraint={handBetCount >= 1 && !pHandBets[hand.id]}
+                    onAttemptLockedBet={() => {}}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT — rank + color/river + bottom controls */}
+          <div style={{ width: '26%', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+            {/* Rank board */}
+            <div className="slot-border-dormant" style={{ flex: '6 1 0', minHeight: 0, borderRadius: 8,
+              border: '1px solid', background: 'rgba(0,0,0,0.45)', padding: '4px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ fontSize: 7, fontWeight: 800, color: 'rgba(253,224,71,0.8)', textAlign: 'center',
+                letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 2, flexShrink: 0 }}>HAND RANK</div>
+              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <RankBets
+                  rankBets={pRankBets}
+                  allRankBets={rankBets}
+                  playerCount={playerCount}
+                  onRankBet={onRankBet}
+                  onRemoveRankBet={onRemoveRankBet}
+                  onMoveRankBet={onMoveRankBet}
+                  gamePhase={gamePhase}
+                  winningRank={winningRank}
+                  leadingRank={leadingRank}
+                  disabled={balance < selectedChip}
+                  killSwitchActive={killSwitchActive}
+                  handBetCount={handBetCount}
+                  maxRankSlots={maxRankSlots}
+                  rankBetCount={rankBetCount}
+                  unlockedRanks={new Set()}
+                  activePlayerId={pid}
+                  activeHandIds={activeHandIds}
+                  onAttemptLockedRank={() => {}}
+                  onHoverRankRow={onSetHoveredRankRow}
+                />
+              </div>
+            </div>
+
+            {/* Color + River board */}
+            <div className={`slot-border-dormant ${luminosityClass}`} style={{ flex: '5 1 0', minHeight: 0, borderRadius: 8,
+              border: '1px solid', background: 'rgba(0,0,0,0.45)', padding: '4px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <SideBets
+                  communityCards={communityCards}
+                  allRedBlackBets={redBlackBets}
+                  allLowHighBets={lowHighBets}
+                  redBlackBets={pRedBlackBets}
+                  lowHighBet={pLowHighBet}
+                  onRedBlackBet={onRedBlackBet}
+                  onRemoveRedBlackBet={onRemoveRedBlackBet}
+                  onLowHighBet={onLowHighBet}
+                  onRemoveLowHighBet={onRemoveLowHighBet}
+                  gamePhase={gamePhase}
+                  winningRedBlack={winningRedBlack}
+                  winningLowHigh={winningLowHigh}
+                  disabled={gamePhase === 'betting' ? balance < selectedChip : gamePhase === 'lowHighBetting' ? balance < selectedChip : true}
+                  killSwitchActive={killSwitchActive}
+                  rankBetActive={sideBetGateOpen}
+                  playerCount={playerCount}
+                  totalInvestment={totalBet}
+                  hoveredRiverType={hoveredRiverType}
+                  onHoverRiver={onSetHoveredRiverType}
+                  riverWinFlash={riverWinFlash}
+                  selectedChip={selectedChip}
+                  hoveredRankRow={hoveredRankRow}
+                  isRankBetPlaced={isRankBetPlaced}
+                  activeColorSide={activeColorSide}
+                  onColorSideConflict={onCloseColorSideAlert}
+                />
+              </div>
+            </div>
+
+            {/* Bottom controls — chips, balance, actions */}
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
+              paddingBottom: 3, paddingTop: 2 }}>
+              {/* Chips */}
+              <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                {CHIP_VALUES.map(v => (
+                  <button key={v} onClick={() => onSelectChip(v)}
+                    style={{ lineHeight: 0, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
+                      transform: selectedChip === v ? 'scale(1.25)' : 'scale(1)',
+                      filter: selectedChip === v ? 'drop-shadow(0 0 4px rgba(251,191,36,0.9))' : 'none',
+                      opacity: selectedChip === v ? 1 : 0.7, transition: 'all 0.15s' }}>
+                    <Chip amount={v} scale={0.46} />
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ flex: 1 }} />
+
+              {/* Balance */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3,
+                padding: '2px 6px', borderRadius: 6, border: '1.5px solid #eab308', background: '#000' }}>
+                <span style={{ fontSize: 8, fontWeight: 900, color: '#facc15' }}>P{pid+1}</span>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#facc15', textShadow: '0 0 6px rgba(251,191,36,0.7)' }}>
+                  ${balance.toLocaleString()}
+                </span>
+              </div>
+
+              {/* Actions */}
+              {gamePhase === 'betting' && totalBet > 0 && (
+                <button onClick={onClearBets}
+                  style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid rgba(239,68,68,0.5)',
+                    background: 'rgba(127,29,29,0.4)', color: '#fca5a5', fontSize: 8, fontWeight: 700, cursor: 'pointer' }}>
+                  Clear
+                </button>
+              )}
+              {resetBankVisible && (
+                <button onClick={onResetBank}
+                  style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid rgba(234,179,8,0.4)',
+                    background: 'rgba(234,179,8,0.1)', color: '#fde047', fontSize: 8, fontWeight: 700, cursor: 'pointer' }}>
+                  Reset
+                </button>
+              )}
+              <GameRulesModal />
+            </div>
+
+          </div>
+        </div>
+
+        {/* Countdown clock — floats over the hand grid */}
+        <div style={{ position: 'fixed', bottom: 36, left: '55%', transform: 'translateX(-50%)', zIndex: 30, pointerEvents: 'none' }}>
+          <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
+        </div>
+      </div>
+    );
+  }
+  // ── End landscape ─────────────────────────────────────────────────────────
+
   return (
     <div
       className={`velvet-board w-full flex flex-col text-white overflow-hidden theme-${boardTheme || 'red'}`}
