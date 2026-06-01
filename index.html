@@ -15,26 +15,6 @@
       gtag('js', new Date());
       gtag('config', 'G-XXXXXXXXXX');
     </script>
-  <style>
-    /* ── Portrait-only lock ───────────────────────────────────────
-       When the device is in landscape orientation the entire #root
-       is counter-rotated 90° so the game always appears upright.
-       The width/height swap ensures it still fills the screen.    */
-    @media screen and (orientation: landscape) {
-      body {
-        overflow: hidden;
-      }
-      #root {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vh;
-        height: 100vw;
-        transform-origin: top left;
-        transform: rotate(90deg) translateY(-100%);
-        overflow: hidden;
-      }
-    }
-  </style>
   </head>
   <body>
     <div id="root"></div>
