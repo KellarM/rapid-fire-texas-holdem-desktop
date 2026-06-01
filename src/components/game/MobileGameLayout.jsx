@@ -290,7 +290,7 @@ export default function MobileGameLayout({
           background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
           border: '2px solid #eab308',
           boxShadow: '0 0 30px rgba(234,179,8,0.5)',
-          animation: 'rfUnlockFadeOut 3s ease forwards',
+          animation: 'rfUnlockFadeOut 4s ease forwards',
           pointerEvents: 'none',
           padding: '14px 24px',
           minWidth: '220px',
