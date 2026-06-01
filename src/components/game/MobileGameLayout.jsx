@@ -246,7 +246,7 @@ export default function MobileGameLayout({
     : FIXED_HANDS.map(h => h.id);
 
 
-  // ── Landscape mode — phone tipped sideways → compact 2-col layout ────────
+  // ── Landscape mode — 2-col layout matching user spec ─────────────────────
   const [isLandscape, setIsLandscape] = React.useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth > window.innerHeight && window.innerWidth < 1024;
@@ -259,6 +259,16 @@ export default function MobileGameLayout({
   }, []);
 
   if (isLandscape) {
+    // ── shared border style ──
+    const panelBorder = '1px solid rgba(202,138,4,0.4)';
+    const panelBg     = 'rgba(0,0,0,0.55)';
+    const headerStyle = {
+      fontSize: 9, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+      textAlign: 'center', padding: '3px 0', flexShrink: 0,
+      background: 'linear-gradient(90deg,#fbbf24,#f59e0b)',
+      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+    };
+
     return (
       <div
         className={`velvet-board text-white theme-${boardTheme || 'red'}`}
@@ -276,57 +286,59 @@ export default function MobileGameLayout({
 
         {/* Unlock flash */}
         {showUnlockFlash && (
-          <div style={{ position:'fixed', top:'12%', left:'38%', transform:'translateX(-50%)', zIndex:9999,
+          <div style={{ position:'fixed', top:'10%', left:'35%', transform:'translateX(-50%)', zIndex:9999,
             display:'flex', flexDirection:'column', alignItems:'center', borderRadius:8,
             background:'linear-gradient(160deg,rgba(0,0,0,0.97),rgba(25,12,0,0.98))',
-            border:'2px solid #eab308', boxShadow:'0 0 20px rgba(234,179,8,0.5)',
-            animation:'rfUnlockFadeOut 4s ease forwards', pointerEvents:'none', padding:'8px 16px', gap:2 }}>
-            <span style={{fontSize:10,fontWeight:900,color:'#eab308',letterSpacing:'0.1em',textTransform:'uppercase'}}>🔓 Bonus Bets Unlocked</span>
+            border:'2px solid #eab308', animation:'rfUnlockFadeOut 4s ease forwards',
+            pointerEvents:'none', padding:'7px 14px', gap:2 }}>
+            <span style={{fontSize:9,fontWeight:900,color:'#eab308',letterSpacing:'0.1em',textTransform:'uppercase'}}>🔓 Bonus Bets Unlocked</span>
             <span style={{fontSize:8,color:'#f87171',fontWeight:700}}>🔴 Color Board Open</span>
             <span style={{fontSize:8,color:'#60a5fa',fontWeight:700}}>🌊 River Bet — After Turn</span>
           </div>
         )}
 
-        {/* ── BODY — 2 columns ── */}
-        <div style={{ flex:1, minHeight:0, display:'flex', overflow:'hidden' }}>
+        {/* ── DEALER BAR — full width, very compact ── */}
+        <div style={{ flexShrink:0, height:22, display:'flex', alignItems:'center',
+          padding:'0 10px', overflow:'hidden', whiteSpace:'nowrap',
+          background:'linear-gradient(90deg,rgba(55,22,0,0.95),rgba(70,28,0,0.95))',
+          borderBottom:'1.5px solid rgba(202,138,4,0.5)' }}>
+          <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
+        </div>
 
-          {/* ─── LEFT/CENTER COLUMN (68%) ─── */}
-          <div style={{ width:'68%', display:'flex', flexDirection:'column', overflow:'hidden',
-            borderRight:'1px solid rgba(202,138,4,0.25)' }}>
+        {/* ── TWO-COLUMN BODY ── */}
+        <div style={{ flex:1, minHeight:0, display:'flex' }}>
 
-            {/* Dealer announcement — compact, center-col only */}
-            <div style={{ flexShrink:0, height:20, display:'flex', alignItems:'center',
-              padding:'0 8px', overflow:'hidden', whiteSpace:'nowrap',
-              background:'linear-gradient(90deg,rgba(55,25,0,0.9),rgba(65,28,0,0.9))',
-              borderBottom:'1px solid rgba(202,138,4,0.35)' }}>
-              <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
-            </div>
+          {/* ════════════════════════════════════════════
+              LEFT COLUMN  — 62% width
+              community cards / hand grid / action bar
+              ════════════════════════════════════════════ */}
+          <div style={{ width:'62%', display:'flex', flexDirection:'column',
+            borderRight:'1.5px solid rgba(202,138,4,0.35)' }}>
 
-            {/* Community cards — hard-clamped to 48px, scale wrapper forces it small */}
-            <div style={{ flexShrink:0, height:48, maxHeight:48, overflow:'hidden',
-              display:'flex', alignItems:'center', justifyContent:'center', gap:4,
-              padding:'0 8px', background:'rgba(0,0,0,0.45)',
-              borderBottom:'1px solid rgba(202,138,4,0.2)' }}>
-              <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt="logo"
-                style={{width:12,height:'auto',borderRadius:2,flexShrink:0,opacity:0.8}} />
-              <div style={{ transform:'scale(0.55)', transformOrigin:'center center',
-                display:'flex', alignItems:'center', flexShrink:0,
-                width:'70%', justifyContent:'center' }}>
+            {/* Community cards strip — hard 46px, cards scaled to fit */}
+            <div style={{ flexShrink:0, height:46, display:'flex', alignItems:'center',
+              justifyContent:'center', gap:3,
+              background:'rgba(0,0,0,0.5)', borderBottom:panelBorder, padding:'0 6px', overflow:'hidden' }}>
+              <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt=""
+                style={{width:11,height:'auto',borderRadius:2,flexShrink:0,opacity:0.75}} />
+              {/* scale wrapper — forces internal card heights down */}
+              <div style={{ transform:'scale(0.52)', transformOrigin:'center center',
+                display:'flex', alignItems:'center', pointerEvents:'none' }}>
                 <CommunityCards cards={communityCards} phase={gamePhase} />
               </div>
-              <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt="logo"
-                style={{width:12,height:'auto',borderRadius:2,flexShrink:0,opacity:0.8}} />
+              <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt=""
+                style={{width:11,height:'auto',borderRadius:2,flexShrink:0,opacity:0.75}} />
             </div>
 
-            {/* Win display */}
+            {/* Win display — zero height when no win */}
             <div style={{flexShrink:0}}>
               <DetailedPayoutDisplay winInfo={lastWinInfo} playerCount={playerCount} />
             </div>
 
-            {/* 5×2 Hand grid — fills remaining vertical space */}
+            {/* 5×2 Hand grid — fills remaining height */}
             <div style={{ flex:1, minHeight:0, display:'grid',
               gridTemplateColumns:'repeat(5,1fr)', gridTemplateRows:'repeat(2,1fr)',
-              gap:2, padding:'3px' }}>
+              gap:2, padding:'3px 3px 2px 3px' }}>
               {displayOrder.map(hid => {
                 const hand = FIXED_HANDS.find(h => h.id === hid);
                 if (!hand) return null;
@@ -348,26 +360,27 @@ export default function MobileGameLayout({
             </div>
 
             {/* ── Bottom action bar ── */}
-            <div style={{ flexShrink:0, height:36, display:'flex', alignItems:'center',
-              gap:4, padding:'0 6px',
-              borderTop:'1px solid rgba(202,138,4,0.3)',
-              background:'rgba(0,0,0,0.55)' }}>
+            <div style={{ flexShrink:0, height:34, display:'flex', alignItems:'center',
+              gap:4, padding:'0 5px',
+              borderTop:'1px solid rgba(202,138,4,0.3)', background:'rgba(0,0,0,0.6)' }}>
 
-              {/* Chips — smaller scale */}
+              {/* Chips — small */}
               <div style={{display:'flex',gap:1,alignItems:'center',flexShrink:0}}>
                 {CHIP_VALUES.map(v => (
                   <button key={v} onClick={()=>onSelectChip(v)}
                     style={{ lineHeight:0, border:'none', background:'transparent', padding:0, cursor:'pointer',
-                      transform: selectedChip===v ? 'scale(1.15)':'scale(1)',
+                      transform: selectedChip===v ? 'scale(1.18)':'scale(1)',
                       filter: selectedChip===v ? 'drop-shadow(0 0 4px rgba(251,191,36,0.9))':'none',
                       opacity: selectedChip===v ? 1:0.6, transition:'all 0.15s' }}>
-                    <Chip amount={v} scale={0.38} />
+                    <Chip amount={v} scale={0.36} />
                   </button>
                 ))}
               </div>
 
-              {/* Countdown clock */}
-              <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
+              {/* Countdown */}
+              <div style={{flexShrink:0}}>
+                <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
+              </div>
 
               <div style={{flex:1}} />
 
@@ -375,138 +388,150 @@ export default function MobileGameLayout({
               <div style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0,
                 padding:'2px 7px', borderRadius:6, border:'1.5px solid #eab308', background:'#000' }}>
                 <span style={{fontSize:7,fontWeight:900,color:'#facc15'}}>P{pid+1}</span>
-                <span style={{fontSize:11,fontWeight:900,color:'#facc15',textShadow:'0 0 6px rgba(251,191,36,0.7)'}}>
+                <span style={{fontSize:11,fontWeight:900,color:'#facc15',textShadow:'0 0 5px rgba(251,191,36,0.7)'}}>
                   ${balance.toLocaleString()}
                 </span>
               </div>
 
               {/* Clear */}
               {gamePhase==='betting' && totalBet>0 && (
-                <button onClick={onClearBets} style={{ flexShrink:0, padding:'2px 6px', borderRadius:5,
-                  border:'1px solid rgba(239,68,68,0.5)', background:'rgba(127,29,29,0.4)',
-                  color:'#fca5a5', fontSize:8, fontWeight:700, cursor:'pointer' }}>Clear</button>
+                <button onClick={onClearBets} style={{flexShrink:0,padding:'2px 5px',borderRadius:4,
+                  border:'1px solid rgba(239,68,68,0.5)',background:'rgba(127,29,29,0.4)',
+                  color:'#fca5a5',fontSize:8,fontWeight:700,cursor:'pointer'}}>Clear</button>
               )}
 
               {/* Gear */}
               <button onClick={()=>setGearMenuOpen(o=>!o)}
-                style={{ flexShrink:0, width:26, height:26, borderRadius:6,
+                style={{flexShrink:0,width:24,height:24,borderRadius:5,
                   border:'1px solid rgba(234,179,8,0.5)',
-                  background: gearMenuOpen?'rgba(234,179,8,0.2)':'rgba(0,0,0,0.5)',
-                  color:'#fde047', display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:13, cursor:'pointer' }}>⚙️</button>
+                  background:gearMenuOpen?'rgba(234,179,8,0.2)':'rgba(0,0,0,0.5)',
+                  color:'#fde047',display:'flex',alignItems:'center',justifyContent:'center',
+                  fontSize:12,cursor:'pointer'}}>⚙️</button>
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN — Rank + Color/River (32%) ─── */}
-          {/* NOTE: overflow visible on right col so touch targets aren't clipped */}
-          <div style={{ width:'32%', flexShrink:0, display:'flex', flexDirection:'column' }}>
+          {/* ════════════════════════════════════════════
+              RIGHT COLUMN — 38% width
+              Top: HAND RANK BOARD (~55%)
+              Bottom: COLOR BOARD + RIVER (~45%)
+              ════════════════════════════════════════════ */}
+          <div style={{ width:'38%', flexShrink:0, display:'flex', flexDirection:'column' }}>
 
-            {/* Rank board */}
-            <div className="slot-border-dormant" style={{ flex:'52 1 0', minHeight:0,
-              background:'rgba(0,0,0,0.5)', padding:'3px',
-              display:'flex', flexDirection:'column', overflow:'hidden' }}>
-              <RankBets
-                rankBets={pRankBets} allRankBets={rankBets} playerCount={playerCount}
-                onRankBet={onRankBet} onRemoveRankBet={onRemoveRankBet} onMoveRankBet={onMoveRankBet}
-                gamePhase={gamePhase} winningRank={winningRank} leadingRank={leadingRank}
-                disabled={balance < selectedChip} killSwitchActive={killSwitchActive}
-                handBetCount={handBetCount} maxRankSlots={maxRankSlots} rankBetCount={rankBetCount}
-                unlockedRanks={new Set()} activePlayerId={pid} activeHandIds={activeHandIds}
-                onAttemptLockedRank={()=>{}} onHoverRankRow={onSetHoveredRankRow}
-              />
+            {/* ── HAND RANK BOARD ── */}
+            <div style={{ flex:'55 1 0', minHeight:0, display:'flex', flexDirection:'column',
+              background:panelBg, borderBottom:'1.5px solid rgba(202,138,4,0.4)',
+              overflow:'hidden' }}>
+              {/* Panel header */}
+              <div style={{...headerStyle}}>HAND RANK BOARD</div>
+              <div style={{flex:1,minHeight:0,overflow:'hidden',padding:'0 3px 3px 3px'}}>
+                <RankBets
+                  rankBets={pRankBets} allRankBets={rankBets} playerCount={playerCount}
+                  onRankBet={onRankBet} onRemoveRankBet={onRemoveRankBet} onMoveRankBet={onMoveRankBet}
+                  gamePhase={gamePhase} winningRank={winningRank} leadingRank={leadingRank}
+                  disabled={balance < selectedChip} killSwitchActive={killSwitchActive}
+                  handBetCount={handBetCount} maxRankSlots={maxRankSlots} rankBetCount={rankBetCount}
+                  unlockedRanks={new Set()} activePlayerId={pid} activeHandIds={activeHandIds}
+                  onAttemptLockedRank={()=>{}} onHoverRankRow={onSetHoveredRankRow}
+                />
+              </div>
             </div>
 
-            <div style={{flexShrink:0,height:1,background:'rgba(202,138,4,0.3)'}} />
-
-            {/* Color + River — overflow visible so touch targets on river buttons aren't clipped */}
-            <div className={`slot-border-dormant ${luminosityClass}`} style={{ flex:'48 1 0', minHeight:0,
-              background:'rgba(0,0,0,0.5)', padding:'3px',
-              display:'flex', flexDirection:'column', overflow:'visible', position:'relative' }}>
-              <SideBets
-                communityCards={communityCards}
-                allRedBlackBets={redBlackBets} allLowHighBets={lowHighBets}
-                redBlackBets={pRedBlackBets} lowHighBet={pLowHighBet}
-                onRedBlackBet={onRedBlackBet} onRemoveRedBlackBet={onRemoveRedBlackBet}
-                onLowHighBet={onLowHighBet} onRemoveLowHighBet={onRemoveLowHighBet}
-                gamePhase={gamePhase} winningRedBlack={winningRedBlack} winningLowHigh={winningLowHigh}
-                disabled={balance < selectedChip}
-                killSwitchActive={killSwitchActive} rankBetActive={sideBetGateOpen}
-                playerCount={playerCount} totalInvestment={totalBet}
-                hoveredRiverType={hoveredRiverType} onHoverRiver={onSetHoveredRiverType}
-                riverWinFlash={riverWinFlash} selectedChip={selectedChip}
-                hoveredRankRow={hoveredRankRow} isRankBetPlaced={isRankBetPlaced}
-                activeColorSide={activeColorSide} onColorSideConflict={onCloseColorSideAlert}
-              />
+            {/* ── COLOR BOARD + RIVER LOW/HIGH ── */}
+            {/* overflow visible so river touch buttons aren't clipped */}
+            <div className={`${luminosityClass}`} style={{ flex:'45 1 0', minHeight:0, display:'flex',
+              flexDirection:'column', background:panelBg, overflow:'visible', position:'relative' }}>
+              {/* Panel header */}
+              <div style={{...headerStyle}}>COLOR BOARD</div>
+              <div style={{flex:1,minHeight:0,overflow:'visible',padding:'0 3px 3px 3px'}}>
+                <SideBets
+                  communityCards={communityCards}
+                  allRedBlackBets={redBlackBets} allLowHighBets={lowHighBets}
+                  redBlackBets={pRedBlackBets} lowHighBet={pLowHighBet}
+                  onRedBlackBet={onRedBlackBet} onRemoveRedBlackBet={onRemoveRedBlackBet}
+                  onLowHighBet={onLowHighBet} onRemoveLowHighBet={onRemoveLowHighBet}
+                  gamePhase={gamePhase} winningRedBlack={winningRedBlack} winningLowHigh={winningLowHigh}
+                  disabled={balance < selectedChip}
+                  killSwitchActive={killSwitchActive} rankBetActive={sideBetGateOpen}
+                  playerCount={playerCount} totalInvestment={totalBet}
+                  hoveredRiverType={hoveredRiverType} onHoverRiver={onSetHoveredRiverType}
+                  riverWinFlash={riverWinFlash} selectedChip={selectedChip}
+                  hoveredRankRow={hoveredRankRow} isRankBetPlaced={isRankBetPlaced}
+                  activeColorSide={activeColorSide} onColorSideConflict={onCloseColorSideAlert}
+                />
+              </div>
             </div>
+
           </div>
         </div>
 
-        {/* Gear dropdown */}
+        {/* ── Gear dropdown — fixed above bottom bar ── */}
         {gearMenuOpen && (
-          <div style={{ position:'fixed', bottom:40, right:4, width:175, zIndex:500,
+          <div style={{ position:'fixed', bottom:38, right:4, width:172, zIndex:500,
             background:'linear-gradient(160deg,rgba(20,8,0,0.98),rgba(40,15,0,0.98))',
             border:'1px solid rgba(234,179,8,0.45)', borderRadius:12, padding:'8px 0',
             boxShadow:'0 -4px 24px rgba(0,0,0,0.8)' }}
             onClick={e=>e.stopPropagation()}>
-            <div style={{padding:'2px 12px 8px',borderBottom:'1px solid rgba(234,179,8,0.2)',marginBottom:4}}>
+            <div style={{padding:'2px 12px 7px',borderBottom:'1px solid rgba(234,179,8,0.2)',marginBottom:3}}>
               <span style={{fontSize:11,fontWeight:800,color:'#fde047',letterSpacing:'0.08em',textTransform:'uppercase'}}>Settings</span>
             </div>
-            <div style={{padding:'5px 12px'}}>
-              <div style={{fontSize:9,fontWeight:700,color:'rgba(253,224,71,0.6)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:5}}>Board Color</div>
+            {/* Board color */}
+            <div style={{padding:'4px 12px'}}>
+              <div style={{fontSize:9,fontWeight:700,color:'rgba(253,224,71,0.6)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:4}}>Board Color</div>
               <div style={{display:'flex',gap:5}}>
                 {[{id:'red',label:'Red',dot:'#dc2626'},{id:'blue',label:'Blue',dot:'#2563eb'},{id:'green',label:'Green',dot:'#16a34a'}].map(t=>(
                   <button key={t.id} onClick={()=>{if(onSetTheme)onSetTheme(t.id);setGearMenuOpen(false);}}
-                    style={{flex:1,padding:'4px 2px',borderRadius:6,cursor:'pointer',fontSize:9,fontWeight:700,
+                    style={{flex:1,padding:'3px 2px',borderRadius:6,cursor:'pointer',fontSize:9,fontWeight:700,
                       border:boardTheme===t.id?'1.5px solid #fde047':'1px solid rgba(234,179,8,0.25)',
                       background:boardTheme===t.id?'rgba(234,179,8,0.15)':'rgba(255,255,255,0.04)',
                       color:boardTheme===t.id?'#fde047':'#94a3b8',
                       display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
-                    <span style={{width:11,height:11,borderRadius:'50%',background:t.dot,display:'block'}} />
+                    <span style={{width:10,height:10,borderRadius:'50%',background:t.dot,display:'block'}} />
                     {t.label}
                   </button>
                 ))}
               </div>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            <div style={{padding:'5px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:11,fontWeight:700,color:'#cbd5e1'}}>Sound</span>
-              <div style={{display:'flex',alignItems:'center',gap:5}}>
+            {/* Sound */}
+            <div style={{padding:'4px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:10,fontWeight:700,color:'#cbd5e1'}}>Sound</span>
+              <div style={{display:'flex',alignItems:'center',gap:4}}>
                 <button onClick={()=>setMuted(m=>!m)}
-                  style={{width:26,height:26,borderRadius:6,border:'1px solid rgba(234,179,8,0.35)',
+                  style={{width:24,height:24,borderRadius:5,border:'1px solid rgba(234,179,8,0.35)',
                     background:muted?'rgba(220,38,38,0.2)':'rgba(234,179,8,0.1)',
-                    color:muted?'#f87171':'#fde047',fontSize:12,cursor:'pointer',
+                    color:muted?'#f87171':'#fde047',fontSize:11,cursor:'pointer',
                     display:'flex',alignItems:'center',justifyContent:'center'}}>{muted?'🔇':'🔊'}</button>
                 <input type="range" min="0" max="1" step="0.05" value={volume}
                   onChange={e=>{setVolume(parseFloat(e.target.value));setMuted(false);}}
-                  style={{width:50,accentColor:'#eab308'}} />
+                  style={{width:48,accentColor:'#eab308'}} />
               </div>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            <div style={{padding:'5px 12px'}}><GameRulesModal asMenuItem /></div>
+            <div style={{padding:'4px 12px'}}><GameRulesModal asMenuItem /></div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
             {resetBankVisible && (<>
-              <div style={{padding:'5px 12px'}}>
+              <div style={{padding:'4px 12px'}}>
                 <button onClick={()=>{onResetBank();setGearMenuOpen(false);}}
-                  style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
+                  style={{width:'100%',padding:'5px 0',borderRadius:7,cursor:'pointer',
                     border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
-                    color:'#fde047',fontSize:11,fontWeight:700}}>💰 Reset Bank</button>
+                    color:'#fde047',fontSize:10,fontWeight:700}}>💰 Reset Bank</button>
               </div>
               <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
             </>)}
-            <div style={{padding:'5px 12px'}}>
+            <div style={{padding:'4px 12px'}}>
               <button onClick={()=>{setShowHistory(true);setGearMenuOpen(false);}}
-                style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
+                style={{width:'100%',padding:'5px 0',borderRadius:7,cursor:'pointer',
                   border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
-                  color:'#fde047',fontSize:11,fontWeight:700,
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>📜 Hand History</button>
+                  color:'#fde047',fontSize:10,fontWeight:700,
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>📜 Hand History</button>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            <div style={{padding:'5px 12px'}}>
+            <div style={{padding:'4px 12px'}}>
               <button onClick={()=>{if(onOpenHelp)onOpenHelp();else setShowHowToPlay(true);setGearMenuOpen(false);}}
-                style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
+                style={{width:'100%',padding:'5px 0',borderRadius:7,cursor:'pointer',
                   border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
-                  color:'#fde047',fontSize:11,fontWeight:700,
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>❓ How to Play</button>
+                  color:'#fde047',fontSize:10,fontWeight:700,
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>❓ How to Play</button>
             </div>
           </div>
         )}
@@ -515,15 +540,15 @@ export default function MobileGameLayout({
         {showHistory && (
           <div style={{position:'fixed',inset:0,zIndex:600,background:'rgba(0,0,0,0.96)',display:'flex',flexDirection:'column'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
-              padding:'10px 16px',borderBottom:'1px solid rgba(234,179,8,0.3)',
+              padding:'9px 14px',borderBottom:'1px solid rgba(234,179,8,0.3)',
               background:'rgba(20,8,0,0.98)',flexShrink:0}}>
-              <span style={{color:'#fde047',fontWeight:800,fontSize:14,letterSpacing:'0.08em',textTransform:'uppercase'}}>📜 Hand History</span>
+              <span style={{color:'#fde047',fontWeight:800,fontSize:13,letterSpacing:'0.08em',textTransform:'uppercase'}}>📜 Hand History</span>
               <button onClick={()=>setShowHistory(false)}
-                style={{width:32,height:32,borderRadius:8,border:'1px solid rgba(234,179,8,0.5)',
-                  background:'rgba(234,179,8,0.15)',color:'#fde047',fontSize:18,fontWeight:900,
+                style={{width:30,height:30,borderRadius:7,border:'1px solid rgba(234,179,8,0.5)',
+                  background:'rgba(234,179,8,0.15)',color:'#fde047',fontSize:16,fontWeight:900,
                   cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
-            <div style={{flex:1,minHeight:0,padding:'12px',overflowY:'auto'}}>
+            <div style={{flex:1,minHeight:0,padding:'10px',overflowY:'auto'}}>
               <HistoryRail history={history} />
             </div>
           </div>
