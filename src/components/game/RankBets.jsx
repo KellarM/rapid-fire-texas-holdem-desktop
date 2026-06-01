@@ -283,17 +283,7 @@ export default function RankBets({
 
   return (
     <div className="relative flex flex-col h-full" style={{ overflow: 'visible' }}>
-      {/* Header */}
-      <div
-        className="text-xs font-bold tracking-wider uppercase mb-0.5 text-center flex-shrink-0 transition-all duration-500"
-        style={{
-          background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}
-      >
-        Hand Rank Board
-      </div>
+      {/* Header removed — space saved for rank rows */}
 
       {/* Kill Switch Overlay */}
       {killSwitchActive && gamePhase === 'betting' && (
