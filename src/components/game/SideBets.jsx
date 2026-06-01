@@ -448,6 +448,12 @@ export default function SideBets({
                 key={type}
                 onMouseEnter={() => onHoverRiver && onHoverRiver(type)}
                 onMouseLeave={() => onHoverRiver && onHoverRiver(null)}
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return;
+                  if (gamePhase !== 'lowHighBetting') return;
+                  if (lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) { onRemoveLowHighBet(); return; }
+                  onLowHighBet(type);
+                }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
