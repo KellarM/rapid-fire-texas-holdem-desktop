@@ -126,6 +126,16 @@ function RankSlot({
         if (e.target.closest('[data-chip]')) return;
         if (gamePhase === 'betting' && !fullyLocked) onRankBet(opt.key);
       }}
+      onTouchEnd={(e) => {
+        e.preventDefault();
+        if (gamePhase !== 'betting' || hardLocked) return;
+        // Tap on chip = remove; tap elsewhere = add
+        if (bet > 0 && e.target.closest('[data-chip]')) {
+          onRemoveRankBet(opt.key);
+        } else if (!fullyLocked) {
+          onRankBet(opt.key);
+        }
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         if (gamePhase === 'betting' && bet > 0) onRemoveRankBet(opt.key);

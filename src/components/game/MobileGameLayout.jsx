@@ -65,9 +65,13 @@ function MobileHandCard({
       }}
       onTouchEnd={(e) => {
         e.preventDefault();
-        if (isBettingPhase) {
-          if (disabledByConstraint) onAttemptLockedBet?.();
-          else onBet(hand.id);
+        if (!isBettingPhase) return;
+        if (disabledByConstraint) { onAttemptLockedBet?.(); return; }
+        // Tap on chip overlay = remove; tap elsewhere = add
+        if (betAmount > 0 && e.target.closest('[data-chip-overlay]')) {
+          onRemoveBet(hand.id);
+        } else {
+          onBet(hand.id);
         }
       }}
       onContextMenu={(e) => { e.preventDefault(); if (isBettingPhase) onRemoveBet(hand.id); }}
@@ -100,7 +104,7 @@ function MobileHandCard({
           }
         </div>
         {betAmount > 0 && (
-          <div style={{ position: 'absolute', bottom: -6, right: -2, zIndex: 10, pointerEvents: 'none' }}>
+          <div data-chip-overlay="true" style={{ position: 'absolute', bottom: -6, right: -2, zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}>
             <Chip amount={betAmount} scale={0.42} />
           </div>
         )}
@@ -321,7 +325,7 @@ export default function MobileGameLayout({
       </div>
 
       {/* ── Main game area ── */}
-      <div className="flex-1 min-h-0 px-2 pt-1 pb-0 flex flex-col gap-1.5">
+      <div className="flex-1 min-h-0 px-2 pt-1 pb-0 flex flex-col gap-1.5" style={{ touchAction: 'none' }}>
 
         {/* 10-hand grid — crypto-shuffled each round */}
         <div
@@ -680,4 +684,3 @@ export default function MobileGameLayout({
     </div>
   );
 }
-

@@ -154,6 +154,17 @@ export default function SideBets({
           if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
           onRedBlackBet(opt.key);
         }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          if (gamePhase !== 'betting') return;
+          // Tap on chip = remove; tap elsewhere = add
+          if (hasBet && e.target.closest('[data-chip]')) {
+            onRemoveRedBlackBet(opt.key);
+          } else {
+            if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
+            onRedBlackBet(opt.key);
+          }
+        }}
         onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'betting') onRemoveRedBlackBet(opt.key); }}
         onDragOver={(e) => { if (gamePhase === 'betting') { e.preventDefault(); e.stopPropagation(); } }}
         onDrop={(e) => {
@@ -427,6 +438,16 @@ export default function SideBets({
                 onMouseEnter={() => onHoverRiver && onHoverRiver(type)}
                 onMouseLeave={() => onHoverRiver && onHoverRiver(null)}
                 onMouseDown={(e) => { if (e.button !== 0) return; if (gamePhase === 'lowHighBetting') onLowHighBet(type); }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  if (gamePhase !== 'lowHighBetting') return;
+                  const hasBetHere = lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0;
+                  if (hasBetHere && e.target.closest('[data-chip]')) {
+                    onRemoveLowHighBet();
+                  } else {
+                    onLowHighBet(type);
+                  }
+                }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
                 whileTap={canBetLH ? { scale: 0.95 } : {}}
                 style={{ ...riverBlockStyle, position: 'relative', overflow: 'visible' }}
