@@ -287,34 +287,35 @@ export default function MobileGameLayout({
           </div>
         )}
 
-        {/* ── BODY — 2 columns: center-left + right ── */}
+        {/* ── BODY — 2 columns ── */}
         <div style={{ flex:1, minHeight:0, display:'flex', overflow:'hidden' }}>
 
-          {/* ─── CENTER-LEFT COLUMN (70% width) ─── */}
-          <div style={{ width:'70%', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          {/* ─── LEFT/CENTER COLUMN (68%) ─── */}
+          <div style={{ width:'68%', display:'flex', flexDirection:'column', overflow:'hidden',
+            borderRight:'1px solid rgba(202,138,4,0.25)' }}>
 
-            {/* Dealer announcement — only spans center column, compact height */}
-            <div style={{ flexShrink:0, height:22, display:'flex', alignItems:'center',
+            {/* Dealer announcement — compact, center-col only */}
+            <div style={{ flexShrink:0, height:20, display:'flex', alignItems:'center',
               padding:'0 8px', overflow:'hidden', whiteSpace:'nowrap',
-              background:'linear-gradient(90deg,rgba(60,30,0,0.85),rgba(70,30,0,0.85))',
-              borderBottom:'1px solid rgba(202,138,4,0.4)',
-              borderRight:'1px solid rgba(202,138,4,0.2)' }}>
+              background:'linear-gradient(90deg,rgba(55,25,0,0.9),rgba(65,28,0,0.9))',
+              borderBottom:'1px solid rgba(202,138,4,0.35)' }}>
               <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
             </div>
 
-            {/* Community cards — force small via scale wrapper */}
-            <div style={{ flexShrink:0, height:52, display:'flex', alignItems:'center',
-              justifyContent:'center', gap:4, padding:'2px 8px',
-              background:'rgba(0,0,0,0.4)', borderBottom:'1px solid rgba(202,138,4,0.2)',
-              borderRight:'1px solid rgba(202,138,4,0.2)', overflow:'hidden' }}>
+            {/* Community cards — hard-clamped to 48px, scale wrapper forces it small */}
+            <div style={{ flexShrink:0, height:48, maxHeight:48, overflow:'hidden',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:4,
+              padding:'0 8px', background:'rgba(0,0,0,0.45)',
+              borderBottom:'1px solid rgba(202,138,4,0.2)' }}>
               <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt="logo"
-                style={{width:14,height:'auto',borderRadius:3,flexShrink:0,opacity:0.85}} />
-              {/* Force community cards to scale down */}
-              <div style={{ transform:'scale(0.62)', transformOrigin:'center center', display:'flex', alignItems:'center' }}>
+                style={{width:12,height:'auto',borderRadius:2,flexShrink:0,opacity:0.8}} />
+              <div style={{ transform:'scale(0.55)', transformOrigin:'center center',
+                display:'flex', alignItems:'center', flexShrink:0,
+                width:'70%', justifyContent:'center' }}>
                 <CommunityCards cards={communityCards} phase={gamePhase} />
               </div>
               <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt="logo"
-                style={{width:14,height:'auto',borderRadius:3,flexShrink:0,opacity:0.85}} />
+                style={{width:12,height:'auto',borderRadius:2,flexShrink:0,opacity:0.8}} />
             </div>
 
             {/* Win display */}
@@ -322,11 +323,10 @@ export default function MobileGameLayout({
               <DetailedPayoutDisplay winInfo={lastWinInfo} playerCount={playerCount} />
             </div>
 
-            {/* 5×2 Hand grid — fills remaining space */}
+            {/* 5×2 Hand grid — fills remaining vertical space */}
             <div style={{ flex:1, minHeight:0, display:'grid',
               gridTemplateColumns:'repeat(5,1fr)', gridTemplateRows:'repeat(2,1fr)',
-              gap:3, padding:'3px 4px 3px 4px',
-              borderRight:'1px solid rgba(202,138,4,0.2)' }}>
+              gap:2, padding:'3px' }}>
               {displayOrder.map(hid => {
                 const hand = FIXED_HANDS.find(h => h.id === hid);
                 if (!hand) return null;
@@ -347,49 +347,47 @@ export default function MobileGameLayout({
               })}
             </div>
 
-            {/* ── Bottom action bar — chips, balance, actions ── */}
-            <div style={{ flexShrink:0, height:38, display:'flex', alignItems:'center',
-              gap:5, padding:'0 6px',
-              borderTop:'1px solid rgba(202,138,4,0.3)', borderRight:'1px solid rgba(202,138,4,0.2)',
-              background:'rgba(0,0,0,0.5)' }}>
+            {/* ── Bottom action bar ── */}
+            <div style={{ flexShrink:0, height:36, display:'flex', alignItems:'center',
+              gap:4, padding:'0 6px',
+              borderTop:'1px solid rgba(202,138,4,0.3)',
+              background:'rgba(0,0,0,0.55)' }}>
 
-              {/* Chips */}
-              <div style={{display:'flex',gap:2,alignItems:'center',flexShrink:0}}>
+              {/* Chips — smaller scale */}
+              <div style={{display:'flex',gap:1,alignItems:'center',flexShrink:0}}>
                 {CHIP_VALUES.map(v => (
                   <button key={v} onClick={()=>onSelectChip(v)}
                     style={{ lineHeight:0, border:'none', background:'transparent', padding:0, cursor:'pointer',
-                      transform: selectedChip===v ? 'scale(1.2)':'scale(1)',
+                      transform: selectedChip===v ? 'scale(1.15)':'scale(1)',
                       filter: selectedChip===v ? 'drop-shadow(0 0 4px rgba(251,191,36,0.9))':'none',
-                      opacity: selectedChip===v ? 1:0.65, transition:'all 0.15s' }}>
-                    <Chip amount={v} scale={0.48} />
+                      opacity: selectedChip===v ? 1:0.6, transition:'all 0.15s' }}>
+                    <Chip amount={v} scale={0.38} />
                   </button>
                 ))}
               </div>
 
               {/* Countdown clock */}
-              <div style={{flexShrink:0}}>
-                <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
-              </div>
+              <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
 
               <div style={{flex:1}} />
 
               {/* Balance */}
               <div style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0,
                 padding:'2px 7px', borderRadius:6, border:'1.5px solid #eab308', background:'#000' }}>
-                <span style={{fontSize:8,fontWeight:900,color:'#facc15'}}>P{pid+1}</span>
+                <span style={{fontSize:7,fontWeight:900,color:'#facc15'}}>P{pid+1}</span>
                 <span style={{fontSize:11,fontWeight:900,color:'#facc15',textShadow:'0 0 6px rgba(251,191,36,0.7)'}}>
                   ${balance.toLocaleString()}
                 </span>
               </div>
 
-              {/* Clear bet button */}
+              {/* Clear */}
               {gamePhase==='betting' && totalBet>0 && (
                 <button onClick={onClearBets} style={{ flexShrink:0, padding:'2px 6px', borderRadius:5,
                   border:'1px solid rgba(239,68,68,0.5)', background:'rgba(127,29,29,0.4)',
-                  color:'#fca5a5', fontSize:9, fontWeight:700, cursor:'pointer' }}>Clear</button>
+                  color:'#fca5a5', fontSize:8, fontWeight:700, cursor:'pointer' }}>Clear</button>
               )}
 
-              {/* Gear button */}
+              {/* Gear */}
               <button onClick={()=>setGearMenuOpen(o=>!o)}
                 style={{ flexShrink:0, width:26, height:26, borderRadius:6,
                   border:'1px solid rgba(234,179,8,0.5)',
@@ -399,59 +397,53 @@ export default function MobileGameLayout({
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN — Rank + Color/River (30% width) ─── */}
-          <div style={{ width:'30%', flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          {/* ─── RIGHT COLUMN — Rank + Color/River (32%) ─── */}
+          {/* NOTE: overflow visible on right col so touch targets aren't clipped */}
+          <div style={{ width:'32%', flexShrink:0, display:'flex', flexDirection:'column' }}>
 
-            {/* Rank board — no dealer bar offset, starts at very top */}
-            <div className="slot-border-dormant" style={{ flex:'55 1 0', minHeight:0,
-              borderLeft:'1px solid rgba(202,138,4,0.3)',
-              background:'rgba(0,0,0,0.5)', padding:'4px 4px 2px 4px',
+            {/* Rank board */}
+            <div className="slot-border-dormant" style={{ flex:'52 1 0', minHeight:0,
+              background:'rgba(0,0,0,0.5)', padding:'3px',
               display:'flex', flexDirection:'column', overflow:'hidden' }}>
-              <div style={{flex:1,minHeight:0,overflow:'hidden'}}>
-                <RankBets
-                  rankBets={pRankBets} allRankBets={rankBets} playerCount={playerCount}
-                  onRankBet={onRankBet} onRemoveRankBet={onRemoveRankBet} onMoveRankBet={onMoveRankBet}
-                  gamePhase={gamePhase} winningRank={winningRank} leadingRank={leadingRank}
-                  disabled={balance < selectedChip} killSwitchActive={killSwitchActive}
-                  handBetCount={handBetCount} maxRankSlots={maxRankSlots} rankBetCount={rankBetCount}
-                  unlockedRanks={new Set()} activePlayerId={pid} activeHandIds={activeHandIds}
-                  onAttemptLockedRank={()=>{}} onHoverRankRow={onSetHoveredRankRow}
-                />
-              </div>
+              <RankBets
+                rankBets={pRankBets} allRankBets={rankBets} playerCount={playerCount}
+                onRankBet={onRankBet} onRemoveRankBet={onRemoveRankBet} onMoveRankBet={onMoveRankBet}
+                gamePhase={gamePhase} winningRank={winningRank} leadingRank={leadingRank}
+                disabled={balance < selectedChip} killSwitchActive={killSwitchActive}
+                handBetCount={handBetCount} maxRankSlots={maxRankSlots} rankBetCount={rankBetCount}
+                unlockedRanks={new Set()} activePlayerId={pid} activeHandIds={activeHandIds}
+                onAttemptLockedRank={()=>{}} onHoverRankRow={onSetHoveredRankRow}
+              />
             </div>
 
-            {/* Divider */}
-            <div style={{flexShrink:0, height:1, background:'rgba(202,138,4,0.3)'}} />
+            <div style={{flexShrink:0,height:1,background:'rgba(202,138,4,0.3)'}} />
 
-            {/* Color + River board */}
-            <div className={`slot-border-dormant ${luminosityClass}`} style={{ flex:'45 1 0', minHeight:0,
-              borderLeft:'1px solid rgba(202,138,4,0.3)',
-              background:'rgba(0,0,0,0.5)', padding:'4px 4px 4px 4px',
-              display:'flex', flexDirection:'column', overflow:'hidden' }}>
-              <div style={{flex:1,minHeight:0,overflow:'hidden'}}>
-                <SideBets
-                  communityCards={communityCards}
-                  allRedBlackBets={redBlackBets} allLowHighBets={lowHighBets}
-                  redBlackBets={pRedBlackBets} lowHighBet={pLowHighBet}
-                  onRedBlackBet={onRedBlackBet} onRemoveRedBlackBet={onRemoveRedBlackBet}
-                  onLowHighBet={onLowHighBet} onRemoveLowHighBet={onRemoveLowHighBet}
-                  gamePhase={gamePhase} winningRedBlack={winningRedBlack} winningLowHigh={winningLowHigh}
-                  disabled={gamePhase==='betting' ? balance<selectedChip : gamePhase==='lowHighBetting' ? balance<selectedChip : true}
-                  killSwitchActive={killSwitchActive} rankBetActive={sideBetGateOpen}
-                  playerCount={playerCount} totalInvestment={totalBet}
-                  hoveredRiverType={hoveredRiverType} onHoverRiver={onSetHoveredRiverType}
-                  riverWinFlash={riverWinFlash} selectedChip={selectedChip}
-                  hoveredRankRow={hoveredRankRow} isRankBetPlaced={isRankBetPlaced}
-                  activeColorSide={activeColorSide} onColorSideConflict={onCloseColorSideAlert}
-                />
-              </div>
+            {/* Color + River — overflow visible so touch targets on river buttons aren't clipped */}
+            <div className={`slot-border-dormant ${luminosityClass}`} style={{ flex:'48 1 0', minHeight:0,
+              background:'rgba(0,0,0,0.5)', padding:'3px',
+              display:'flex', flexDirection:'column', overflow:'visible', position:'relative' }}>
+              <SideBets
+                communityCards={communityCards}
+                allRedBlackBets={redBlackBets} allLowHighBets={lowHighBets}
+                redBlackBets={pRedBlackBets} lowHighBet={pLowHighBet}
+                onRedBlackBet={onRedBlackBet} onRemoveRedBlackBet={onRemoveRedBlackBet}
+                onLowHighBet={onLowHighBet} onRemoveLowHighBet={onRemoveLowHighBet}
+                gamePhase={gamePhase} winningRedBlack={winningRedBlack} winningLowHigh={winningLowHigh}
+                disabled={balance < selectedChip}
+                killSwitchActive={killSwitchActive} rankBetActive={sideBetGateOpen}
+                playerCount={playerCount} totalInvestment={totalBet}
+                hoveredRiverType={hoveredRiverType} onHoverRiver={onSetHoveredRiverType}
+                riverWinFlash={riverWinFlash} selectedChip={selectedChip}
+                hoveredRankRow={hoveredRankRow} isRankBetPlaced={isRankBetPlaced}
+                activeColorSide={activeColorSide} onColorSideConflict={onCloseColorSideAlert}
+              />
             </div>
           </div>
         </div>
 
-        {/* ── Gear dropdown — fixed, above bottom bar ── */}
+        {/* Gear dropdown */}
         {gearMenuOpen && (
-          <div style={{ position:'fixed', bottom:44, right:4, width:175, zIndex:500,
+          <div style={{ position:'fixed', bottom:40, right:4, width:175, zIndex:500,
             background:'linear-gradient(160deg,rgba(20,8,0,0.98),rgba(40,15,0,0.98))',
             border:'1px solid rgba(234,179,8,0.45)', borderRadius:12, padding:'8px 0',
             boxShadow:'0 -4px 24px rgba(0,0,0,0.8)' }}
@@ -459,7 +451,6 @@ export default function MobileGameLayout({
             <div style={{padding:'2px 12px 8px',borderBottom:'1px solid rgba(234,179,8,0.2)',marginBottom:4}}>
               <span style={{fontSize:11,fontWeight:800,color:'#fde047',letterSpacing:'0.08em',textTransform:'uppercase'}}>Settings</span>
             </div>
-            {/* Board color */}
             <div style={{padding:'5px 12px'}}>
               <div style={{fontSize:9,fontWeight:700,color:'rgba(253,224,71,0.6)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:5}}>Board Color</div>
               <div style={{display:'flex',gap:5}}>
@@ -477,7 +468,6 @@ export default function MobileGameLayout({
               </div>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            {/* Sound */}
             <div style={{padding:'5px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <span style={{fontSize:11,fontWeight:700,color:'#cbd5e1'}}>Sound</span>
               <div style={{display:'flex',alignItems:'center',gap:5}}>
@@ -492,43 +482,31 @@ export default function MobileGameLayout({
               </div>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            {/* Game Rules */}
-            <div style={{padding:'5px 12px'}}>
-              <GameRulesModal asMenuItem />
-            </div>
+            <div style={{padding:'5px 12px'}}><GameRulesModal asMenuItem /></div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            {/* Reset bank */}
             {resetBankVisible && (<>
               <div style={{padding:'5px 12px'}}>
                 <button onClick={()=>{onResetBank();setGearMenuOpen(false);}}
                   style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
                     border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
-                    color:'#fde047',fontSize:11,fontWeight:700,letterSpacing:'0.04em'}}>
-                  💰 Reset Bank
-                </button>
+                    color:'#fde047',fontSize:11,fontWeight:700}}>💰 Reset Bank</button>
               </div>
               <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
             </>)}
-            {/* History */}
             <div style={{padding:'5px 12px'}}>
               <button onClick={()=>{setShowHistory(true);setGearMenuOpen(false);}}
                 style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
                   border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
                   color:'#fde047',fontSize:11,fontWeight:700,
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
-                📜 Hand History
-              </button>
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>📜 Hand History</button>
             </div>
             <div style={{borderTop:'1px solid rgba(234,179,8,0.12)',margin:'3px 0'}} />
-            {/* How to play */}
             <div style={{padding:'5px 12px'}}>
               <button onClick={()=>{if(onOpenHelp)onOpenHelp();else setShowHowToPlay(true);setGearMenuOpen(false);}}
                 style={{width:'100%',padding:'6px 0',borderRadius:8,cursor:'pointer',
                   border:'1px solid rgba(234,179,8,0.4)',background:'rgba(234,179,8,0.08)',
                   color:'#fde047',fontSize:11,fontWeight:700,
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
-                ❓ How to Play
-              </button>
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>❓ How to Play</button>
             </div>
           </div>
         )}
@@ -550,8 +528,6 @@ export default function MobileGameLayout({
             </div>
           </div>
         )}
-
-        {/* How to play overlay */}
         <HowToPlayOverlay forceOpen={showHowToPlay} onClose={()=>setShowHowToPlay(false)} />
       </div>
     );
