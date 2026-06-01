@@ -46,15 +46,16 @@ export default function ToolsMenu({
     <div className="relative" ref={ref} style={{ visibility: toolsVisible ? 'visible' : 'hidden' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all
-          ${open
-            ? 'border-yellow-400 bg-yellow-700/40 text-yellow-200'
-            : 'border-yellow-700/50 bg-yellow-900/20 text-yellow-300 hover:border-yellow-500 hover:bg-yellow-900/40'
-          }`}
+        style={{
+          width: 32, height: 32, borderRadius: 8,
+          border: open ? '1px solid #facc15' : '1px solid rgba(234,179,8,0.5)',
+          background: open ? 'rgba(234,179,8,0.2)' : 'rgba(0,0,0,0.5)',
+          color: '#fde047',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0, cursor: 'pointer', padding: 0,
+        }}
       >
-        <Wrench className="w-3.5 h-3.5" />
-        Tools
-        <span className={`transition-transform duration-200 text-yellow-400/60 ${open ? 'rotate-180' : ''}`}>▾</span>
+        <Wrench style={{ width: 15, height: 15 }} />
       </button>
 
       {open && (
