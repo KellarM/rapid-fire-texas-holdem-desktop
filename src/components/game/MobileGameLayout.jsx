@@ -256,50 +256,53 @@ export default function MobileGameLayout({
       <AutoTrimToast isVisible={showAutoTrimToast} onHide={onHideAutoTrimToast} />
       <ColorSideAlert isOpen={!!showColorSideAlert} onClose={onCloseColorSideAlert} />
 
-      {/* ── Dealer message bar ── */}
+      {/* ── Dealer message bar — fixed height, never moves ── */}
       <div className="flex-shrink-0 px-2 pt-1.5">
         <div style={{
-          height: showUnlockFlash ? '90px' : '26px',
-          minHeight: showUnlockFlash ? '90px' : '26px',
-          maxHeight: showUnlockFlash ? '90px' : '26px',
+          height: '26px',
+          minHeight: '26px',
+          maxHeight: '26px',
           display: 'flex',
           alignItems: 'center',
           borderRadius: '0.4rem',
           border: '1px solid rgba(202,138,4,0.4)',
           background: 'linear-gradient(90deg, rgba(78,47,0,0.5) 0%, rgba(83,37,0,0.5) 100%)',
-          overflow: 'visible',
+          overflow: 'hidden',
           whiteSpace: 'nowrap',
-          position: 'relative',
-          transition: 'height 0.15s ease, min-height 0.15s ease',
         }}>
-          {showUnlockFlash ? (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 40,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '0.4rem',
-              background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
-              border: '1.5px solid #eab308',
-              boxShadow: '0 0 20px rgba(234,179,8,0.35)',
-              animation: 'rfUnlockFadeOut 3s ease forwards',
-              pointerEvents: 'none',
-              padding: '6px 10px',
-            }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: '#eab308', letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center' }}>🔓 Bonus Bets Unlocked</span>
-              <div style={{ height: 5 }} />
-              <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700, textAlign: 'center' }}>🔴 Color Board Open</span>
-              <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>🌊 River Bet Available</span>
-              <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>After The Turn Card</span>
-            </div>
-          ) : (
-            <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
-          )}
+          <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
         </div>
       </div>
+
+      {/* ── Bonus Bets Unlocked — fixed overlay, floats over board, nothing moves ── */}
+      {showUnlockFlash && (
+        <div style={{
+          position: 'fixed',
+          top: '18%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '0.6rem',
+          background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
+          border: '2px solid #eab308',
+          boxShadow: '0 0 30px rgba(234,179,8,0.5)',
+          animation: 'rfUnlockFadeOut 3s ease forwards',
+          pointerEvents: 'none',
+          padding: '14px 24px',
+          minWidth: '220px',
+          gap: 4,
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 900, color: '#eab308', letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center' }}>🔓 Bonus Bets Unlocked</span>
+          <div style={{ height: 6 }} />
+          <span style={{ fontSize: 11, color: '#f87171', fontWeight: 700, textAlign: 'center' }}>🔴 Color Board Open</span>
+          <span style={{ fontSize: 11, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>🌊 River Bet Available</span>
+          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, textAlign: 'center' }}>After The Turn Card</span>
+        </div>
+      )}
 
       {/* ── Community Cards ── */}
       <div className="flex-shrink-0 px-2 pt-1">
