@@ -1580,6 +1580,7 @@ export default function RapidFireGame() {
   if (isMobile) {
     return (
       <>
+        <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}`}</style>
         {/* Tool modals — same as desktop */}
         <PlayerStatsPanel isOpen={showStatsPanel} onClose={() => setShowStatsPanel(false)} playerStats={playerStats} playerCount={playerCount} />
         <AnimatePresence>
@@ -1672,6 +1673,7 @@ export default function RapidFireGame() {
           activeColorSide={activeColorSide}
           preloadSounds={preloadSounds}
           onSetTheme={setBoardTheme}
+          showUnlockFlash={showUnlockFlash}
         />
       </>
     );
