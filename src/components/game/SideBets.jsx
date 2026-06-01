@@ -155,14 +155,14 @@ export default function SideBets({
           if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
           onRedBlackBet(opt.key);
         }}
-        onTouchEnd={(e) => {
+        onPointerDown={(e) => {
           e.preventDefault();
           if (gamePhase !== 'betting') return;
-          // Tap on chip = remove; tap elsewhere = add
-          if (hasBet && e.target.closest('[data-chip]')) {
+          // Toggle: if already bet here, remove; otherwise add
+          if (hasBet) {
             onRemoveRedBlackBet(opt.key);
           } else {
-            if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
+            if (isSideLocked && !colorLocked) { if (onColorSideConflict) onColorSideConflict(); return; }
             onRedBlackBet(opt.key);
           }
         }}
@@ -454,8 +454,8 @@ export default function SideBets({
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
                   const hasBetHere = lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0;
-                  // Tapping chip icon removes; tapping button body adds
-                  if (hasBetHere && (e.target.dataset.chip || e.target.closest('[data-chip]'))) {
+                  // Toggle: if already bet this type, remove it; otherwise add
+                  if (hasBetHere) {
                     onRemoveLowHighBet();
                   } else {
                     onLowHighBet(type);
