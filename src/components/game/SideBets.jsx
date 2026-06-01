@@ -451,7 +451,6 @@ export default function SideBets({
                 onMouseDown={(e) => {
                   if (e.button !== 0) return;
                   if (gamePhase !== 'lowHighBetting') return;
-                  if (lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) { onRemoveLowHighBet(); return; }
                   onLowHighBet(type);
                 }}
                 onTouchEnd={(e) => {
