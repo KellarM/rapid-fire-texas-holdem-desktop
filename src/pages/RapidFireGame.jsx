@@ -1791,15 +1791,15 @@ export default function RapidFireGame() {
         {/* CENTER: Main Game Board */}
         <div className="flex-1 flex flex-col gap-1.5 min-w-0 items-center">
 
-          {/* Dealer Announcement — 32px hard lock, no padding, single line only */}
+          {/* Dealer Announcement — expands when unlock flash is active */}
           <div
             style={{
-              height: '32px',
-              minHeight: '32px',
-              maxHeight: '32px',
+              height: showUnlockFlash ? '90px' : '32px',
+              minHeight: showUnlockFlash ? '90px' : '32px',
+              maxHeight: showUnlockFlash ? '90px' : '32px',
               width: '100%',
               flexShrink: 0,
-              overflow: 'hidden',
+              overflow: 'visible',
               whiteSpace: 'nowrap',
               display: 'flex',
               alignItems: 'center',
@@ -1809,6 +1809,7 @@ export default function RapidFireGame() {
               background: 'linear-gradient(90deg, rgba(78,47,0,0.5) 0%, rgba(83,37,0,0.5) 100%)',
               boxSizing: 'border-box',
               position: 'relative',
+              transition: 'height 0.2s ease, min-height 0.2s ease',
             }}>
             <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
             {showUnlockFlash && (
