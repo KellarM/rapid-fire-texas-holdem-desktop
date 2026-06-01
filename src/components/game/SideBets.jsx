@@ -155,16 +155,11 @@ export default function SideBets({
           if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
           onRedBlackBet(opt.key);
         }}
-        onPointerDown={(e) => {
+        onTouchEnd={(e) => {
           e.preventDefault();
           if (gamePhase !== 'betting') return;
-          // Toggle: if already bet here, remove; otherwise add
-          if (hasBet) {
-            onRemoveRedBlackBet(opt.key);
-          } else {
-            if (isSideLocked && !colorLocked) { if (onColorSideConflict) onColorSideConflict(); return; }
-            onRedBlackBet(opt.key);
-          }
+          if (isSideLocked && !colorLocked && !hasBet) { if (onColorSideConflict) onColorSideConflict(); return; }
+          onRedBlackBet(opt.key);
         }}
         onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'betting') onRemoveRedBlackBet(opt.key); }}
         onDragOver={(e) => { if (gamePhase === 'betting') { e.preventDefault(); e.stopPropagation(); } }}
@@ -450,16 +445,10 @@ export default function SideBets({
                 key={type}
                 onMouseEnter={() => onHoverRiver && onHoverRiver(type)}
                 onMouseLeave={() => onHoverRiver && onHoverRiver(null)}
-                onPointerDown={(e) => {
+                onTouchEnd={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
-                  const hasBetHere = lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0;
-                  // Toggle: if already bet this type, remove it; otherwise add
-                  if (hasBetHere) {
-                    onRemoveLowHighBet();
-                  } else {
-                    onLowHighBet(type);
-                  }
+                  onLowHighBet(type);
                 }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
                 whileTap={canBetLH ? { scale: 0.95 } : {}}
