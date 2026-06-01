@@ -427,7 +427,7 @@ export default function MobileGameLayout({
       </div>
 
       {/* ── Bottom action bar ── */}
-      <div className="flex-shrink-0 px-2 py-1.5 border-t border-yellow-900/40 flex items-center gap-1.5 bg-black/40">
+      <div className="flex-shrink-0 px-1.5 py-1 border-t border-yellow-900/40 flex items-center gap-1 bg-black/40" style={{ overflow: "hidden" }}>
 
         {/* Chips */}
         <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -439,12 +439,12 @@ export default function MobileGameLayout({
                 ${selectedChip === v ? 'scale-125 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]' : 'opacity-70 hover:opacity-100 hover:scale-110'}`}
               style={{ lineHeight: 0 }}
             >
-              <Chip amount={v} scale={0.58} />
+              <Chip amount={v} scale={0.52} />
             </button>
           ))}
         </div>
 
-        <div className="flex-1" />
+        <div style={{ flex: "0 0 4px" }} />
 
         {/* Balance */}
         <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl border-2 border-yellow-500 bg-black flex-shrink-0">
@@ -677,16 +677,17 @@ export default function MobileGameLayout({
           />
         </div>
 
-        {/* DEMO MODE badge — rightmost, after gear */}
+        {/* DEMO MODE badge — rightmost, compact */}
         <div style={{
           display: 'flex', alignItems: 'center',
-          padding: '4px 8px', borderRadius: 6,
-          border: '2px solid #f59e0b',
+          padding: '3px 6px', borderRadius: 5,
+          border: '1.5px solid #f59e0b',
           background: 'linear-gradient(135deg, rgba(120,53,15,0.95) 0%, rgba(0,0,0,0.95) 100%)',
-          boxShadow: '0 0 10px rgba(245,158,11,0.5)',
+          boxShadow: '0 0 8px rgba(245,158,11,0.4)',
           flexShrink: 0,
+          whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontSize: 8, color: '#f59e0b', fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>⚡ DEMO</span>
+          <span style={{ fontSize: 7.5, color: '#f59e0b', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase' }}>⚡ DEMO</span>
         </div>
 
       </div>
