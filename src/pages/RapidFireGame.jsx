@@ -80,7 +80,29 @@ const PLAYER_TAB_STYLES = [
 
 // ── Mobile detection ─────────────────────────────────────────────────────
 function useIsMobile() {
-  return true; // Always mobile — desktop layout disabled for this build
+  const [isMobile, setIsMobile] = useState(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    // Landscape on a phone-sized screen → use desktop/landscape layout
+    if (w > h && w < 1024) return false;
+    return w < 768;
+  });
+  useEffect(() => {
+    const handler = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // Phone tipped sideways → switch to desktop layout
+      if (w > h && w < 1024) { setIsMobile(false); return; }
+      setIsMobile(w < 768);
+    };
+    window.addEventListener('resize', handler);
+    window.addEventListener('orientationchange', handler);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('orientationchange', handler);
+    };
+  }, []);
+  return isMobile;
 }
 
 // Phases: 'betting' | 'flop' | 'turn' | 'lowHighBetting' | 'river' | 'settlement' | 'winner'
