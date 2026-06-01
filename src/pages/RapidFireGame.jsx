@@ -310,7 +310,7 @@ export default function RapidFireGame() {
   useEffect(() => {
     if (sideBetGateOpen && !prevGateRef.current) {
       setShowUnlockFlash(true);
-      const t = setTimeout(() => setShowUnlockFlash(false), 3000);
+      const t = setTimeout(() => setShowUnlockFlash(false), 4000);
       prevGateRef.current = true;
       return () => clearTimeout(t);
     }
@@ -1580,7 +1580,7 @@ export default function RapidFireGame() {
   if (isMobile) {
     return (
       <>
-        <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}`}</style>
+        <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}`}</style>
         {/* Tool modals — same as desktop */}
         <PlayerStatsPanel isOpen={showStatsPanel} onClose={() => setShowStatsPanel(false)} playerStats={playerStats} playerCount={playerCount} />
         <AnimatePresence>
@@ -1682,7 +1682,7 @@ export default function RapidFireGame() {
   // ── Desktop layout ────────────────────────────────────────────────────────
   return (
   <>
-      <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}`}</style>
+      <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}`}</style>
       <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
       {/* Countdown Clock */}
@@ -1827,7 +1827,7 @@ export default function RapidFireGame() {
                 background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
                 border: '1.5px solid #eab308',
                 boxShadow: '0 0 20px rgba(234,179,8,0.35)',
-                animation: 'rfUnlockFadeOut 3s ease forwards',
+                animation: 'rfUnlockFadeOut 4s ease forwards',
                 pointerEvents: 'none',
                 padding: '6px 10px',
                 gap: 0,
