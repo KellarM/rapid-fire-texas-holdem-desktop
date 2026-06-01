@@ -1817,18 +1817,23 @@ export default function RapidFireGame() {
                 inset: 0,
                 zIndex: 40,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
                 borderRadius: '0.5rem',
-                background: 'linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(25,12,0,0.97) 100%)',
+                background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
                 border: '1.5px solid #eab308',
+                boxShadow: '0 0 20px rgba(234,179,8,0.35)',
                 animation: 'rfUnlockFadeOut 3s ease forwards',
                 pointerEvents: 'none',
+                padding: '6px 10px',
+                gap: 0,
               }}>
-                <span style={{ fontSize: 10, fontWeight: 900, color: '#eab308', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>🔓 Bonus Bets Unlocked</span>
-                <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700, whiteSpace: 'nowrap' }}>🔴 Color Board</span>
-                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, whiteSpace: 'nowrap' }}>🌊 River Bet</span>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#eab308', letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center' }}>🔓 Bonus Bets Unlocked</span>
+                <div style={{ height: 5 }} />
+                <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700, textAlign: 'center' }}>🔴 Color Board Open</span>
+                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>🌊 River Bet Available</span>
+                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>After The Turn Card</span>
               </div>
             )}
           </div>
