@@ -247,16 +247,9 @@ export default function MobileGameLayout({
 
 
   // ── Landscape mode — 2-col layout ────────────────────────────────────────
-  const [isLandscape, setIsLandscape] = React.useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth > window.innerHeight && window.innerWidth < 1024;
-  });
-  React.useEffect(() => {
-    const handler = () => setIsLandscape(window.innerWidth > window.innerHeight && window.innerWidth < 1024);
-    window.addEventListener('resize', handler);
-    window.addEventListener('orientationchange', handler);
-    return () => { window.removeEventListener('resize', handler); window.removeEventListener('orientationchange', handler); };
-  }, []);
+  // Landscape mode DISABLED — portrait only until landscape layout is finalized
+  // To re-enable: replace the line below with the full detection hook
+  const isLandscape = false;
 
   if (isLandscape) {
     const panelBorder = '1px solid rgba(202,138,4,0.4)';
