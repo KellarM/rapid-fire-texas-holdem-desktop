@@ -20,15 +20,27 @@ export default function ToolsMenu({
   toolsVisible = true,
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [menuPos, setMenuPos] = useState({ bottom: 60, right: 8 });
+  const btnRef = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  function handleOpen() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({
+        bottom: window.innerHeight - rect.top + 6,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen(o => !o);
+  }
 
   function handle(fn) {
     fn?.();
@@ -36,16 +48,17 @@ export default function ToolsMenu({
   }
 
   const typeHandlers = {
-    stats:            onOpenStats,
-    observer:         onOpenObserver,
-    analytics:        onOpenAnalytics,
-    gameTiming:        onOpenGameTiming,
+    stats:      onOpenStats,
+    observer:   onOpenObserver,
+    analytics:  onOpenAnalytics,
+    gameTiming: onOpenGameTiming,
   };
 
   return (
-    <div className="relative" ref={ref} style={{ visibility: toolsVisible ? 'visible' : 'hidden' }}>
+    <div style={{ position: 'relative', visibility: toolsVisible ? 'visible' : 'hidden' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         style={{
           width: 32, height: 32, borderRadius: 8,
           border: open ? '1px solid #facc15' : '1px solid rgba(234,179,8,0.5)',
@@ -59,28 +72,53 @@ export default function ToolsMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 bottom-full mb-1.5 w-60 bg-slate-900 border border-yellow-700/40 rounded-xl shadow-2xl shadow-black/60 z-50 overflow-hidden">
-          <div className="px-3 py-2 border-b border-yellow-700/20">
-            <p className="text-yellow-400/60 text-xs font-semibold tracking-wider uppercase">Game Tools</p>
+        <div style={{
+          position: 'fixed',
+          bottom: menuPos.bottom,
+          right: menuPos.right,
+          width: 240,
+          background: 'linear-gradient(160deg, #0f172a 0%, #1e1b10 100%)',
+          border: '1px solid rgba(234,179,8,0.4)',
+          borderRadius: 12,
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.8)',
+          zIndex: 9999,
+          overflow: 'hidden',
+        }}>
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(234,179,8,0.2)' }}>
+            <p style={{ color: 'rgba(250,204,21,0.6)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Game Tools</p>
           </div>
 
           {TOOLS.map(({ icon: Icon, label, href, type, badge, badgeColor }) => {
             if (type) {
               return (
                 <button key={label} onClick={() => handle(typeHandlers[type])}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:bg-yellow-900/20 hover:text-yellow-200 transition-colors text-left">
-                  <Icon className="w-4 h-4 text-yellow-500/70 flex-shrink-0" />
-                  <span className="flex-1">{label}</span>
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 12px', background: 'transparent', border: 'none',
+                    color: '#cbd5e1', fontSize: 13, cursor: 'pointer', textAlign: 'left',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Icon style={{ width: 15, height: 15, color: 'rgba(234,179,8,0.7)', flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{label}</span>
                   {badge && (
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold ${badgeColor}`}>{badge}</span>
+                    <span style={{ fontSize: 9, padding: '2px 5px', borderRadius: 4, border: '1px solid', fontWeight: 700 }} className={badgeColor}>{badge}</span>
                   )}
                 </button>
               );
             }
             return (
               <Link key={label} to={href} onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:bg-yellow-900/20 hover:text-yellow-200 transition-colors">
-                <Icon className="w-4 h-4 text-yellow-500/70 flex-shrink-0" />
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', color: '#cbd5e1', fontSize: 13,
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <Icon style={{ width: 15, height: 15, color: 'rgba(234,179,8,0.7)', flexShrink: 0 }} />
                 {label}
               </Link>
             );
