@@ -421,8 +421,7 @@ export default function MobileGameLayout({
             <div style={{ flex:'55 1 0', minHeight:0, display:'flex', flexDirection:'column',
               background:panelBg, borderBottom:'1.5px solid rgba(202,138,4,0.4)',
               overflow:'hidden' }}>
-              {/* Panel header */}
-              <div style={{...headerStyle}}>HAND RANK BOARD</div>
+              {/* Header suppressed in landscape — RankBets has no header */}
               <div style={{flex:1,minHeight:0,overflow:'hidden',padding:'0 3px 3px 3px'}}>
                 <RankBets
                   rankBets={pRankBets} allRankBets={rankBets} playerCount={playerCount}
@@ -440,8 +439,7 @@ export default function MobileGameLayout({
             {/* overflow visible so river touch buttons aren't clipped */}
             <div className={`${luminosityClass}`} style={{ flex:'45 1 0', minHeight:0, display:'flex',
               flexDirection:'column', background:panelBg, overflow:'visible', position:'relative' }}>
-              {/* Panel header */}
-              <div style={{...headerStyle}}>COLOR BOARD</div>
+              {/* Headers suppressed — SideBets handles internally with compactLandscape */}
               <div style={{flex:1,minHeight:0,overflow:'visible',padding:'0 3px 3px 3px'}}>
                 <SideBets
                   communityCards={communityCards}
@@ -457,6 +455,7 @@ export default function MobileGameLayout({
                   riverWinFlash={riverWinFlash} selectedChip={selectedChip}
                   hoveredRankRow={hoveredRankRow} isRankBetPlaced={isRankBetPlaced}
                   activeColorSide={activeColorSide} onColorSideConflict={onCloseColorSideAlert}
+                  compactLandscape={true}
                 />
               </div>
             </div>
