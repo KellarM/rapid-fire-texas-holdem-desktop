@@ -450,12 +450,12 @@ export default function SideBets({
                 key={type}
                 onMouseEnter={() => onHoverRiver && onHoverRiver(type)}
                 onMouseLeave={() => onHoverRiver && onHoverRiver(null)}
-                onMouseDown={(e) => { if (e.button !== 0) return; if (gamePhase === 'lowHighBetting') onLowHighBet(type); }}
-                onTouchEnd={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
                   const hasBetHere = lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0;
-                  if (hasBetHere && e.target.closest('[data-chip]')) {
+                  // Tapping chip icon removes; tapping button body adds
+                  if (hasBetHere && (e.target.dataset.chip || e.target.closest('[data-chip]'))) {
                     onRemoveLowHighBet();
                   } else {
                     onLowHighBet(type);
@@ -463,7 +463,7 @@ export default function SideBets({
                 }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
                 whileTap={canBetLH ? { scale: 0.95 } : {}}
-                style={{ ...riverBlockStyle, position: 'relative', overflow: 'visible' }}
+                style={{ ...riverBlockStyle, position: 'relative', overflow: 'visible', touchAction: 'none', minHeight: 34 }}
                 className={`relative transition-all duration-200 ${canBetLH ? 'cursor-pointer hover:brightness-110 lp-magnetic' : 'cursor-default'}`}
               >
                 <EnergyArcOverlay active={isHovered && canBetLH} />
