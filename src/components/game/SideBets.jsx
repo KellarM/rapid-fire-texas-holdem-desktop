@@ -158,9 +158,9 @@ export default function SideBets({
         onTouchEnd={(e) => {
           e.preventDefault();
           if (gamePhase !== 'betting') return;
-          // Tap on existing bet = remove it
-          if (hasBet) { onRemoveRedBlackBet(opt.key); return; }
-          // Tap on empty = add, but check side-lock rule first
+          // If the tap landed on a chip, remove the bet
+          if (e.target.closest('[data-chip="true"]')) { onRemoveRedBlackBet(opt.key); return; }
+          // Otherwise always add — check side-lock rule first
           if (isSideLocked && !colorLocked) { if (onColorSideConflict) onColorSideConflict(); return; }
           onRedBlackBet(opt.key);
         }}
@@ -456,8 +456,9 @@ export default function SideBets({
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
-                  // Tap on existing bet = remove it
-                  if (hasBet) { onRemoveLowHighBet(); return; }
+                  // If the tap landed on a chip, remove the bet
+                  if (e.target.closest('[data-chip="true"]')) { onRemoveLowHighBet(); return; }
+                  // Otherwise always add
                   onLowHighBet(type);
                 }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
