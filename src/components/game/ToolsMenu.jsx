@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Wrench, BarChart2, Award, PieChart, Layers, Database, Timer, Users, ShieldAlert, FileText, Swords, Eye, LineChart } from 'lucide-react';
+import { Wrench, BarChart2, Award, PieChart, Layers, Timer, Eye, LineChart } from 'lucide-react';
 
 const TOOLS = [
   { icon: BarChart2,  label: 'Player Stats',               type: 'stats'           },
-  { icon: Database,   label: 'Molly Simulator',            type: 'mollySimulator', badge: 'NEW', badgeColor: 'bg-yellow-700/60 text-yellow-300 border-yellow-600/40' },
-  { icon: Users,      label: 'Archetype Battle',           type: 'archetypeBattle', badge: 'NEW', badgeColor: 'bg-purple-700/60 text-purple-300 border-purple-600/40' },
-  { icon: ShieldAlert,label: 'Exploit Hunter',             type: 'exploitHunter',  badge: 'NEW', badgeColor: 'bg-red-700/60 text-red-300 border-red-600/40' },
-  { icon: FileText,   label: 'Compliance Report',          type: 'complianceReport', badge: 'NEW', badgeColor: 'bg-green-700/60 text-green-300 border-green-600/40' },
-  { icon: Swords,     label: 'KS Strategy Test',            type: 'ksStrategyTest',   badge: 'NEW', badgeColor: 'bg-purple-700/60 text-purple-300 border-purple-600/40' },
   { icon: Eye,        label: 'Observer',                    type: 'observer',         badge: 'NEW', badgeColor: 'bg-cyan-700/60 text-cyan-300 border-cyan-600/40' },
   { icon: LineChart,  label: 'Analytics',                   type: 'analytics',        badge: 'NEW', badgeColor: 'bg-green-700/60 text-green-300 border-green-600/40' },
   { icon: Award,      label: 'Gaming License Calibration', href: '/gaming-license' },
@@ -19,11 +14,6 @@ const TOOLS = [
 
 export default function ToolsMenu({
   onOpenStats,
-  onOpenMollySimulator,
-  onOpenArchetypeBattle,
-  onOpenExploitHunter,
-  onOpenComplianceReport,
-  onOpenKsStrategyTest,
   onOpenObserver,
   onOpenAnalytics,
   onOpenGameTiming,
@@ -47,11 +37,6 @@ export default function ToolsMenu({
 
   const typeHandlers = {
     stats:            onOpenStats,
-    mollySimulator:   onOpenMollySimulator,
-    archetypeBattle:  onOpenArchetypeBattle,
-    exploitHunter:    onOpenExploitHunter,
-    complianceReport:  onOpenComplianceReport,
-    ksStrategyTest:   onOpenKsStrategyTest,
     observer:         onOpenObserver,
     analytics:        onOpenAnalytics,
     gameTiming:        onOpenGameTiming,
