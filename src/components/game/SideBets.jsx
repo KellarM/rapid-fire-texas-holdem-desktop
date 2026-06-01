@@ -68,6 +68,7 @@ export default function SideBets({
   selectedChip,
   hoveredRankRow,
   isRankBetPlaced,
+  compactLandscape,   // landscape mode: hides headers, flips color grid to 3×2
 }) {
   const colorLocked = killSwitchActive || !rankBetActive;
   const riverLocked = !rankBetActive;
@@ -286,13 +287,15 @@ export default function SideBets({
     <div className="flex flex-col h-full gap-1">
       {/* Color Board */}
       <div className="relative flex flex-col min-h-0" style={{ flex: '3 1 0' }}>
-        {/* Header */}
-        <div
-          className="text-xs font-black tracking-wider uppercase mb-1 text-center flex-shrink-0"
-          style={{ ...goldEmbossText, fontSize: '0.7rem', letterSpacing: '0.1em' }}
-        >
-          Color Board
-        </div>
+        {/* Header — hidden in landscape to save space */}
+        {!compactLandscape && (
+          <div
+            className="text-xs font-black tracking-wider uppercase mb-1 text-center flex-shrink-0"
+            style={{ ...goldEmbossText, fontSize: '0.7rem', letterSpacing: '0.1em' }}
+          >
+            Color Board
+          </div>
+        )}
 
         {/* Kill Switch Overlay */}
         {killSwitchActive && gamePhase === 'betting' && (
@@ -348,25 +351,35 @@ export default function SideBets({
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-2 gap-1 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
-          <div className="flex flex-col gap-1">
+        {compactLandscape ? (
+          /* Landscape: 3 columns × 2 rows — red row on top, black row on bottom */
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gridTemplateRows:'repeat(2,1fr)', gap:3, flex:1, minHeight:0 }}>
             {RED_OPTIONS.map(opt => renderRBCell(opt, true))}
-          </div>
-          <div className="flex flex-col gap-1">
             {BLACK_OPTIONS.map(opt => renderRBCell(opt, false))}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-1 flex-1 min-h-0" style={{ gridTemplateRows: '1fr' }}>
+            <div className="flex flex-col gap-1">
+              {RED_OPTIONS.map(opt => renderRBCell(opt, true))}
+            </div>
+            <div className="flex flex-col gap-1">
+              {BLACK_OPTIONS.map(opt => renderRBCell(opt, false))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* River — Low / High */}
       <div className="relative flex flex-col min-h-0" style={{ flex: '2 1 0' }}>
-        {/* Header */}
-        <div
-          className={`text-xs font-black tracking-wider uppercase mb-1 text-center flex-shrink-0 ${canBetLH && !hoveredRiverType ? 'animate-pulse' : ''}`}
-          style={{ ...goldEmbossText, fontSize: '0.7rem', letterSpacing: '0.1em' }}
-        >
-          River — Low / High
-        </div>
+        {/* Header — hidden in landscape to save space */}
+        {!compactLandscape && (
+          <div
+            className={`text-xs font-black tracking-wider uppercase mb-1 text-center flex-shrink-0 ${canBetLH && !hoveredRiverType ? 'animate-pulse' : ''}`}
+            style={{ ...goldEmbossText, fontSize: '0.7rem', letterSpacing: '0.1em' }}
+          >
+            River — Low / High
+          </div>
+        )}
 
         {/* Smoked Glass Vault — River locked before turn is dealt OR rank gate not met */}
         {(gamePhase === 'betting' || gamePhase === 'flop' || (gamePhase === 'lowHighBetting' && !rankBetActive)) && (
