@@ -266,7 +266,6 @@ export default function MobileGameLayout({
         className={`velvet-board text-white theme-${boardTheme || 'red'}`}
         style={{ width:'100dvw', height:'100dvh', display:'flex', overflow:'hidden' }}
         onClick={preloadSounds}
-        onTouchStart={preloadSounds}
       >
         {/* ── Alerts ── */}
         <HandBetLimitAlert isOpen={showHandLimitAlert} onClose={onCloseHandAlert} />
@@ -303,19 +302,19 @@ export default function MobileGameLayout({
             <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
           </div>
 
-          {/* Community cards — 40px hard cap, scale(0.46) to crush internal sizing */}
-          <div style={{ flexShrink:0, height:40, maxHeight:40, overflow:'hidden',
+          {/* Community cards — 30px hard cap, scale(0.40) */}
+          <div style={{ flexShrink:0, height:30, maxHeight:30, overflow:'hidden',
             display:'flex', alignItems:'center', justifyContent:'center',
             background:'rgba(0,0,0,0.5)', borderBottom:panelBorder, padding:'0 4px' }}>
             <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt=""
-              style={{width:10,height:'auto',borderRadius:2,flexShrink:0,opacity:0.7}} />
-            <div style={{ transform:'scale(0.46)', transformOrigin:'center center',
+              style={{width:9,height:'auto',borderRadius:2,flexShrink:0,opacity:0.7}} />
+            <div style={{ transform:'scale(0.40)', transformOrigin:'center center',
               display:'flex', alignItems:'center', flexShrink:0,
-              width:'75%', justifyContent:'center', pointerEvents:'none' }}>
+              width:'78%', justifyContent:'center', pointerEvents:'none' }}>
               <CommunityCards cards={communityCards} phase={gamePhase} />
             </div>
             <img src={LOGO_URLS[boardTheme]||LOGO_URLS.red} alt=""
-              style={{width:10,height:'auto',borderRadius:2,flexShrink:0,opacity:0.7}} />
+              style={{width:9,height:'auto',borderRadius:2,flexShrink:0,opacity:0.7}} />
           </div>
 
           {/* Win display */}
@@ -323,10 +322,10 @@ export default function MobileGameLayout({
             <DetailedPayoutDisplay winInfo={lastWinInfo} playerCount={playerCount} />
           </div>
 
-          {/* 5×2 Hand grid */}
+          {/* 5×2 Hand grid — flex:1 but capped so cards stay compact */}
           <div style={{ flex:1, minHeight:0, display:'grid',
             gridTemplateColumns:'repeat(5,1fr)', gridTemplateRows:'repeat(2,1fr)',
-            gap:2, padding:'2px' }}>
+            gap:2, padding:'2px', maxHeight:'calc(100% - 80px)' }}>
             {displayOrder.map(hid => {
               const hand = FIXED_HANDS.find(h => h.id === hid);
               if (!hand) return null;
