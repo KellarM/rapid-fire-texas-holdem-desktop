@@ -454,18 +454,6 @@ export default function MobileGameLayout({
           </span>
         </div>
 
-        {/* DEMO MODE badge — bottom right */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          padding: '4px 8px', borderRadius: 6,
-          border: '2px solid #f59e0b',
-          background: 'linear-gradient(135deg, rgba(120,53,15,0.95) 0%, rgba(0,0,0,0.95) 100%)',
-          boxShadow: '0 0 10px rgba(245,158,11,0.5)',
-          flexShrink: 0,
-        }}>
-          <span style={{ fontSize: 8, color: '#f59e0b', fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>⚡ DEMO</span>
-        </div>
-
         {/* Gear menu button + dropdown */}
         <div className="flex items-center gap-1 flex-shrink-0" style={{ position: 'relative' }}>
           {gamePhase === 'betting' && totalBet > 0 && (
@@ -688,6 +676,19 @@ export default function MobileGameLayout({
             toolsVisible={toolsVisible}
           />
         </div>
+
+        {/* DEMO MODE badge — rightmost, after gear */}
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '4px 8px', borderRadius: 6,
+          border: '2px solid #f59e0b',
+          background: 'linear-gradient(135deg, rgba(120,53,15,0.95) 0%, rgba(0,0,0,0.95) 100%)',
+          boxShadow: '0 0 10px rgba(245,158,11,0.5)',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 8, color: '#f59e0b', fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>⚡ DEMO</span>
+        </div>
+
       </div>
     </div>
   );
