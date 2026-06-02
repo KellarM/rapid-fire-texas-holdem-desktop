@@ -383,6 +383,33 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                         color="#34d399" />
                     ))}
                 </div>
+
+                {/* 3. Player Hand Bets — Games / Wins / Losses */}
+                <div className="border border-purple-700/30 rounded-xl p-3">
+                  <div className="text-purple-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Hand Bets</div>
+                  {s.playerHandBreakdown && Object.keys(s.playerHandBreakdown).length > 0 ? (
+                    <div>
+                      <div className="grid grid-cols-4 mb-2">
+                        <div className="text-gray-500 text-[9px] font-semibold">Hand</div>
+                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                      </div>
+                      {Object.entries(s.playerHandBreakdown)
+                        .sort((a, b) => b[1].games - a[1].games)
+                        .map(([hid, d]) => (
+                          <div key={hid} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
+                            <div className="text-purple-300 text-[10px]">Hand {hid}</div>
+                            <div className="text-center text-white text-[10px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-600 text-[10px]">No hand bet data yet</div>
+                  )}
+                </div>
               </div>
             )}
           </div>

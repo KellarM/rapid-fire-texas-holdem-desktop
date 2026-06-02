@@ -142,7 +142,21 @@ Deno.serve(async (req) => {
 
       // ── Player-side breakdowns ─────────────────────────────────────────────
 
-      // Player Rank breakdown: per rank key the player bet on — games / wins / losses
+      // Player Hand breakdown: per hand ID the player bet on — games / wins / losses
+      const playerHandBreakdown: Record<string, { games: number; wins: number; losses: number }> = {};
+      withCardBet.forEach(e => {
+        const hb = e.hand_bets || {};
+        const winnerIds = (e.winner_hand_ids || []).map(String);
+        Object.entries(hb).forEach(([hid, amt]) => {
+          if (Number(amt) <= 0) return;
+          if (!playerHandBreakdown[hid]) playerHandBreakdown[hid] = { games: 0, wins: 0, losses: 0 };
+          playerHandBreakdown[hid].games++;
+          if (winnerIds.includes(String(hid))) playerHandBreakdown[hid].wins++;
+          else playerHandBreakdown[hid].losses++;
+        });
+      });
+
+            // Player Rank breakdown: per rank key the player bet on — games / wins / losses
       const playerRankBreakdown: Record<string, { games: number; wins: number; losses: number }> = {};
       withRankBet.forEach(e => {
         const rb = e.rank_bets || {};
@@ -220,6 +234,7 @@ Deno.serve(async (req) => {
         rankBreakdown, colorBreakdown, riverBreakdown,
         handWinBreakdown, handBetBreakdown,
         playerRankBreakdown, playerColorBreakdown, playerRiverBreakdown,
+        playerHandBreakdown,
       });
     }
 
