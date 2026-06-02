@@ -42,7 +42,37 @@ function BarRow({ label, value, max, color = '#eab308' }) {
   );
 }
 
-export default function AnalyticsDashboard({ isOpen, onClose }) {
+// Hand card labels — suit symbols with color metadata
+const SUIT_SYMBOL = { diamonds: '♦', hearts: '♥', clubs: '♣', spades: '♠' };
+const SUIT_COLOR  = { diamonds: '#f87171', hearts: '#f87171', clubs: '#e2e8f0', spades: '#e2e8f0' };
+
+const HAND_LABELS = {
+  1:  [{ rank: 'A',  suit: 'diamonds' }, { rank: '10', suit: 'hearts'   }],
+  2:  [{ rank: 'K',  suit: 'clubs'    }, { rank: 'K',  suit: 'spades'   }],
+  3:  [{ rank: 'Q',  suit: 'clubs'    }, { rank: 'J',  suit: 'spades'   }],
+  4:  [{ rank: 'Q',  suit: 'spades'   }, { rank: '10', suit: 'spades'   }],
+  5:  [{ rank: 'J',  suit: 'clubs'    }, { rank: '9',  suit: 'clubs'    }],
+  6:  [{ rank: '8',  suit: 'diamonds' }, { rank: '6',  suit: 'diamonds' }],
+  7:  [{ rank: '7',  suit: 'diamonds' }, { rank: '7',  suit: 'spades'   }],
+  8:  [{ rank: '4',  suit: 'hearts'   }, { rank: '2',  suit: 'hearts'   }],
+  9:  [{ rank: '3',  suit: 'clubs'    }, { rank: '3',  suit: 'hearts'   }],
+  10: [{ rank: 'A',  suit: 'hearts'   }, { rank: '5',  suit: 'diamonds' }],
+};
+
+// Renders e.g.  <span>A<span style="color:red">♦</span> / 10<span style="color:red">♥</span></span>
+function HandLabel({ hid }) {
+  const cards = HAND_LABELS[parseInt(hid)];
+  if (!cards) return <span>Hand {hid}</span>;
+  return (
+    <span className="font-mono">
+      {cards[0].rank}<span style={{ color: SUIT_COLOR[cards[0].suit] }}>{SUIT_SYMBOL[cards[0].suit]}</span>
+      {' / '}
+      {cards[1].rank}<span style={{ color: SUIT_COLOR[cards[1].suit] }}>{SUIT_SYMBOL[cards[1].suit]}</span>
+    </span>
+  );
+}
+
+function AnalyticsDashboard({ isOpen, onClose }) {
   const [loading, setLoading]   = useState(false);
   const [clearing, setClearing] = useState(false);
   const [stats, setStats]       = useState(null);
@@ -367,7 +397,7 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                   {s.handWinBreakdown && Object.entries(s.handWinBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([hid, count]) => (
-                      <BarRow key={hid} label={`Hand ${hid}`} value={count}
+                      <BarRow key={hid} label={<HandLabel hid={hid} />} value={count}
                         max={Math.max(...Object.values(s.handWinBreakdown))}
                         color="#eab308" />
                     ))}
@@ -378,7 +408,7 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                   {s.handBetBreakdown && Object.entries(s.handBetBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([hid, count]) => (
-                      <BarRow key={hid} label={`Hand ${hid}`} value={count}
+                      <BarRow key={hid} label={<HandLabel hid={hid} />} value={count}
                         max={Math.max(...Object.values(s.handBetBreakdown))}
                         color="#34d399" />
                     ))}
@@ -399,7 +429,7 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                         .sort((a, b) => b[1].games - a[1].games)
                         .map(([hid, d]) => (
                           <div key={hid} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
-                            <div className="text-purple-300 text-[10px]">Hand {hid}</div>
+                            <div className="text-purple-300 text-[10px]"><HandLabel hid={hid} /></div>
                             <div className="text-center text-white text-[10px]">{d.games}</div>
                             <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
                             <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
@@ -418,3 +448,5 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
     </AnimatePresence>
   );
 }
+
+export default AnalyticsDashboard;
