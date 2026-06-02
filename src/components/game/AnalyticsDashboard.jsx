@@ -22,9 +22,9 @@ function StatCard({ label, value, sub, color = 'yellow' }) {
   };
   return (
     <div className={`rounded-xl border px-3 py-2.5 ${colors[color]}`}>
-      <div className="text-[10px] font-semibold tracking-wider uppercase opacity-60 mb-1">{label}</div>
+      <div className="text-[12px] font-semibold tracking-wider uppercase opacity-60 mb-1">{label}</div>
       <div className="text-xl font-bold leading-none">{value}</div>
-      {sub && <div className="text-[10px] opacity-50 mt-1">{sub}</div>}
+      {sub && <div className="text-[12px] opacity-50 mt-1">{sub}</div>}
     </div>
   );
 }
@@ -33,11 +33,11 @@ function BarRow({ label, value, max, color = '#eab308' }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-2 py-0.5">
-      <span className="text-[10px] text-gray-400 w-20 flex-shrink-0 truncate">{label}</span>
+      <span className="text-[12px] text-gray-400 w-28 flex-shrink-0 truncate">{label}</span>
       <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
       </div>
-      <span className="text-[10px] text-gray-300 w-8 text-right flex-shrink-0">{value}</span>
+      <span className="text-[12px] text-gray-300 w-8 text-right flex-shrink-0">{value}</span>
     </div>
   );
 }
@@ -121,7 +121,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
             <div className="flex items-center gap-2">
               <BarChart2 className="w-5 h-5 text-yellow-400" />
               <span className="text-yellow-300 font-bold tracking-wide text-sm uppercase">Game Analytics</span>
-              {s && <span className="text-[10px] text-yellow-400/50 ml-1">{s.totalRounds} rounds recorded</span>}
+              {s && <span className="text-[12px] text-yellow-400/50 ml-1">{s.totalRounds} rounds recorded</span>}
             </div>
             <div className="flex items-center gap-2">
               <button onClick={load} disabled={loading}
@@ -183,7 +183,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Board Breakdown</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">Board Breakdown</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: 'Card Board',  games: s.cardGames,  boardWins: s.cardBoardWins,  playerWins: s.cardPlayerWins  },
@@ -199,22 +199,22 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                       return (
                         <div key={label} className="rounded-lg border border-slate-700/50 overflow-hidden">
                           <div className="grid grid-cols-4 bg-slate-800/60 border-b border-slate-700/50">
-                            <div className="col-span-1 px-1.5 py-1 text-yellow-400 font-bold text-[9px] truncate">{label}</div>
-                            <div className="px-1 py-1 text-center text-gray-400 font-semibold text-[9px]">Games</div>
-                            <div className="px-1 py-1 text-center text-red-400 font-semibold text-[9px]">Board</div>
-                            <div className="px-1 py-1 text-center text-green-400 font-semibold text-[9px]">Player</div>
+                            <div className="col-span-1 px-1.5 py-1 text-yellow-400 font-bold text-[11px] truncate">{label}</div>
+                            <div className="px-1 py-1 text-center text-gray-400 font-semibold text-[11px]">Games</div>
+                            <div className="px-1 py-1 text-center text-red-400 font-semibold text-[11px]">Board</div>
+                            <div className="px-1 py-1 text-center text-green-400 font-semibold text-[11px]">Player</div>
                           </div>
                           <div className="grid grid-cols-4 border-b border-slate-700/30">
-                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[9px] font-semibold">Total</div>
-                            <div className="px-1 py-1 text-center text-white font-bold text-[9px]">{g}</div>
-                            <div className="px-1 py-1 text-center text-red-300 font-bold text-[9px]">{bw}</div>
-                            <div className="px-1 py-1 text-center text-green-300 font-bold text-[9px]">{pw}</div>
+                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[11px] font-semibold">Total</div>
+                            <div className="px-1 py-1 text-center text-white font-bold text-[11px]">{g}</div>
+                            <div className="px-1 py-1 text-center text-red-300 font-bold text-[11px]">{bw}</div>
+                            <div className="px-1 py-1 text-center text-green-300 font-bold text-[11px]">{pw}</div>
                           </div>
                           <div className="grid grid-cols-4">
-                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[9px] font-semibold">%</div>
-                            <div className="px-1 py-1 text-center text-white text-[9px]">100%</div>
-                            <div className="px-1 py-1 text-center text-red-300 text-[9px]">{bwPct}</div>
-                            <div className="px-1 py-1 text-center text-green-300 text-[9px]">{pwPct}</div>
+                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[11px] font-semibold">%</div>
+                            <div className="px-1 py-1 text-center text-white text-[11px]">100%</div>
+                            <div className="px-1 py-1 text-center text-red-300 text-[11px]">{bwPct}</div>
+                            <div className="px-1 py-1 text-center text-green-300 text-[11px]">{pwPct}</div>
                           </div>
                         </div>
                       );
@@ -223,7 +223,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Side Bet Gate Closure (Kill Switch)</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-2">Side Bet Gate Closure (Kill Switch)</div>
                   <div className="flex items-center gap-4 mb-1">
                     <div>
                       <span className="text-2xl font-bold text-orange-400">{fmtPct(s.killSwitchRate)}</span>
@@ -235,11 +235,11 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                         : <><TrendingDown className="w-3 h-3 text-green-400" /> Normal</>}
                     </div>
                   </div>
-                  <div className="text-[10px] text-gray-600">Gate closes when Rank bet total ≠ Card bet total, locking out Color &amp; River boards.</div>
+                  <div className="text-[12px] text-gray-600">Gate closes when Rank bet total ≠ Card bet total, locking out Color &amp; River boards.</div>
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Betting Patterns</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">Betting Patterns</div>
                   {s.bettingPatterns && (() => {
                     const total = s.totalRounds;
                     const patterns = [
@@ -256,11 +256,11 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                           const pct = total > 0 ? (count / total) * 100 : 0;
                           return (
                             <div key={key} className="flex items-center gap-2">
-                              <span className="text-[10px] text-gray-400 w-36 flex-shrink-0">{label}</span>
+                              <span className="text-[12px] text-gray-400 w-36 flex-shrink-0">{label}</span>
                               <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
                               </div>
-                              <span className="text-[10px] text-gray-300 w-12 text-right flex-shrink-0">{count} <span className="text-gray-600">({pct.toFixed(0)}%)</span></span>
+                              <span className="text-[12px] text-gray-300 w-12 text-right flex-shrink-0">{count} <span className="text-gray-600">({pct.toFixed(0)}%)</span></span>
                             </div>
                           );
                         })}
@@ -275,7 +275,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
               <div className="space-y-4">
                 {/* 1. Board — Winning Ranks */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Winning Ranks (Top Occurrences)</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">Winning Ranks (Top Occurrences)</div>
                   {s.rankBreakdown && Object.entries(s.rankBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([rank, count]) => (
@@ -287,34 +287,34 @@ function AnalyticsDashboard({ isOpen, onClose }) {
 
                 {/* 2. Player — Rank Bets */}
                 <div className="border border-purple-700/30 rounded-xl p-3">
-                  <div className="text-purple-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Rank Bets</div>
+                  <div className="text-purple-400/70 text-[12px] font-semibold uppercase tracking-wider mb-3">Player Rank Bets</div>
                   {s.playerRankBreakdown && Object.keys(s.playerRankBreakdown).length > 0 ? (
                     <div>
                       <div className="grid grid-cols-4 mb-1">
-                        <div className="text-gray-500 text-[9px] font-semibold">Rank</div>
-                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
-                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
-                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                        <div className="text-gray-500 text-[11px] font-semibold">Rank</div>
+                        <div className="text-center text-gray-500 text-[11px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[11px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[11px] font-semibold">Losses</div>
                       </div>
                       {Object.entries(s.playerRankBreakdown)
                         .sort((a, b) => b[1].games - a[1].games)
                         .map(([rank, d]) => (
                           <div key={rank} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
-                            <div className="text-purple-300 text-[10px]">{rank}</div>
-                            <div className="text-center text-white text-[10px]">{d.games}</div>
-                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
-                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                            <div className="text-purple-300 text-[12px]">{rank}</div>
+                            <div className="text-center text-white text-[12px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[12px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[12px]">{d.losses}</div>
                           </div>
                         ))}
                     </div>
                   ) : (
-                    <div className="text-gray-600 text-[10px]">No rank bet data yet</div>
+                    <div className="text-gray-600 text-[12px]">No rank bet data yet</div>
                   )}
                 </div>
 
                 {/* 3. Board — Color Board Results */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Color Board Results</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">Color Board Results</div>
                   {s.colorBreakdown && Object.entries(s.colorBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([color, count]) => (
@@ -326,34 +326,34 @@ function AnalyticsDashboard({ isOpen, onClose }) {
 
                 {/* 4. Player — Color Bets */}
                 <div className="border border-blue-700/30 rounded-xl p-3">
-                  <div className="text-blue-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Color Bets</div>
+                  <div className="text-blue-400/70 text-[12px] font-semibold uppercase tracking-wider mb-3">Player Color Bets</div>
                   {s.playerColorBreakdown && Object.keys(s.playerColorBreakdown).length > 0 ? (
                     <div>
                       <div className="grid grid-cols-4 mb-1">
-                        <div className="text-gray-500 text-[9px] font-semibold">Key</div>
-                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
-                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
-                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                        <div className="text-gray-500 text-[11px] font-semibold">Key</div>
+                        <div className="text-center text-gray-500 text-[11px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[11px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[11px] font-semibold">Losses</div>
                       </div>
                       {Object.entries(s.playerColorBreakdown)
                         .sort((a, b) => b[1].games - a[1].games)
                         .map(([key, d]) => (
                           <div key={key} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
-                            <div className={`text-[10px] font-semibold ${key.includes('R') ? 'text-red-400' : 'text-blue-400'}`}>{key}</div>
-                            <div className="text-center text-white text-[10px]">{d.games}</div>
-                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
-                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                            <div className={`text-[12px] font-semibold ${key.includes('R') ? 'text-red-400' : 'text-blue-400'}`}>{key}</div>
+                            <div className="text-center text-white text-[12px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[12px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[12px]">{d.losses}</div>
                           </div>
                         ))}
                     </div>
                   ) : (
-                    <div className="text-gray-600 text-[10px]">No color bet data yet</div>
+                    <div className="text-gray-600 text-[12px]">No color bet data yet</div>
                   )}
                 </div>
 
                 {/* 5. Board — River Board */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">River Board (Low / High)</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">River Board (Low / High)</div>
                   <div className="grid grid-cols-2 gap-2">
                     <StatCard label="LOW wins" value={s.riverBreakdown?.LOW || 0} color="green" />
                     <StatCard label="HIGH wins" value={s.riverBreakdown?.HIGH || 0} color="blue" />
@@ -362,29 +362,29 @@ function AnalyticsDashboard({ isOpen, onClose }) {
 
                 {/* 6. Player — River Bets */}
                 <div className="border border-green-700/30 rounded-xl p-3">
-                  <div className="text-green-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player River Bets</div>
+                  <div className="text-green-400/70 text-[12px] font-semibold uppercase tracking-wider mb-3">Player River Bets</div>
                   {s.playerRiverBreakdown ? (
                     <div>
                       <div className="grid grid-cols-4 mb-1">
-                        <div className="text-gray-500 text-[9px] font-semibold">Side</div>
-                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
-                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
-                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                        <div className="text-gray-500 text-[11px] font-semibold">Side</div>
+                        <div className="text-center text-gray-500 text-[11px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[11px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[11px] font-semibold">Losses</div>
                       </div>
                       {['LOW','HIGH'].map(side => {
                         const d = s.playerRiverBreakdown[side] || { games: 0, wins: 0, losses: 0 };
                         return (
                           <div key={side} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
-                            <div className={`text-[10px] font-semibold ${side === 'LOW' ? 'text-green-400' : 'text-blue-400'}`}>{side}</div>
-                            <div className="text-center text-white text-[10px]">{d.games}</div>
-                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
-                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                            <div className={`text-[12px] font-semibold ${side === 'LOW' ? 'text-green-400' : 'text-blue-400'}`}>{side}</div>
+                            <div className="text-center text-white text-[12px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[12px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[12px]">{d.losses}</div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="text-gray-600 text-[10px]">No river bet data yet</div>
+                    <div className="text-gray-600 text-[12px]">No river bet data yet</div>
                   )}
                 </div>
               </div>
@@ -393,7 +393,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
             {!loading && s && tab === 'hands' && (
               <div className="space-y-4">
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Hand Win Frequency</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-3">Hand Win Frequency</div>
                   {s.handWinBreakdown && Object.entries(s.handWinBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([hid, count]) => (
@@ -404,7 +404,7 @@ function AnalyticsDashboard({ isOpen, onClose }) {
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Most Bet Hands</div>
+                  <div className="text-yellow-400/60 text-[12px] font-semibold uppercase tracking-wider mb-2">Most Bet Hands</div>
                   {s.handBetBreakdown && Object.entries(s.handBetBreakdown)
                     .sort((a, b) => b[1] - a[1])
                     .map(([hid, count]) => (
@@ -416,28 +416,28 @@ function AnalyticsDashboard({ isOpen, onClose }) {
 
                 {/* 3. Player Hand Bets — Games / Wins / Losses */}
                 <div className="border border-purple-700/30 rounded-xl p-3">
-                  <div className="text-purple-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Hand Bets</div>
+                  <div className="text-purple-400/70 text-[12px] font-semibold uppercase tracking-wider mb-3">Player Hand Bets</div>
                   {s.playerHandBreakdown && Object.keys(s.playerHandBreakdown).length > 0 ? (
                     <div>
                       <div className="grid grid-cols-4 mb-2">
-                        <div className="text-gray-500 text-[9px] font-semibold">Hand</div>
-                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
-                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
-                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                        <div className="text-gray-500 text-[11px] font-semibold">Hand</div>
+                        <div className="text-center text-gray-500 text-[11px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[11px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[11px] font-semibold">Losses</div>
                       </div>
                       {Object.entries(s.playerHandBreakdown)
                         .sort((a, b) => b[1].games - a[1].games)
                         .map(([hid, d]) => (
                           <div key={hid} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
-                            <div className="text-purple-300 text-[10px]"><HandLabel hid={hid} /></div>
-                            <div className="text-center text-white text-[10px]">{d.games}</div>
-                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
-                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                            <div className="text-purple-300 text-[12px]"><HandLabel hid={hid} /></div>
+                            <div className="text-center text-white text-[12px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[12px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[12px]">{d.losses}</div>
                           </div>
                         ))}
                     </div>
                   ) : (
-                    <div className="text-gray-600 text-[10px]">No hand bet data yet</div>
+                    <div className="text-gray-600 text-[12px]">No hand bet data yet</div>
                   )}
                 </div>
               </div>
