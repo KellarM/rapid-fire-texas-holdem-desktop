@@ -53,15 +53,25 @@ Deno.serve(async (req) => {
         const winnerIds = (e.winner_hand_ids || []).map(String);
         return winnerIds.some(wid => Number(e.hand_bets[wid] || e.hand_bets[Number(wid)] || 0) > 0);
       }).length;
-      // Rank win: player had a rank bet and it matched the winning rank
-      const rankWins  = withRankBet.filter(e => !!e.rank_win).length;
-      // Color win: player had a color bet and a winning color matched their bet key
+      // Rank win: recomputed from raw data — player's exact bet key must match winning rank
+      // (never trust saved rank_win boolean — old records may have been saved incorrectly)
+      const rankWins  = withRankBet.filter(e => {
+        if (!e.winning_rank) return false;
+        const rb = e.rank_bets || {};
+        return Object.entries(rb).some(([key, amt]) => Number(amt) > 0 && key === e.winning_rank);
+      }).length;
+      // Color win: recomputed from raw data — player's bet key must be in winning_colors
       const colorWins = withColorBet.filter(e => {
         const winColors = e.winning_colors || [];
-        return winColors.some(wc => Number(e.color_bets[wc] || 0) > 0);
+        return winColors.some(wc => Number((e.color_bets || {})[wc] || 0) > 0);
       }).length;
-      // River win: player had a river bet and won
-      const riverWins = withRiverBet.filter(e => !!e.river_win).length;
+      // River win: recomputed from raw data — player's bet type must match winning_low_high
+      const riverWins = withRiverBet.filter(e => {
+        const lh = e.low_high_bet;
+        if (!lh || !e.winning_low_high) return false;
+        const betType = typeof lh === 'object' ? lh.type : null;
+        return betType === e.winning_low_high;
+      }).length;
 
       const cardWinRate  = withCardBet.length  > 0 ? cardWins  / withCardBet.length  : null;
       const rankWinRate  = withRankBet.length  > 0 ? rankWins  / withRankBet.length  : null;
