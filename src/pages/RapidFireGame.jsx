@@ -1395,9 +1395,15 @@ export default function RapidFireGame() {
         total_payout: roundData.totalPayout || 0,
         net_result: (roundData.totalPayout || 0) - (roundData.totalBet || 0),
         card_win: (roundData.winnerHandIds || []).length > 0 || roundData.isBoardWin,
-        rank_win: !!(roundData.winningRank && Object.values(roundData.rankBets || {}).some(v => v > 0)),
-        color_win: (roundData.winningColors || []).length > 0,
-        river_win: !!(roundData.winningLowHigh),
+        // rank_win: true only if player's specific bet rank matches the actual winning rank
+        rank_win: !!(roundData.winningRank &&
+          Object.entries(roundData.rankBets || {}).some(([key, amt]) => amt > 0 && key === roundData.winningRank)),
+        color_win: (roundData.winningColors || []).length > 0 &&
+          (roundData.winningColors || []).some(wc => Number((roundData.colorBets || {})[wc] || 0) > 0),
+        // river_win: true only if player's bet side (LOW/HIGH) matches the board outcome
+        river_win: !!(roundData.winningLowHigh &&
+          roundData.lowHighBet?.amount > 0 &&
+          roundData.lowHighBet?.type === roundData.winningLowHigh),
         winning_rank: roundData.winningRank || null,
         winning_colors: roundData.winningColors || [],
         winning_low_high: roundData.winningLowHigh || null,
