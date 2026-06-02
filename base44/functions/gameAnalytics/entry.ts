@@ -140,6 +140,51 @@ Deno.serve(async (req) => {
         if (e.winning_low_high === 'HIGH') riverBreakdown.HIGH++;
       });
 
+      // ── Player-side breakdowns ─────────────────────────────────────────────
+
+      // Player Rank breakdown: per rank key the player bet on — games / wins / losses
+      const playerRankBreakdown: Record<string, { games: number; wins: number; losses: number }> = {};
+      withRankBet.forEach(e => {
+        const rb = e.rank_bets || {};
+        const winningRank = e.winning_rank || null;
+        Object.entries(rb).forEach(([key, amt]) => {
+          if (Number(amt) <= 0) return;
+          if (!playerRankBreakdown[key]) playerRankBreakdown[key] = { games: 0, wins: 0, losses: 0 };
+          playerRankBreakdown[key].games++;
+          if (key === winningRank) playerRankBreakdown[key].wins++;
+          else playerRankBreakdown[key].losses++;
+        });
+      });
+
+      // Player Color breakdown: per color key the player bet on — games / wins / losses
+      const playerColorBreakdown: Record<string, { games: number; wins: number; losses: number }> = {};
+      withColorBet.forEach(e => {
+        const cb = e.color_bets || {};
+        const winColors = e.winning_colors || [];
+        Object.entries(cb).forEach(([key, amt]) => {
+          if (Number(amt) <= 0) return;
+          if (!playerColorBreakdown[key]) playerColorBreakdown[key] = { games: 0, wins: 0, losses: 0 };
+          playerColorBreakdown[key].games++;
+          if (winColors.includes(key)) playerColorBreakdown[key].wins++;
+          else playerColorBreakdown[key].losses++;
+        });
+      });
+
+      // Player River breakdown: LOW / HIGH — games / wins / losses
+      const playerRiverBreakdown: Record<string, { games: number; wins: number; losses: number }> = {
+        LOW:  { games: 0, wins: 0, losses: 0 },
+        HIGH: { games: 0, wins: 0, losses: 0 },
+      };
+      withRiverBet.forEach(e => {
+        const lh = e.low_high_bet;
+        if (!lh) return;
+        const betType: string = typeof lh === 'object' ? (lh as any).type : null;
+        if (!betType || !['LOW','HIGH'].includes(betType)) return;
+        playerRiverBreakdown[betType].games++;
+        if (betType === e.winning_low_high) playerRiverBreakdown[betType].wins++;
+        else playerRiverBreakdown[betType].losses++;
+      });
+
       // Hand win breakdown
       const handWinBreakdown = {};
       settled.forEach(e => {
@@ -174,6 +219,7 @@ Deno.serve(async (req) => {
         bettingPatterns,
         rankBreakdown, colorBreakdown, riverBreakdown,
         handWinBreakdown, handBetBreakdown,
+        playerRankBreakdown, playerColorBreakdown, playerRiverBreakdown,
       });
     }
 

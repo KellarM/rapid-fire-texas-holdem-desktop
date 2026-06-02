@@ -243,6 +243,7 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
 
             {!loading && s && tab === 'boards' && (
               <div className="space-y-4">
+                {/* 1. Board — Winning Ranks */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
                   <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Winning Ranks (Top Occurrences)</div>
                   {s.rankBreakdown && Object.entries(s.rankBreakdown)
@@ -254,6 +255,34 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                     ))}
                 </div>
 
+                {/* 2. Player — Rank Bets */}
+                <div className="border border-purple-700/30 rounded-xl p-3">
+                  <div className="text-purple-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Rank Bets</div>
+                  {s.playerRankBreakdown && Object.keys(s.playerRankBreakdown).length > 0 ? (
+                    <div>
+                      <div className="grid grid-cols-4 mb-1">
+                        <div className="text-gray-500 text-[9px] font-semibold">Rank</div>
+                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                      </div>
+                      {Object.entries(s.playerRankBreakdown)
+                        .sort((a, b) => b[1].games - a[1].games)
+                        .map(([rank, d]) => (
+                          <div key={rank} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
+                            <div className="text-purple-300 text-[10px]">{rank}</div>
+                            <div className="text-center text-white text-[10px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-600 text-[10px]">No rank bet data yet</div>
+                  )}
+                </div>
+
+                {/* 3. Board — Color Board Results */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
                   <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Color Board Results</div>
                   {s.colorBreakdown && Object.entries(s.colorBreakdown)
@@ -265,12 +294,68 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                     ))}
                 </div>
 
+                {/* 4. Player — Color Bets */}
+                <div className="border border-blue-700/30 rounded-xl p-3">
+                  <div className="text-blue-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player Color Bets</div>
+                  {s.playerColorBreakdown && Object.keys(s.playerColorBreakdown).length > 0 ? (
+                    <div>
+                      <div className="grid grid-cols-4 mb-1">
+                        <div className="text-gray-500 text-[9px] font-semibold">Key</div>
+                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                      </div>
+                      {Object.entries(s.playerColorBreakdown)
+                        .sort((a, b) => b[1].games - a[1].games)
+                        .map(([key, d]) => (
+                          <div key={key} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
+                            <div className={`text-[10px] font-semibold ${key.includes('R') ? 'text-red-400' : 'text-blue-400'}`}>{key}</div>
+                            <div className="text-center text-white text-[10px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-600 text-[10px]">No color bet data yet</div>
+                  )}
+                </div>
+
+                {/* 5. Board — River Board */}
                 <div className="border border-yellow-700/20 rounded-xl p-3">
                   <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">River Board (Low / High)</div>
                   <div className="grid grid-cols-2 gap-2">
                     <StatCard label="LOW wins" value={s.riverBreakdown?.LOW || 0} color="green" />
                     <StatCard label="HIGH wins" value={s.riverBreakdown?.HIGH || 0} color="blue" />
                   </div>
+                </div>
+
+                {/* 6. Player — River Bets */}
+                <div className="border border-green-700/30 rounded-xl p-3">
+                  <div className="text-green-400/70 text-[10px] font-semibold uppercase tracking-wider mb-3">Player River Bets</div>
+                  {s.playerRiverBreakdown ? (
+                    <div>
+                      <div className="grid grid-cols-4 mb-1">
+                        <div className="text-gray-500 text-[9px] font-semibold">Side</div>
+                        <div className="text-center text-gray-500 text-[9px] font-semibold">Games</div>
+                        <div className="text-center text-green-400 text-[9px] font-semibold">Wins</div>
+                        <div className="text-center text-red-400 text-[9px] font-semibold">Losses</div>
+                      </div>
+                      {['LOW','HIGH'].map(side => {
+                        const d = s.playerRiverBreakdown[side] || { games: 0, wins: 0, losses: 0 };
+                        return (
+                          <div key={side} className="grid grid-cols-4 py-1 border-b border-slate-800/50">
+                            <div className={`text-[10px] font-semibold ${side === 'LOW' ? 'text-green-400' : 'text-blue-400'}`}>{side}</div>
+                            <div className="text-center text-white text-[10px]">{d.games}</div>
+                            <div className="text-center text-green-300 text-[10px]">{d.wins}</div>
+                            <div className="text-center text-red-300 text-[10px]">{d.losses}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-gray-600 text-[10px]">No river bet data yet</div>
+                  )}
                 </div>
               </div>
             )}
