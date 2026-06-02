@@ -68,6 +68,23 @@ Deno.serve(async (req) => {
       const colorWinRate = withColorBet.length > 0 ? colorWins / withColorBet.length : null;
       const riverWinRate = withRiverBet.length > 0 ? riverWins / withRiverBet.length : null;
 
+      // Per-board: Games / Board wins (house won) / Player wins
+      const cardGames       = withCardBet.length;
+      const cardPlayerWins  = cardWins;
+      const cardBoardWins   = cardGames - cardPlayerWins;
+
+      const rankGames       = withRankBet.length;
+      const rankPlayerWins  = rankWins;
+      const rankBoardWins   = rankGames - rankPlayerWins;
+
+      const colorGames      = withColorBet.length;
+      const colorPlayerWins = colorWins;
+      const colorBoardWins  = colorGames - colorPlayerWins;
+
+      const riverGames      = withRiverBet.length;
+      const riverPlayerWins = riverWins;
+      const riverBoardWins  = riverGames - riverPlayerWins;
+
       // Kill switch: rounds where player had hand+rank bets but no color or river (gate was closed)
       const killSwitchRounds = settled.filter(e => e.kill_switch_active).length;
       const gateClosedRounds = settled.filter(e => {
@@ -139,6 +156,10 @@ Deno.serve(async (req) => {
         withRankBetCount: withRankBet.length,
         withColorBetCount: withColorBet.length,
         withRiverBetCount: withRiverBet.length,
+        cardGames, cardBoardWins, cardPlayerWins,
+        rankGames, rankBoardWins, rankPlayerWins,
+        colorGames, colorBoardWins, colorPlayerWins,
+        riverGames, riverBoardWins, riverPlayerWins,
         killSwitchRate,
         bettingPatterns,
         rankBreakdown, colorBreakdown, riverBreakdown,

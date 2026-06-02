@@ -153,21 +153,42 @@ export default function AnalyticsDashboard({ isOpen, onClose }) {
                 </div>
 
                 <div className="border border-yellow-700/20 rounded-xl p-3">
-                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-2">Board Win Rates <span className="text-gray-600 normal-case font-normal">(wins / rounds where bet was placed)</span></div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <div className="text-yellow-400/60 text-[10px] font-semibold uppercase tracking-wider mb-3">Board Breakdown</div>
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Card Board',  val: s.cardWinRate,  count: s.withCardBetCount  },
-                      { label: 'Rank Board',  val: s.rankWinRate,  count: s.withRankBetCount  },
-                      { label: 'Color Board', val: s.colorWinRate, count: s.withColorBetCount },
-                      { label: 'River Board', val: s.riverWinRate, count: s.withRiverBetCount },
-                    ].map(({ label, val, count }) => (
-                      <div key={label} className="flex justify-between items-center text-xs py-1 border-b border-slate-800">
-                        <span className="text-gray-400">{label}<span className="text-gray-600 ml-1">({count || 0}r)</span></span>
-                        <span className={val === null ? 'text-gray-600' : val > 0.5 ? 'text-green-400' : 'text-yellow-300'}>
-                          {val === null ? 'N/A' : fmtPct(val)}
-                        </span>
-                      </div>
-                    ))}
+                      { label: 'Card Board',  games: s.cardGames,  boardWins: s.cardBoardWins,  playerWins: s.cardPlayerWins  },
+                      { label: 'Rank Board',  games: s.rankGames,  boardWins: s.rankBoardWins,  playerWins: s.rankPlayerWins  },
+                      { label: 'Color Board', games: s.colorGames, boardWins: s.colorBoardWins, playerWins: s.colorPlayerWins },
+                      { label: 'River Board', games: s.riverGames, boardWins: s.riverBoardWins, playerWins: s.riverPlayerWins },
+                    ].map(({ label, games, boardWins, playerWins }) => {
+                      const g  = games      || 0;
+                      const bw = boardWins  || 0;
+                      const pw = playerWins || 0;
+                      const bwPct = g > 0 ? ((bw / g) * 100).toFixed(1) + '%' : '—';
+                      const pwPct = g > 0 ? ((pw / g) * 100).toFixed(1) + '%' : '—';
+                      return (
+                        <div key={label} className="rounded-lg border border-slate-700/50 overflow-hidden">
+                          <div className="grid grid-cols-4 bg-slate-800/60 border-b border-slate-700/50">
+                            <div className="col-span-1 px-1.5 py-1 text-yellow-400 font-bold text-[9px] truncate">{label}</div>
+                            <div className="px-1 py-1 text-center text-gray-400 font-semibold text-[9px]">Games</div>
+                            <div className="px-1 py-1 text-center text-red-400 font-semibold text-[9px]">Board</div>
+                            <div className="px-1 py-1 text-center text-green-400 font-semibold text-[9px]">Player</div>
+                          </div>
+                          <div className="grid grid-cols-4 border-b border-slate-700/30">
+                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[9px] font-semibold">Total</div>
+                            <div className="px-1 py-1 text-center text-white font-bold text-[9px]">{g}</div>
+                            <div className="px-1 py-1 text-center text-red-300 font-bold text-[9px]">{bw}</div>
+                            <div className="px-1 py-1 text-center text-green-300 font-bold text-[9px]">{pw}</div>
+                          </div>
+                          <div className="grid grid-cols-4">
+                            <div className="col-span-1 px-1.5 py-1 text-gray-500 text-[9px] font-semibold">%</div>
+                            <div className="px-1 py-1 text-center text-white text-[9px]">100%</div>
+                            <div className="px-1 py-1 text-center text-red-300 text-[9px]">{bwPct}</div>
+                            <div className="px-1 py-1 text-center text-green-300 text-[9px]">{pwPct}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
