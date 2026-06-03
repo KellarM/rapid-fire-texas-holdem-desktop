@@ -132,7 +132,7 @@ export default function RapidFireGame() {
   const [winnerHandIds, setWinnerHandIds] = useState([]);
   const [winningRedBlack, setWinningRedBlack] = useState([]);
   const [winningLowHigh, setWinningLowHigh] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(() => { try { const s = localStorage.getItem('rfth_history'); return s ? JSON.parse(s) : []; } catch { return []; } });
   const [playerStats, setPlayerStats] = useState({});
   const [showStatsPanel, setShowStatsPanel] = useState(false);
   const [showMollySimulator, setShowMollySimulator] = useState(false);
@@ -1420,17 +1420,8 @@ export default function RapidFireGame() {
     // ─────────────────────────────────────────────────────────────────────────
 
     setHistory((prev) => {
-      const next = [{
-        _key: `${Date.now()}_${Math.random()}`,
-        roundId,
-        isBoardWin,
-        handRank: handResult?.name || 'No Hand',
-        cardsA: winnerHandA?.cards || [],
-        cardsB: winnerHandB?.cards || [],
-        colorResult,
-        colorWinners: winRB,
-        lowHighResult: winLH || '-'
-      }, ...prev].slice(0, 200);
+      const next = [{ _key: `${Date.now()}_${Math.random()}`, roundId, isBoardWin, handRank: handResult?.name || 'No Hand', cardsA: winnerHandA?.cards || [], cardsB: winnerHandB?.cards || [], colorResult, colorWinners: winRB, lowHighResult: winLH || '-' }, ...prev].slice(0, 200);
+      try { localStorage.setItem('rfth_history', JSON.stringify(next)); } catch {}
       return next;
     });
 
@@ -1467,7 +1458,7 @@ export default function RapidFireGame() {
     setRoundId(1);
     setRoundsPlayed(0);
     setCasinoProfit(0);
-    setHistory([]);
+    setHistory([]); try { localStorage.removeItem('rfth_history'); } catch {}
     setPlayerStats({});
     setActivePlayer(0);
     setPlayerCount(1);
