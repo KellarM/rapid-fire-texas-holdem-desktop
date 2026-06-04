@@ -1,59 +1,92 @@
 import React, { useState, useEffect } from 'react';
+import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
 
 const STORAGE_KEY = 'rfth_howtoplay_seen';
 
-const STEPS = [
-  {
-    step: 1,
-    title: 'Select Your Hand',
-    icon: '🃏',
-    description: 'Pick 1 of the 10 fixed hands on the board. Place your Hand Bet — this is required to play.',
-    highlight: 'One hand per round. Your Hand Bet is the foundation of every round.',
-  },
-  {
-    step: 2,
-    title: 'Unlock Your Bonus Bets',
-    icon: '🔓',
-    description: 'Place a Rank Bet equal to your Hand Bet to unlock two bonus markets simultaneously: the Color Board Bet and the River Bet.',
-    highlight: 'Rank Bet = unlocks Color Board AND River Bet at the same time.',
-  },
-  {
-    step: 3,
-    title: 'Place Your Color Board Bet',
-    icon: '🔴',
-    description: 'Before the Flop is dealt, bet on whether the 5 community cards will show more Red or more Black. Choose 3, 4, or 5 cards of one color. This bet resolves purely on the color distribution of the board — independent of your hand ranking.',
-    highlight: '3 Red only wins if exactly 3 Red cards appear on the community board. Same rule applies for Black.',
-  },
-  {
-    step: 4,
-    title: 'The River Bet Opens',
-    icon: '🌊',
-    description: 'After the Turn card is revealed, the River Bet window opens. Based on the 4 community cards showing, decide whether the 5th and final card will be High (8 or above) or Low (7 or below).',
-    highlight: 'This is your only bet placed after cards are dealt. One decision. One card.',
-  },
-  {
-    step: 5,
-    title: 'All Bets Resolve',
-    icon: '💰',
-    description: 'The River card is dealt. All markets settle simultaneously — your Hand and Rank result, your Color Board result, and your River result. A new round begins automatically.',
-    highlight: 'If the Board beats all player hands, hand bets are collected. Color Board and River bets resolve independently.',
-  },
-];
+function loadVersions() {
+  try {
+    const saved = localStorage.getItem(VERSIONS_STORAGE_KEY);
+    return saved ? { ...DEFAULT_VERSIONS, ...JSON.parse(saved) } : { ...DEFAULT_VERSIONS };
+  } catch {
+    return { ...DEFAULT_VERSIONS };
+  }
+}
+
+function buildSteps(v) {
+  const maxHands       = v.maxCardHands ?? 1;
+  const maxRanks       = v.maxRankSlots ?? 1;
+  const rankLockAt     = v.rankLockThreshold ?? 1;
+  const handLockAt     = v.handLockThreshold ?? 1;
+  const colorBothSides = v.colorBothSides ?? false;
+
+  const handsLabel = maxHands === 1 ? '1 hand' : `up to ${maxHands} hands`;
+  const ranksLabel = maxRanks === 1 ? '1 Rank bet' : `up to ${maxRanks} Rank bets`;
+
+  return [
+    {
+      step: 1,
+      title: 'Select Your Hand',
+      icon: '\uD83C\uDCCF',
+      description: `Pick ${handsLabel} from the 10 fixed hands on the board. Place your Hand Bet — this is required to play.`,
+      highlight: maxHands === 1
+        ? 'One hand per round. Your Hand Bet is the foundation of every round.'
+        : `You can select up to ${maxHands} hands. The hand grid locks once you reach ${handLockAt} selection${handLockAt !== 1 ? 's' : ''}.`,
+    },
+    {
+      step: 2,
+      title: 'Unlock Your Bonus Bets',
+      icon: '\uD83D\uDD13',
+      description: `Place ${ranksLabel} equal to your Hand Bet total to unlock two bonus markets: the Color Board Bet and the River Bet. The Rank board locks if you select ${rankLockAt} or more hands.`,
+      highlight: rankLockAt === 1
+        ? `Rank Bet unlocks Color Board AND River Bet. Rank is only available with 1 hand selected.`
+        : `Rank Bet unlocks Color Board AND River Bet. Rank locks when you select ${rankLockAt} or more hands.`,
+    },
+    {
+      step: 3,
+      title: 'Place Your Color Board Bet',
+      icon: '\uD83D\uDD34',
+      description: `Before the Flop is dealt, bet on whether the 5 community cards will show more Red or more Black. Choose 3, 4, or 5 cards of one color. This bet resolves purely on color distribution — independent of hand ranking.`,
+      highlight: colorBothSides
+        ? '3 Red wins only if exactly 3 Red cards appear. You may bet both Red AND Black in the same round.'
+        : '3 Red wins only if exactly 3 Red cards appear. You may only bet Red OR Black — not both.',
+    },
+    {
+      step: 4,
+      title: 'The River Bet Opens',
+      icon: '\uD83C\uDF0A',
+      description: 'After the Turn card is revealed, the River Bet window opens. Based on the 4 community cards showing, decide whether the 5th and final card will be High (8 or above) or Low (7 or below).',
+      highlight: 'This is your only bet placed after cards are dealt. One decision. One card.',
+    },
+    {
+      step: 5,
+      title: 'All Bets Resolve',
+      icon: '\uD83D\uDCB0',
+      description: 'The River card is dealt. All markets settle simultaneously — your Hand and Rank result, your Color Board result, and your River result. A new round begins automatically.',
+      highlight: 'If the Board beats all player hands, hand bets are collected. Color Board and River bets resolve independently.',
+    },
+  ];
+}
 
 export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
   const [visible, setVisible] = useState(false);
-  const [step, setStep] = useState(0);
+  const [step, setStep]       = useState(0);
+  const [steps, setSteps]     = useState(() => buildSteps(loadVersions()));
 
   useEffect(() => {
     if (forceOpen) {
+      setSteps(buildSteps(loadVersions()));
       setStep(0);
       setVisible(true);
       return;
     }
     try {
       const seen = localStorage.getItem(STORAGE_KEY);
-      if (!seen) setVisible(true);
+      if (!seen) {
+        setSteps(buildSteps(loadVersions()));
+        setVisible(true);
+      }
     } catch {
+      setSteps(buildSteps(loadVersions()));
       setVisible(true);
     }
   }, [forceOpen]);
@@ -65,7 +98,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
   };
 
   const handleNext = () => {
-    if (step < STEPS.length - 1) setStep(s => s + 1);
+    if (step < steps.length - 1) setStep(s => s + 1);
     else handleClose();
   };
 
@@ -75,7 +108,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
 
   if (!visible) return null;
 
-  const current = STEPS[step];
+  const current = steps[step];
 
   return (
     <div
@@ -111,7 +144,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
 
         {/* Step indicator */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, justifyContent: 'center' }}>
-          {STEPS.map((_, i) => (
+          {steps.map((_, i) => (
             <div key={i} style={{
               width: i === step ? 24 : 8, height: 8, borderRadius: 4,
               background: i === step ? '#eab308' : i < step ? 'rgba(234,179,8,0.4)' : 'rgba(255,255,255,0.15)',
@@ -131,7 +164,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
           color: 'rgba(234,179,8,0.6)', letterSpacing: '0.12em',
           textTransform: 'uppercase', marginBottom: 6,
         }}>
-          Step {current.step} of {STEPS.length}
+          Step {current.step} of {steps.length}
         </div>
 
         {/* Title */}
@@ -189,7 +222,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
               letterSpacing: '0.04em',
             }}
           >
-            {step < STEPS.length - 1 ? 'Next →' : "Let's Play!"}
+            {step < steps.length - 1 ? 'Next →' : "Let's Play!"}
           </button>
         </div>
       </div>
