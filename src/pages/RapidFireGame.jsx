@@ -437,6 +437,26 @@ export default function RapidFireGame() {
       }
     }
 
+    // Check if adding this hand triggers rank lock — auto-refund rank bets if so
+    const newHandCountAfterAdd = Object.keys({ ...(handBets[pid] || {}), [handId]: 1 }).length;
+    const rankLockAtAdd = versions?.rankLockThreshold ?? 2;
+    if (newHandCountAfterAdd >= rankLockAtAdd) {
+      const rankRefundAdd = Object.values(rankBets[pid] || {}).reduce((s, v) => s + v, 0);
+      const colorRefundAdd = Object.values(pRedBlackBets).reduce((s, v) => s + v, 0);
+      const riverRefundAdd = pLowHighBet?.amount || 0;
+      const totalRefundAdd = rankRefundAdd + colorRefundAdd + riverRefundAdd;
+      if (totalRefundAdd > 0) {
+        setRankBets((prev) => ({ ...prev, [pid]: {} }));
+        setRedBlackBets((prev) => ({ ...prev, [pid]: {} }));
+        setLowHighBets((prev) => ({ ...prev, [pid]: null }));
+        setHandBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [handId]: existing + selectedChip } }));
+        setBalances((b) => {const n = [...b];n[pid] += totalRefundAdd - selectedChip;return n;});
+        setShowAutoTrimToast(true);
+        playChipPlace();
+        return;
+      }
+    }
+
     setHandBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [handId]: existing + selectedChip } }));
     setBalances((b) => {const n = [...b];n[pid] -= selectedChip;return n;});
     playChipPlace();
@@ -500,7 +520,14 @@ export default function RapidFireGame() {
 
     // Step 1: enforce rank slot limits and mathematical possibility
     const remainingHandCount = Object.keys(updatedHandBets).length;
-    const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
+    // Versions-aware rank slot calculation on hand removal
+    const rankLockAtRemove = versions?.rankLockThreshold ?? 2;
+    const rankUnlockUpToRemove = versions?.rankUnlockThreshold ?? 1;
+    const slotsAllowed = (remainingHandCount >= rankLockAtRemove || remainingHandCount > rankUnlockUpToRemove)
+      ? 0
+      : versions?.rankScaling
+        ? remainingHandCount * (versions?.rankPerHand ?? 1)
+        : (versions?.rankFixedCap ?? 1);
     let rankRefund = 0;
     let updatedRankBets = { ...(rankBets[pid] || {}) };
 
@@ -692,7 +719,13 @@ export default function RapidFireGame() {
     if (fromAmt <= 0) return;
 
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
-    const slotsAllowed = currentHandCount === 1 ? 1 : 0;
+    const rlAt = versions?.rankLockThreshold ?? 2;
+    const ruTo = versions?.rankUnlockThreshold ?? 1;
+    const slotsAllowed = (currentHandCount >= rlAt || currentHandCount > ruTo)
+      ? 0
+      : versions?.rankScaling
+        ? currentHandCount * (versions?.rankPerHand ?? 1)
+        : (versions?.rankFixedCap ?? 1);
     const toAmt = currentRankBets[toKey] || 0;
 
     // Build the updated rank bets after the move
@@ -847,7 +880,13 @@ export default function RapidFireGame() {
         setBalances((b) => {const n = [...b];n[dragPid] += fromAmt + rankRefund + colorRefund + riverRefund;return n;});
       } else {
         const remainingHandCount = Object.keys(remainingHandBets).length;
-        const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
+        const rlAtDrop1 = versions?.rankLockThreshold ?? 2;
+        const ruToDrop1 = versions?.rankUnlockThreshold ?? 1;
+        const slotsAllowed = (remainingHandCount >= rlAtDrop1 || remainingHandCount > ruToDrop1)
+          ? 0
+          : versions?.rankScaling
+            ? remainingHandCount * (versions?.rankPerHand ?? 1)
+            : (versions?.rankFixedCap ?? 1);
         let rankRefund = 0;
         let updatedRankBets = { ...(rankBets[dragPid] || {}) };
 
@@ -903,7 +942,13 @@ export default function RapidFireGame() {
       updatedHandBets[toHandId] = fromAmt;
 
       const remainingHandCount = Object.keys(updatedHandBets).length;
-      const slotsAllowed = remainingHandCount === 1 ? 1 : 0;
+      const rlAtDrop2 = versions?.rankLockThreshold ?? 2;
+      const ruToDrop2 = versions?.rankUnlockThreshold ?? 1;
+      const slotsAllowed = (remainingHandCount >= rlAtDrop2 || remainingHandCount > ruToDrop2)
+        ? 0
+        : versions?.rankScaling
+          ? remainingHandCount * (versions?.rankPerHand ?? 1)
+          : (versions?.rankFixedCap ?? 1);
 
       let rankRefund = 0;
       let updatedRankBets = { ...(rankBets[dragPid] || {}) };
