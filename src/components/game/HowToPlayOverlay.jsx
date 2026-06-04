@@ -71,9 +71,13 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
   const [steps,    setSteps]    = useState([]);
   const [updated,  setUpdated]  = useState(false);   // true = rules changed since last visit
 
-  // Track whether we have already auto-shown this overlay in this page session.
-  // Prevents it from re-firing every time 'suppress' toggles (e.g. after recovery modal closes).
-  const hasAutoShownRef = React.useRef(false);
+  // ── Auto-show guard ──────────────────────────────────────────────────────
+  // Uses sessionStorage (NOT a ref) so the flag survives React remounts,
+  // iframe reloads from code syncs, and recovery modal cycles — all within
+  // the same browser tab session.
+  // Clears automatically when the tab is closed or a new session starts,
+  // so players still see the overlay fresh each time they open the app.
+  const SESSION_SHOWN_KEY = 'rfth_htp_shown';
 
   // ── Auto-show on first load (once per page session) ───────────────────────
   useEffect(() => {
@@ -89,11 +93,12 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
       return;
     }
 
-    // Auto-show: only if suppress is currently false AND we haven't shown yet.
-    // When suppress goes false->true->false (recovery flow), hasAutoShownRef
-    // prevents re-firing after the recovery modal closes.
-    if (!suppress && !hasAutoShownRef.current) {
-      hasAutoShownRef.current = true;
+    // Auto-show: only if suppress is false AND we haven't shown in this session.
+    // sessionStorage persists across React remounts (unlike useRef) so this
+    // guard survives code-sync reloads and recovery modal open/close cycles.
+    const alreadyShown = sessionStorage.getItem(SESSION_SHOWN_KEY) === '1';
+    if (!suppress && !alreadyShown) {
+      sessionStorage.setItem(SESSION_SHOWN_KEY, '1');
       setVisible(true);
     }
   }, [forceOpen, suppress]);
