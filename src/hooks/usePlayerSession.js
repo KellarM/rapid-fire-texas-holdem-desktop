@@ -75,8 +75,13 @@ export function usePlayerSession() {
   const deviceId   = useRef(getDeviceId());
   const sessionId  = useRef(getOrCreateSessionId());
 
-  // Initialise from cache for THIS device — shows correct value immediately while DB loads
-  const [balances, setBalancesState] = useState(() => readBalanceCache(deviceId.current));
+  // Initialise with STARTING_BALANCE — DB loads the real value within ~500ms.
+  // We deliberately do NOT pre-populate from localStorage cache here because:
+  // 1. The cache may be stale (written before a win/loss that wasn't flushed)
+  // 2. A stale cache value flashing briefly is more confusing than $10,000
+  // 3. The DB is the single source of truth (GLI-19 requirement)
+  // The cache is still written on every balance change for crash-recovery fallback.
+  const [balances, setBalancesState] = useState(() => Array(NUM_PLAYERS).fill(STARTING_BALANCE));
 
   // FIX: Use ref for recordIds — avoids illegal setState-inside-setState
   const recordIdsRef = useRef(Array(NUM_PLAYERS).fill(null));
@@ -91,7 +96,8 @@ export function usePlayerSession() {
     async function loadSessions() {
       try {
         const records = await PlayerSession.filter({ device_id: deviceId.current });
-        const newBalances = [...readBalanceCache(deviceId.current)];
+        // Start from STARTING_BALANCE — DB values are authoritative, not cache
+        const newBalances = Array(NUM_PLAYERS).fill(STARTING_BALANCE);
 
         for (const rec of records) {
           const slot = rec.player_slot;

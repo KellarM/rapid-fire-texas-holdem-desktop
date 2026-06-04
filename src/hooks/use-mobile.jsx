@@ -17,8 +17,9 @@ export function useIsMobile() {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     mql.addEventListener("change", onChange)
-    // Sync once in case width changed between render and effect
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    // NOTE: Do NOT call setIsMobile here on mount.
+    // The useState initializer already captured the correct value synchronously.
+    // Calling setIsMobile here would trigger an unnecessary re-render / remount.
     return () => mql.removeEventListener("change", onChange);
   }, [])
 
