@@ -106,7 +106,8 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
     if (step > 0) setStep(s => s - 1);
   };
 
-  if (!visible || steps.length === 0) return null;
+  // Never render while suppressed (e.g. recovery check pending or recovery modal open)
+  if (suppress || !visible || steps.length === 0) return null;
 
   const current = steps[step];
 

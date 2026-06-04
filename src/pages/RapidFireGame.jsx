@@ -321,6 +321,22 @@ export default function RapidFireGame() {
       setLowHighBets({ [pid]: null });
     }
 
+    // ── Restore authoritative balance from AuditRound record ─────────────────
+    // balanceBefore (from AuditRound) = balance BEFORE any bets were deducted.
+    // Correct post-bet balance = balanceBefore - totalWagered.
+    // This overrides whatever the DB PlayerSession has, ensuring the balance
+    // is correct even if the DB write didn't fully flush before the crash.
+    if (recoveredState.balanceBefore != null && recoveredState.totalWagered != null) {
+      const correctBalance = recoveredState.balanceBefore - recoveredState.totalWagered;
+      setBalances((prev) => {
+        const next = [...prev];
+        next[pid] = correctBalance;
+        return next;
+      });
+      console.log('[Recovery] Balance restored from AuditRound:', correctBalance,
+        '(balanceBefore:', recoveredState.balanceBefore, '- wagered:', recoveredState.totalWagered, ')');
+    }
+
     // ── Restore the exact deck that was dealt — same cards, same order ───────
     // boardCards: array of { rank, suit } objects saved to AuditRound at deal time.
     // If no boardCards saved (older record pre-fix), fall back to fresh deal.
