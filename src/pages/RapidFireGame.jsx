@@ -327,15 +327,12 @@ export default function RapidFireGame() {
     // ── Restore authoritative balance from AuditRound record ─────────────────
     // balanceBefore (from AuditRound) = balance BEFORE any bets were deducted.
     // Correct post-bet balance = balanceBefore - totalWagered.
-    // This overrides whatever the DB PlayerSession has, ensuring the balance
-    // is correct even if the DB write didn't fully flush before the crash.
+    // Use forceBalance so the override ref protects this value against any
+    // subsequent loadSessions() re-run that might overwrite with stale DB data.
     if (recoveredState.balanceBefore != null && recoveredState.totalWagered != null) {
       const correctBalance = recoveredState.balanceBefore - recoveredState.totalWagered;
-      setBalances((prev) => {
-        const next = [...prev];
-        next[pid] = correctBalance;
-        return next;
-      });
+      // forceBalance: sets UI + override ref + persists to DB (fire-and-forget ok here)
+      forceBalance(pid, correctBalance).catch(() => {});
       console.log('[Recovery] Balance restored from AuditRound:', correctBalance,
         '(balanceBefore:', recoveredState.balanceBefore, '- wagered:', recoveredState.totalWagered, ')');
     }
@@ -380,7 +377,7 @@ export default function RapidFireGame() {
       handleDealFlop();
     }
     // NOTE: Do NOT re-deduct balance here — already persisted to DB.
-  }, [recoveredState, activePlayer, clearRecovery, playCardDeal]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [recoveredState, activePlayer, clearRecovery, playCardDeal, forceBalance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRecoveryAbandon = useCallback(async () => {
     // ── REFUND: restore the player's balance to what it was BEFORE bets were placed ──
@@ -1878,6 +1875,21 @@ export default function RapidFireGame() {
   // Auto-progression: Flop → Turn
   useEffect(() => {
     if (gamePhase !== 'flop') return;
+    // RESUME GUARD: After a crash-recovery resume, isResumingRound is true for one
+    // render cycle. Skip the auto-deal timer that tick — the game will proceed
+    // normally on the very next re-render once isResumingRound is cleared.
+    // Without this guard, the timer fires instantly after resume and deals the
+    // turn before loadSessions() has finished restoring the correct balance.
+    if (isResumingRound.current) {
+      // RESUME: skip the auto-timer this render cycle. Clear the flag and
+      // schedule the turn deal directly after a brief delay so the game
+      // continues from where it left off with the correct restored state.
+      isResumingRound.current = false;
+      const resumeTimer = setTimeout(() => {
+        handleDealTurn();
+      }, timing.flopReveal * 1000);
+      return () => clearTimeout(resumeTimer);
+    }
     const timer = setTimeout(() => {
       handleDealTurn();
     }, timing.flopReveal * 1000);
