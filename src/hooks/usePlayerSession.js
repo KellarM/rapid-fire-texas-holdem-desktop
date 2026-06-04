@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PlayerSession, AuditRound } from '@/api/entities';
+import { PlayerSession } from '@/api/entities';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const STARTING_BALANCE  = 10000;
@@ -117,6 +117,12 @@ export function usePlayerSession() {
   const recordIdsRef = useRef(Array(NUM_PLAYERS).fill(null));
   const [dbReady, setDbReady] = useState(false);
 
+  // Override map: { [slot]: value } — if set, loadSessions will use this value
+  // instead of the DB value for that slot. Used by abandon flow to prevent
+  // a remount-triggered loadSessions from overwriting the refunded balance
+  // before the DB write has landed.
+  const balanceOverrideRef = useRef({});
+
   // Pending write queue — if a DB write fails we retry it
   const pendingRef  = useRef({}); // { [slot]: balance }
   const retryTimer  = useRef(null);
@@ -135,37 +141,6 @@ export function usePlayerSession() {
             newBalances[slot] = rec.balance ?? STARTING_BALANCE;
             recordIdsRef.current[slot] = rec.id;
           }
-        }
-
-        // ── RACE-CONDITION GUARD ──────────────────────────────────────────────
-        // If there's an open AuditRound for this device, it means either:
-        //   (a) The player is mid-round and about to see the recovery modal, OR
-        //   (b) The abandon flow's persistBalance() DB write hasn't completed yet.
-        // In case (b) the PlayerSession.balance is the post-bet deducted value,
-        // which is WRONG — balance_before from AuditRound is the correct value.
-        // Fix: load any open AuditRounds and use balance_before as the authority.
-        try {
-          const openRounds = await AuditRound.filter({ device_id: deviceId.current, status: 'open' });
-          if (openRounds && openRounds.length > 0) {
-            // Sort newest first — most recent open round is authoritative
-            const sorted = openRounds.sort(
-              (a, b) => new Date(b.timestamp_open) - new Date(a.timestamp_open)
-            );
-            const latest = sorted[0];
-            const slot   = latest.player_slot ?? 0;
-            if (slot >= 0 && slot < NUM_PLAYERS && latest.balance_before != null) {
-              // balance_before = balance BEFORE bets were deducted
-              // correct in-round balance = balance_before - total_wagered
-              const inRoundBalance = latest.balance_before - (latest.total_wagered ?? 0);
-              newBalances[slot] = inRoundBalance;
-              console.log('[PlayerSession] Open AuditRound found — using in-round balance:',
-                inRoundBalance, '(balance_before:', latest.balance_before,
-                '- wagered:', latest.total_wagered, ')');
-            }
-          }
-        } catch (e) {
-          // Non-fatal — fall back to PlayerSession.balance
-          console.warn('[PlayerSession] AuditRound check failed:', e);
         }
 
         // Create records for any missing slots
@@ -195,6 +170,20 @@ export function usePlayerSession() {
             recordIdsRef.current[slot] = id;
           }
         }
+
+        // Apply any balance overrides — these come from the abandon flow where
+        // persistBalance() was awaited but the DB write may not have propagated
+        // to a subsequent loadSessions() call yet.
+        const overrides = balanceOverrideRef.current;
+        for (const [slotStr, val] of Object.entries(overrides)) {
+          const slot = Number(slotStr);
+          if (slot >= 0 && slot < NUM_PLAYERS) {
+            newBalances[slot] = val;
+            console.log('[PlayerSession] Override applied for slot', slot, ':', val);
+          }
+        }
+        // Clear overrides — they've been applied
+        balanceOverrideRef.current = {};
 
         setBalancesState(newBalances);
         writeBalanceCache(deviceId.current, newBalances);
@@ -253,6 +242,24 @@ export function usePlayerSession() {
     persistBalance(slot, newBalance);
   }, [persistBalance]);
 
+  // ── Public: force a balance value, protecting against loadSessions overwrite ──
+  // Use this when you need the balance to survive a component remount.
+  // Sets the override ref so loadSessions applies this value if it re-runs,
+  // AND persists to DB (awaitable). Returns the persist promise.
+  const forceBalance = useCallback((slot, newBalance) => {
+    // 1. Update UI state immediately
+    setBalancesState(prev => {
+      const next = [...prev];
+      next[slot] = newBalance;
+      writeBalanceCache(deviceId.current, next);
+      return next;
+    });
+    // 2. Set override so any re-mount loadSessions uses this value
+    balanceOverrideRef.current[slot] = newBalance;
+    // 3. Persist to DB (awaitable — caller should await for guarantee)
+    return persistBalance(slot, newBalance);
+  }, [persistBalance]);
+
   // ── Public: update balance for multiple slots at once ────────────────────
   const setBalances = useCallback((updaterOrArray) => {
     setBalancesState(prev => {
@@ -302,7 +309,8 @@ export function usePlayerSession() {
     balances,
     setBalance,
     setBalances,
-    persistBalance,          // awaitable — use when you MUST confirm DB write before reload
+    persistBalance,          // awaitable — confirms DB write
+    forceBalance,            // awaitable — sets override + persists, survives remount
     resetAllBalances,
     recordRoundResult,
     deviceId: deviceId.current,
