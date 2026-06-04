@@ -65,7 +65,7 @@ function buildSteps(v) {
   ];
 }
 
-export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
+export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress = false }) {
   const [visible,  setVisible]  = useState(false);
   const [step,     setStep]     = useState(0);
   const [steps,    setSteps]    = useState([]);
@@ -78,13 +78,18 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
     setUpdated(changed);
     setStep(0);
 
+    // Suppress if there's an incomplete round to recover — show recovery modal instead
+    if (suppress) {
+      setVisible(false);
+      return;
+    }
     if (forceOpen) {
       setVisible(true);
       return;
     }
     // Always show on load
     setVisible(true);
-  }, [forceOpen]);
+  }, [forceOpen, suppress]);
 
   const handleClose = () => {
     markRulesSeen();          // stamp the current hash so warning clears next time

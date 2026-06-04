@@ -227,6 +227,7 @@ export default function MobileGameLayout({
   preloadSounds,
   onSetTheme,
   onOpenHelp,
+  suppressHowToPlay = false,
 }) {
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
@@ -520,7 +521,7 @@ export default function MobileGameLayout({
             </div>
           </div>
         )}
-        <HowToPlayOverlay forceOpen={showHowToPlay} onClose={()=>setShowHowToPlay(false)} />
+        <HowToPlayOverlay forceOpen={showHowToPlay} onClose={()=>setShowHowToPlay(false)} suppress={suppressHowToPlay} />
       </div>
     );
   }
@@ -907,6 +908,7 @@ export default function MobileGameLayout({
           <HowToPlayOverlay
             forceOpen={showHowToPlay}
             onClose={() => setShowHowToPlay(false)}
+            suppress={suppressHowToPlay}
           />
 
           {/* ── History Rail Overlay ── */}

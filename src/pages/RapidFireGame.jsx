@@ -1925,6 +1925,7 @@ export default function RapidFireGame() {
           preloadSounds={preloadSounds}
           onSetTheme={setBoardTheme}
           showUnlockFlash={showUnlockFlash}
+          suppressHowToPlay={recoveryChecking || showRecoveryModal}
         />
       </>
     );
