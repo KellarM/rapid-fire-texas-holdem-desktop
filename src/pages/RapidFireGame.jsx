@@ -303,7 +303,7 @@ export default function RapidFireGame() {
   const rankBetCount = Object.keys(pRankBets).length;
 
   // Kill switch: 4 hands locks all side markets
-  const killSwitchActive = handBetCount >= (versions?.rankLockThreshold ?? 2);
+  const killSwitchActive = handBetCount >= (versions?.rankLockThreshold ?? 3);
 
   // Phase 4 gate: Color Board and River require total rank === total hand bets
   const sideBetGateOpen = !killSwitchActive && isSideBetGateOpen(pHandBets, pRankBets);
@@ -349,14 +349,12 @@ export default function RapidFireGame() {
   // All 7 rank slots are available when kill-switch is off (any rank can win regardless of hand selection)
   const activeHandIds = Object.keys(pHandBets).map(Number);
 
-  // Max rank slots: 1 hand = 1 slot (only when exactly 1 hand selected)
+  // Max rank slots: driven by combined max (hands + ranks <= rankCombinedMax)
   const maxRankSlots = (() => {
-    const lockAt = versions?.rankLockThreshold ?? 2;
-    const unlockUpTo = versions?.rankUnlockThreshold ?? 1;
-    if (handBetCount >= lockAt || handBetCount > unlockUpTo) return 0;
-    return versions?.rankScaling
-      ? handBetCount * (versions?.rankPerHand ?? 1)
-      : (versions?.rankFixedCap ?? 1);
+    const lockAt = versions?.rankLockThreshold ?? 3;
+    const combinedMax = versions?.rankCombinedMax ?? 3;
+    if (handBetCount >= lockAt) return 0;
+    return Math.max(0, combinedMax - handBetCount);
   })();
 
   // Phase Lock: exactly 1 hand bet + at least 1 rank bet → finalize selection, lock remaining hands
@@ -439,7 +437,7 @@ export default function RapidFireGame() {
 
     // Check if adding this hand triggers rank lock — auto-refund rank bets if so
     const newHandCountAfterAdd = Object.keys({ ...(handBets[pid] || {}), [handId]: 1 }).length;
-    const rankLockAtAdd = versions?.rankLockThreshold ?? 2;
+    const rankLockAtAdd = versions?.rankLockThreshold ?? 3;
     if (newHandCountAfterAdd >= rankLockAtAdd) {
       const rankRefundAdd = Object.values(rankBets[pid] || {}).reduce((s, v) => s + v, 0);
       const colorRefundAdd = Object.values(pRedBlackBets).reduce((s, v) => s + v, 0);
@@ -521,13 +519,11 @@ export default function RapidFireGame() {
     // Step 1: enforce rank slot limits and mathematical possibility
     const remainingHandCount = Object.keys(updatedHandBets).length;
     // Versions-aware rank slot calculation on hand removal
-    const rankLockAtRemove = versions?.rankLockThreshold ?? 2;
-    const rankUnlockUpToRemove = versions?.rankUnlockThreshold ?? 1;
-    const slotsAllowed = (remainingHandCount >= rankLockAtRemove || remainingHandCount > rankUnlockUpToRemove)
+    const rankLockAtRemove = versions?.rankLockThreshold ?? 3;
+    const combinedMaxRemove = versions?.rankCombinedMax ?? 3;
+    const slotsAllowed = remainingHandCount >= rankLockAtRemove
       ? 0
-      : versions?.rankScaling
-        ? remainingHandCount * (versions?.rankPerHand ?? 1)
-        : (versions?.rankFixedCap ?? 1);
+      : Math.max(0, combinedMaxRemove - remainingHandCount);
     let rankRefund = 0;
     let updatedRankBets = { ...(rankBets[pid] || {}) };
 
@@ -632,10 +628,9 @@ export default function RapidFireGame() {
     // --- ADD intent from here down ---
 
     // Versions config: rank locks when hands >= rankLockThreshold
-    const rankLockAt = versions?.rankLockThreshold ?? 2;
-    const rankUnlockUpTo = versions?.rankUnlockThreshold ?? 1;
+    const rankLockAt = versions?.rankLockThreshold ?? 3;
     const currentHandCountForRank = Object.keys(handBets[pid] || {}).length;
-    if (currentHandCountForRank >= rankLockAt || currentHandCountForRank > rankUnlockUpTo) {
+    if (currentHandCountForRank >= rankLockAt) {
       setRankAlertType('closed');
       setShowRankLimitAlert(true);
       return;
@@ -648,12 +643,11 @@ export default function RapidFireGame() {
       return;
     }
 
-    // Versions config: rank slot limit (fixed cap or scaling)
+    // Versions config: rank slot limit driven by combined max
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
     const currentRankSlots = Object.keys(pRankBets).length;
-    const slotsAllowed = versions?.rankScaling
-      ? currentHandCount * (versions?.rankPerHand ?? 1)
-      : (versions?.rankFixedCap ?? 1);
+    const combinedMaxRank = versions?.rankCombinedMax ?? 3;
+    const slotsAllowed = Math.max(0, combinedMaxRank - currentHandCount);
     if (!pRankBets[key] && currentRankSlots >= slotsAllowed) {
       setRankAlertType('limit');
       setShowRankLimitAlert(true);
@@ -719,13 +713,11 @@ export default function RapidFireGame() {
     if (fromAmt <= 0) return;
 
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
-    const rlAt = versions?.rankLockThreshold ?? 2;
-    const ruTo = versions?.rankUnlockThreshold ?? 1;
-    const slotsAllowed = (currentHandCount >= rlAt || currentHandCount > ruTo)
+    const rlAt = versions?.rankLockThreshold ?? 3;
+    const combinedMaxMove = versions?.rankCombinedMax ?? 3;
+    const slotsAllowed = currentHandCount >= rlAt
       ? 0
-      : versions?.rankScaling
-        ? currentHandCount * (versions?.rankPerHand ?? 1)
-        : (versions?.rankFixedCap ?? 1);
+      : Math.max(0, combinedMaxMove - currentHandCount);
     const toAmt = currentRankBets[toKey] || 0;
 
     // Build the updated rank bets after the move
@@ -760,7 +752,7 @@ export default function RapidFireGame() {
 
     // Versions config: color market locks at rankLockThreshold hands
     const colorHandCount = Object.keys(handBets[pid] || {}).length;
-    if (colorHandCount >= (versions?.rankLockThreshold ?? 2)) {
+    if (colorHandCount >= (versions?.rankLockThreshold ?? 3)) {
       setCapAlertType('color_locked');
       setShowCapAlert(true);
       return;
@@ -880,13 +872,11 @@ export default function RapidFireGame() {
         setBalances((b) => {const n = [...b];n[dragPid] += fromAmt + rankRefund + colorRefund + riverRefund;return n;});
       } else {
         const remainingHandCount = Object.keys(remainingHandBets).length;
-        const rlAtDrop1 = versions?.rankLockThreshold ?? 2;
-        const ruToDrop1 = versions?.rankUnlockThreshold ?? 1;
-        const slotsAllowed = (remainingHandCount >= rlAtDrop1 || remainingHandCount > ruToDrop1)
+        const rlAtDrop1 = versions?.rankLockThreshold ?? 3;
+        const combinedMaxDrop1 = versions?.rankCombinedMax ?? 3;
+        const slotsAllowed = remainingHandCount >= rlAtDrop1
           ? 0
-          : versions?.rankScaling
-            ? remainingHandCount * (versions?.rankPerHand ?? 1)
-            : (versions?.rankFixedCap ?? 1);
+          : Math.max(0, combinedMaxDrop1 - remainingHandCount);
         let rankRefund = 0;
         let updatedRankBets = { ...(rankBets[dragPid] || {}) };
 
@@ -942,13 +932,11 @@ export default function RapidFireGame() {
       updatedHandBets[toHandId] = fromAmt;
 
       const remainingHandCount = Object.keys(updatedHandBets).length;
-      const rlAtDrop2 = versions?.rankLockThreshold ?? 2;
-      const ruToDrop2 = versions?.rankUnlockThreshold ?? 1;
-      const slotsAllowed = (remainingHandCount >= rlAtDrop2 || remainingHandCount > ruToDrop2)
+      const rlAtDrop2 = versions?.rankLockThreshold ?? 3;
+      const combinedMaxDrop2 = versions?.rankCombinedMax ?? 3;
+      const slotsAllowed = remainingHandCount >= rlAtDrop2
         ? 0
-        : versions?.rankScaling
-          ? remainingHandCount * (versions?.rankPerHand ?? 1)
-          : (versions?.rankFixedCap ?? 1);
+        : Math.max(0, combinedMaxDrop2 - remainingHandCount);
 
       let rankRefund = 0;
       let updatedRankBets = { ...(rankBets[dragPid] || {}) };

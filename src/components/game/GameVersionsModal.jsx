@@ -20,13 +20,13 @@ function Toggle({ value, onChange, labelOn = 'ON', labelOff = 'OFF' }) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all \${
         value
           ? 'border-green-500 bg-green-900/40 text-green-300'
           : 'border-gray-600 bg-gray-800/40 text-gray-400'
       }`}
     >
-      <span className={`w-2 h-2 rounded-full ${value ? 'bg-green-400' : 'bg-gray-600'}`} />
+      <span className={`w-2 h-2 rounded-full \${value ? 'bg-green-400' : 'bg-gray-600'}`} />
       {value ? labelOn : labelOff}
     </button>
   );
@@ -43,6 +43,30 @@ function Row({ step, label, description, children }) {
         <p className="text-gray-500 text-[11px] mt-0.5">{description}</p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">{children}</div>
+    </div>
+  );
+}
+
+// Preview table: shows rank slots available for 1..maxCardHands
+function RankPreviewTable({ maxCardHands, rankCombinedMax, rankLockThreshold }) {
+  const rows = [];
+  for (let h = 1; h <= Math.min(maxCardHands, 6); h++) {
+    const locked = h >= rankLockThreshold;
+    const slots = locked ? 0 : Math.max(0, rankCombinedMax - h);
+    rows.push({ h, slots, locked });
+  }
+  return (
+    <div className="mt-2 rounded-lg border border-yellow-700/20 overflow-hidden">
+      <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-widest text-yellow-400/50 px-3 py-1.5 border-b border-yellow-700/20">
+        <span>Hands</span><span className="text-center">Rank Slots</span><span className="text-right">Status</span>
+      </div>
+      {rows.map(({ h, slots, locked }) => (
+        <div key={h} className={`grid grid-cols-3 px-3 py-1 text-[11px] \${locked ? 'text-red-400/60' : 'text-green-300/80'}`}>
+          <span>{h} hand{h > 1 ? 's' : ''}</span>
+          <span className="text-center font-bold">{locked ? '—' : slots}</span>
+          <span className="text-right">{locked ? '🔒 locked' : '✓ open'}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -78,11 +102,6 @@ export default function GameVersionsModal({ isOpen, onClose }) {
   const handleReset = () => {
     setV({ ...DEFAULT_VERSIONS });
   };
-
-  // Computed: max rank slots given current selections (for preview)
-  const previewRankSlots = v.rankScaling
-    ? v.rankPerHand * v.maxCardHands
-    : v.rankFixedCap;
 
   return (
     <AnimatePresence>
@@ -120,9 +139,9 @@ export default function GameVersionsModal({ isOpen, onClose }) {
               </div>
 
               {/* Body */}
-              <div className="px-5 py-4 space-y-5">
+              <div className="px-5 py-4 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
 
-                {/* SECTION: Card Hands */}
+                {/* SECTION: Card Hand Rules */}
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Card Hand Rules</p>
                   <div className="space-y-3">
@@ -136,59 +155,40 @@ export default function GameVersionsModal({ isOpen, onClose }) {
 
                 <div className="border-t border-yellow-700/20" />
 
-                {/* SECTION: Rank Rules */}
+                {/* SECTION: Rank Bet Rules */}
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Rank Bet Rules</p>
                   <div className="space-y-3">
-                    <Row step="2" label="Rank unlocks when hands ≤"
-                      description="Rank board is available as long as player has selected this many hands or fewer.">
-                      <NumInput value={v.rankUnlockThreshold} onChange={val => set('rankUnlockThreshold', val)} min={1} max={10} />
-                      <span className="text-gray-500 text-xs">hands</span>
+
+                    <Row step="2" label="Max combined (hands + ranks)"
+                      description="Total combined selections allowed. e.g. 3 means: 1 hand = 2 ranks, 2 hands = 1 rank.">
+                      <NumInput value={v.rankCombinedMax} onChange={val => set('rankCombinedMax', val)} min={2} max={10} />
+                      <span className="text-gray-500 text-xs">total</span>
                     </Row>
 
                     <Row step="3" label="Rank locks when hands ≥"
-                      description="Rank board locks the moment player hits this hand count.">
+                      description="Rank board locks entirely once player hits this hand count (0 rank slots).">
                       <NumInput value={v.rankLockThreshold} onChange={val => set('rankLockThreshold', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>
 
-                    <Row step="4" label="Rank bet limit mode"
-                      description={v.rankScaling
-                        ? `Scaling ON — rank slots = hands × ${v.rankPerHand} (currently ${previewRankSlots} max)`
-                        : `Fixed cap — player gets ${v.rankFixedCap} rank slot${v.rankFixedCap !== 1 ? 's' : ''} regardless of hands`}>
-                      <Toggle
-                        value={v.rankScaling}
-                        onChange={val => set('rankScaling', val)}
-                        labelOn="SCALING"
-                        labelOff="FIXED"
-                      />
-                    </Row>
+                    {/* Live preview table */}
+                    <RankPreviewTable
+                      maxCardHands={v.maxCardHands}
+                      rankCombinedMax={v.rankCombinedMax}
+                      rankLockThreshold={v.rankLockThreshold}
+                    />
 
-                    {!v.rankScaling && (
-                      <Row step="4a" label="Fixed rank slots allowed"
-                        description="Total number of rank positions the player can bet on.">
-                        <NumInput value={v.rankFixedCap} onChange={val => set('rankFixedCap', val)} min={1} max={9} />
-                        <span className="text-gray-500 text-xs">slots</span>
-                      </Row>
-                    )}
-
-                    {v.rankScaling && (
-                      <Row step="4a" label="Rank slots per hand"
-                        description={`Rank slots = hands selected × this value (max hands: ${v.maxCardHands} → ${previewRankSlots} slots)`}>
-                        <NumInput value={v.rankPerHand} onChange={val => set('rankPerHand', val)} min={1} max={9} />
-                        <span className="text-gray-500 text-xs">per hand</span>
-                      </Row>
-                    )}
                   </div>
                 </div>
 
                 <div className="border-t border-yellow-700/20" />
 
-                {/* SECTION: Color Rules */}
+                {/* SECTION: Color Bet Rules */}
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Color Bet Rules</p>
                   <div className="space-y-3">
-                    <Row step="5" label="Allow betting both Red & Black"
+                    <Row step="4" label="Allow betting both Red & Black"
                       description={v.colorBothSides
                         ? 'Player can bet Red AND Black simultaneously.'
                         : 'Player can only bet one side — Red OR Black, not both.'}>
@@ -223,13 +223,12 @@ export default function GameVersionsModal({ isOpen, onClose }) {
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-1.5 rounded-lg border-2 border-yellow-500 bg-yellow-600 hover:bg-yellow-500 text-black text-xs font-black transition-all"
+                    className="px-4 py-1.5 rounded-lg border border-yellow-600 bg-yellow-700/30 text-yellow-300 text-xs font-bold hover:bg-yellow-700/50 hover:text-white transition-all"
                   >
                     Save Versions
                   </button>
                 </div>
               </div>
-
             </div>
           </motion.div>
         </>
