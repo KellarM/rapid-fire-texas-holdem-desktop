@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
-
-const STORAGE_KEY = 'rfth_howtoplay_seen';
+import { rulesHaveChanged, markRulesSeen } from '@/lib/rulesHash';
 
 function loadVersions() {
   try {
@@ -26,7 +25,7 @@ function buildSteps(v) {
     {
       step: 1,
       title: 'Select Your Hand',
-      icon: '\uD83C\uDCCF',
+      icon: '🃏',
       description: `Pick ${handsLabel} from the 10 fixed hands on the board. Place your Hand Bet — this is required to play.`,
       highlight: maxHands === 1
         ? 'One hand per round. Your Hand Bet is the foundation of every round.'
@@ -35,7 +34,7 @@ function buildSteps(v) {
     {
       step: 2,
       title: 'Unlock Your Bonus Bets',
-      icon: '\uD83D\uDD13',
+      icon: '🔓',
       description: `Place ${ranksLabel} equal to your Hand Bet total to unlock two bonus markets: the Color Board Bet and the River Bet. The Rank board locks if you select ${rankLockAt} or more hands.`,
       highlight: rankLockAt === 1
         ? `Rank Bet unlocks Color Board AND River Bet. Rank is only available with 1 hand selected.`
@@ -44,7 +43,7 @@ function buildSteps(v) {
     {
       step: 3,
       title: 'Place Your Color Board Bet',
-      icon: '\uD83D\uDD34',
+      icon: '🔴',
       description: `Before the Flop is dealt, bet on whether the 5 community cards will show more Red or more Black. Choose 3, 4, or 5 cards of one color. This bet resolves purely on color distribution — independent of hand ranking.`,
       highlight: colorBothSides
         ? '3 Red wins only if exactly 3 Red cards appear. You may bet both Red AND Black in the same round.'
@@ -53,14 +52,14 @@ function buildSteps(v) {
     {
       step: 4,
       title: 'The River Bet Opens',
-      icon: '\uD83C\uDF0A',
+      icon: '🌊',
       description: 'After the Turn card is revealed, the River Bet window opens. Based on the 4 community cards showing, decide whether the 5th and final card will be High (8 or above) or Low (7 or below).',
       highlight: 'This is your only bet placed after cards are dealt. One decision. One card.',
     },
     {
       step: 5,
       title: 'All Bets Resolve',
-      icon: '\uD83D\uDCB0',
+      icon: '💰',
       description: 'The River card is dealt. All markets settle simultaneously — your Hand and Rank result, your Color Board result, and your River result. A new round begins automatically.',
       highlight: 'If the Board beats all player hands, hand bets are collected. Color Board and River bets resolve independently.',
     },
@@ -68,31 +67,28 @@ function buildSteps(v) {
 }
 
 export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
-  const [visible, setVisible] = useState(false);
-  const [step, setStep]       = useState(0);
-  const [steps, setSteps]     = useState(() => buildSteps(loadVersions()));
+  const [visible,  setVisible]  = useState(false);
+  const [step,     setStep]     = useState(0);
+  const [steps,    setSteps]    = useState([]);
+  const [updated,  setUpdated]  = useState(false);   // true = rules changed since last visit
 
   useEffect(() => {
+    const v        = loadVersions();
+    const changed  = rulesHaveChanged();
+    setSteps(buildSteps(v));
+    setUpdated(changed);
+    setStep(0);
+
     if (forceOpen) {
-      setSteps(buildSteps(loadVersions()));
-      setStep(0);
       setVisible(true);
       return;
     }
-    try {
-      const seen = localStorage.getItem(STORAGE_KEY);
-      if (!seen) {
-        setSteps(buildSteps(loadVersions()));
-        setVisible(true);
-      }
-    } catch {
-      setSteps(buildSteps(loadVersions()));
-      setVisible(true);
-    }
+    // Always show on load
+    setVisible(true);
   }, [forceOpen]);
 
   const handleClose = () => {
-    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+    markRulesSeen();          // stamp the current hash so warning clears next time
     setVisible(false);
     if (onClose) onClose();
   };
@@ -106,7 +102,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
     if (step > 0) setStep(s => s - 1);
   };
 
-  if (!visible) return null;
+  if (!visible || steps.length === 0) return null;
 
   const current = steps[step];
 
@@ -121,14 +117,39 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
     >
       <div style={{
         background: 'linear-gradient(160deg, rgba(20,10,0,0.98) 0%, rgba(40,20,0,0.98) 100%)',
-        border: '1.5px solid rgba(234,179,8,0.5)',
+        border: `1.5px solid ${updated ? 'rgba(251,146,60,0.7)' : 'rgba(234,179,8,0.5)'}`,
         borderRadius: 18,
-        padding: '32px 36px',
+        padding: '28px 32px 32px',
         maxWidth: 480,
         width: '90%',
         boxShadow: '0 8px 48px rgba(0,0,0,0.8), 0 0 0 1px rgba(234,179,8,0.1)',
         position: 'relative',
       }}>
+
+        {/* ── Rules-updated warning banner ── */}
+        {updated && (
+          <div style={{
+            background: 'rgba(251,146,60,0.12)',
+            border: '1px solid rgba(251,146,60,0.45)',
+            borderRadius: 10,
+            padding: '9px 14px',
+            marginBottom: 18,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+          }}>
+            <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <div style={{ color: '#fb923c', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 2 }}>
+                Rules Updated
+              </div>
+              <div style={{ color: '#fed7aa', fontSize: 11, lineHeight: 1.5 }}>
+                The game settings or odds have changed since your last visit. Please review the steps below before playing.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Skip button */}
         <button
           onClick={handleClose}
@@ -143,7 +164,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose }) {
         </button>
 
         {/* Step indicator */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 24, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 20, justifyContent: 'center' }}>
           {steps.map((_, i) => (
             <div key={i} style={{
               width: i === step ? 24 : 8, height: 8, borderRadius: 4,
