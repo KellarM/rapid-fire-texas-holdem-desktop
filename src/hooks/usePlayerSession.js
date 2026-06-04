@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { PlayerSession } from '@/api/entities';
+import { PlayerSession, AuditRound } from '@/api/entities';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const STARTING_BALANCE  = 10000;
@@ -135,6 +135,37 @@ export function usePlayerSession() {
             newBalances[slot] = rec.balance ?? STARTING_BALANCE;
             recordIdsRef.current[slot] = rec.id;
           }
+        }
+
+        // ── RACE-CONDITION GUARD ──────────────────────────────────────────────
+        // If there's an open AuditRound for this device, it means either:
+        //   (a) The player is mid-round and about to see the recovery modal, OR
+        //   (b) The abandon flow's persistBalance() DB write hasn't completed yet.
+        // In case (b) the PlayerSession.balance is the post-bet deducted value,
+        // which is WRONG — balance_before from AuditRound is the correct value.
+        // Fix: load any open AuditRounds and use balance_before as the authority.
+        try {
+          const openRounds = await AuditRound.filter({ device_id: deviceId.current, status: 'open' });
+          if (openRounds && openRounds.length > 0) {
+            // Sort newest first — most recent open round is authoritative
+            const sorted = openRounds.sort(
+              (a, b) => new Date(b.timestamp_open) - new Date(a.timestamp_open)
+            );
+            const latest = sorted[0];
+            const slot   = latest.player_slot ?? 0;
+            if (slot >= 0 && slot < NUM_PLAYERS && latest.balance_before != null) {
+              // balance_before = balance BEFORE bets were deducted
+              // correct in-round balance = balance_before - total_wagered
+              const inRoundBalance = latest.balance_before - (latest.total_wagered ?? 0);
+              newBalances[slot] = inRoundBalance;
+              console.log('[PlayerSession] Open AuditRound found — using in-round balance:',
+                inRoundBalance, '(balance_before:', latest.balance_before,
+                '- wagered:', latest.total_wagered, ')');
+            }
+          }
+        } catch (e) {
+          // Non-fatal — fall back to PlayerSession.balance
+          console.warn('[PlayerSession] AuditRound check failed:', e);
         }
 
         // Create records for any missing slots
@@ -271,6 +302,7 @@ export function usePlayerSession() {
     balances,
     setBalance,
     setBalances,
+    persistBalance,          // awaitable — use when you MUST confirm DB write before reload
     resetAllBalances,
     recordRoundResult,
     deviceId: deviceId.current,

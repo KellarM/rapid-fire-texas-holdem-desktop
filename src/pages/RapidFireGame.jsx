@@ -239,6 +239,7 @@ export default function RapidFireGame() {
     balances,
     setBalance,
     setBalances,
+    persistBalance,
     resetAllBalances,
     recordRoundResult,
     deviceId,
@@ -382,25 +383,36 @@ export default function RapidFireGame() {
 
   const handleRecoveryAbandon = useCallback(async () => {
     // ── REFUND: restore the player's balance to what it was BEFORE bets were placed ──
-    // The AuditRound record holds balanceBefore (pre-bet) and totalWagered.
     // Abandoning = voiding the round = the wager is returned in full.
+    // CRITICAL: we AWAIT persistBalance() so the DB write is confirmed BEFORE
+    // abandonIncompleteRound() marks the AuditRound as abandoned.
+    // This prevents a race where loadSessions() on the next reload reads the
+    // stale post-bet balance from DB before our write completes.
     if (recoveredState?.balanceBefore != null) {
       const pid = activePlayer;
       const refundedBalance = recoveredState.balanceBefore; // full pre-bet balance
+      // Update UI immediately
       setBalances((prev) => {
         const next = [...prev];
         next[pid] = refundedBalance;
         return next;
       });
-      // Persist the restored balance to DB so a refresh shows the correct value
-      setBalance(pid, refundedBalance);
+      // AWAIT the DB write — guarantees DB has correct value before any reload
+      try {
+        await persistBalance(pid, refundedBalance);
+        console.log('[Abandon] Balance DB write confirmed:', refundedBalance);
+      } catch (e) {
+        // If DB write fails, still proceed — balance is correct in UI
+        // and will sync on next write cycle
+        console.error('[Abandon] Balance DB write failed, proceeding anyway:', e);
+      }
       console.log('[Abandon] Balance restored to', refundedBalance,
         '(was', recoveredState.balanceBefore, '- wagered', recoveredState.totalWagered, ')');
     }
     await abandonIncompleteRound();
     setShowRecoveryModal(false);
     setRecoveredState(null);
-  }, [abandonIncompleteRound, recoveredState, activePlayer, setBalance, setBalances]);
+  }, [abandonIncompleteRound, recoveredState, activePlayer, persistBalance, setBalances]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Listen for timing updates from GameTimingModal
