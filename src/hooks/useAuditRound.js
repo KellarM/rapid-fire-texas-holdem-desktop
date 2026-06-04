@@ -68,6 +68,7 @@ export function useAuditRound({ deviceId, sessionId }) {
     killSwitchActive,
     playerSlot,
     versionsSnapshot,
+    boardCards,         // NEW: full 5-card board saved at deal time for crash recovery
   }) => {
     const payload = {
       session_id:       sessionId,
@@ -83,6 +84,7 @@ export function useAuditRound({ deviceId, sessionId }) {
       low_high_bet:     lowHighBet,
       kill_switch_active: killSwitchActive,
       versions_snapshot: versionsSnapshot,
+      community_cards:  boardCards || [],  // save full board immediately for recovery
       status:           'open',
     };
 

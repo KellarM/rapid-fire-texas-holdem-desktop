@@ -78,17 +78,18 @@ export function useIncompleteRoundRecovery({ deviceId, onRecordId }) {
   const getRestoredBetState = useCallback(() => {
     if (!incompleteRound) return null;
     return {
-      recordId:       incompleteRound.id,
-      roundNumber:    incompleteRound.round_number,
-      handBets:       incompleteRound.hand_bets        || {},
-      rankBets:       incompleteRound.rank_bets        || {},
-      colorBets:      incompleteRound.color_bets       || {},
-      lowHighBet:     incompleteRound.low_high_bet     || null,
-      balanceBefore:  incompleteRound.balance_before   ?? null,
-      totalWagered:   incompleteRound.total_wagered    ?? 0,
+      recordId:         incompleteRound.id,
+      roundNumber:      incompleteRound.round_number,
+      handBets:         incompleteRound.hand_bets        || {},
+      rankBets:         incompleteRound.rank_bets        || {},
+      colorBets:        incompleteRound.color_bets       || {},
+      lowHighBet:       incompleteRound.low_high_bet     || null,
+      balanceBefore:    incompleteRound.balance_before   ?? null,
+      totalWagered:     incompleteRound.total_wagered    ?? 0,
       killSwitchActive: incompleteRound.kill_switch_active ?? false,
       versionsSnapshot: incompleteRound.versions_snapshot ?? {},
-      openedAt:       incompleteRound.timestamp_open,
+      openedAt:         incompleteRound.timestamp_open,
+      boardCards:       incompleteRound.community_cards  || [],  // full 5-card board for deck restore
     };
   }, [incompleteRound]);
 

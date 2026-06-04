@@ -305,25 +305,60 @@ export default function RapidFireGame() {
 
   const handleRecoveryResume = useCallback(() => {
     if (!recoveredState) return;
-    // Restore bet state for the active player
-    setHandBets({ [activePlayer]: recoveredState.handBets });
-    setRankBets({ [activePlayer]: recoveredState.rankBets });
-    setRedBlackBets({ [activePlayer]: recoveredState.colorBets });
-    if (recoveredState.lowHighBet) {
-      setLowHighBets({ [activePlayer]: recoveredState.lowHighBet });
+    const pid = activePlayer;
+
+    // ── Restore all bet state for the active player ──────────────────────────
+    setHandBets({ [pid]: recoveredState.handBets });
+    setRankBets({ [pid]: recoveredState.rankBets });
+    setRedBlackBets({ [pid]: recoveredState.colorBets });
+    // lowHighBet is stored as the bet object directly (not per-player map) — restore correctly
+    if (recoveredState.lowHighBet && recoveredState.lowHighBet.amount > 0) {
+      setLowHighBets({ [pid]: recoveredState.lowHighBet });
+    } else {
+      setLowHighBets({ [pid]: null });
     }
-    // NOTE: Do NOT re-deduct balance here.
-    // The balance was already deducted when bets were placed, and that deduction
-    // was persisted to the DB (via usePlayerSession). On reload the DB balance
-    // is restored directly — so the bets are already "paid for".
-    // Re-deducting here would double-charge the player.
-    setShowRecoveryModal(false);
-    clearRecovery();
-    // Jump straight to the flop deal — resume the round
-    // Flag so handleDealFlop skips opening a NEW AuditRound (record already exists)
-    isResumingRound.current = true;
-    handleDealFlop();
-  }, [recoveredState, activePlayer, clearRecovery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── Restore the exact deck that was dealt — same cards, same order ───────
+    // boardCards: array of { rank, suit } objects saved to AuditRound at deal time.
+    // If no boardCards saved (older record pre-fix), fall back to fresh deal.
+    const savedBoard = recoveredState.boardCards;
+    if (savedBoard && savedBoard.length === 5) {
+      // Restore the exact 5-card board from the DB
+      const flop = [savedBoard[0], savedBoard[1], savedBoard[2]];
+      setCommunityCards(flop);
+      setDeck(savedBoard);
+      setDeckIndex(3);  // turn is at index 3, river at index 4
+
+      const leader = findLeadingHand(flop);
+      setLeadingHandIds(leader ? leader.handIds : []);
+      setLeadingRank(leader ? leader.handResult.name : null);
+      const leaderHand = leader ? FIXED_HANDS.find((h) => h.id === leader.handIds[0]) : null;
+      const leaderCards = leaderHand ? leaderHand.cards.map((c) => `${c.rank}${SUITS[c.suit]}`).join(' & ') : '';
+      setDealerMessage(
+        leader
+          ? `Flop: ${flop.map(cardDisplay).join(' ')} — ${leaderCards} leads (${leader.handResult.name}) [RESUMED]`
+          : `Flop: ${flop.map(cardDisplay).join(' ')} [RESUMED]`
+      );
+
+      // Restore the round counter to the interrupted round (not a new round)
+      if (recoveredState.roundNumber) setRoundId(recoveredState.roundNumber);
+      // Mark as resuming so handleDealFlop (if somehow called) skips new AuditRound
+      isResumingRound.current = true;
+      setShowRecoveryModal(false);
+      clearRecovery();
+      // Set phase directly — no need to call handleDealFlop at all
+      setGamePhase('flop');
+      playCardDeal();
+    } else {
+      // Fallback: no saved board — resume via handleDealFlop (fresh deal, old behaviour)
+      console.warn('[Recovery] No saved boardCards — falling back to fresh deal');
+      setShowRecoveryModal(false);
+      clearRecovery();
+      isResumingRound.current = true;
+      handleDealFlop();
+    }
+    // NOTE: Do NOT re-deduct balance here — already persisted to DB.
+  }, [recoveredState, activePlayer, clearRecovery, playCardDeal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRecoveryAbandon = useCallback(async () => {
     await abandonIncompleteRound();
@@ -1140,6 +1175,9 @@ export default function RapidFireGame() {
     // ── Phase 2 GLI-19: open AuditRound record (bets now locked) ─────────────
     // IMPORTANT: read from REFS not closure variables — refs always hold current state.
     // Skip if we are resuming a recovered round — record already exists in DB
+    // Generate board BEFORE audit block so it can be saved for crash recovery
+    const board5 = getSecureRandomBoard();
+
     if (!isResumingRound.current) {
     const pid             = activePlayerRef.current;
     const liveHandBets    = handBetsRef.current;
@@ -1176,13 +1214,14 @@ export default function RapidFireGame() {
         killSwitchActive: isKillSwitchActive(Object.keys(auditHandBets).length, liveVersions?.rankLockThreshold ?? 1),
         playerSlot:       pid,
         versionsSnapshot: liveVersions ? { ...liveVersions } : {},
+        boardCards:       board5,   // save full 5-card board for crash recovery
       });
     } // end auditTotalWagered > 0 guard
     } // end !isResumingRound guard
     isResumingRound.current = false; // reset for next round
     // ─────────────────────────────────────────────────────────────────────────
 
-    const board5 = getSecureRandomBoard();
+    // board5 was generated above (before the audit block) and passed to openRound for recovery
     const flop = [board5[0], board5[1], board5[2]];
     setCommunityCards(flop);
     setDeck(board5);
