@@ -1640,6 +1640,7 @@ export default function RapidFireGame() {
           killSwitchActive={killSwitchActive}
           sideBetGateOpen={sideBetGateOpen}
           handBetCount={handBetCount}
+          maxHandBetsAllowed={maxHandBetsAllowed}
           rankBetCount={rankBetCount}
           maxRankSlots={maxRankSlots}
           luminosityClass={luminosityClass}

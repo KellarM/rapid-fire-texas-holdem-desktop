@@ -143,6 +143,7 @@ function MobileHandCard({
 export default function MobileGameLayout({
   gamePhase,
   communityCards,
+  maxHandBetsAllowed = 1,
   dealerMessage,
   leadingHandIds,
   winnerHandIds,
@@ -333,7 +334,7 @@ export default function MobileGameLayout({
                   onBet={onHandBet} onRemoveBet={onRemoveHandBet}
                   gamePhase={gamePhase}
                   disabled={balance < selectedChip && !pHandBets[hand.id]}
-                  disabledByConstraint={handBetCount >= 1 && !pHandBets[hand.id]}
+                  disabledByConstraint={handBetCount >= maxHandBetsAllowed && !pHandBets[hand.id]}
                   onAttemptLockedBet={()=>{}}
                 />
               );
@@ -627,7 +628,7 @@ export default function MobileGameLayout({
                 onRemoveBet={onRemoveHandBet}
                 gamePhase={gamePhase}
                 disabled={balance < selectedChip && !pHandBets[hand.id]}
-                disabledByConstraint={handBetCount >= 1 && !pHandBets[hand.id]}
+                disabledByConstraint={handBetCount >= maxHandBetsAllowed && !pHandBets[hand.id]}
                 onAttemptLockedBet={() => {}}
               />
             );
