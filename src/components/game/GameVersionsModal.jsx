@@ -21,13 +21,13 @@ function Toggle({ value, onChange, labelOn = 'ON', labelOff = 'OFF' }) {
   return (
     <button
       onClick={() => onChange(!value)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all \${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
         value
           ? 'border-green-500 bg-green-900/40 text-green-300'
           : 'border-gray-600 bg-gray-800/40 text-gray-400'
       }`}
     >
-      <span className={`w-2 h-2 rounded-full \${value ? 'bg-green-400' : 'bg-gray-600'}`} />
+      <span className={`w-2 h-2 rounded-full ${value ? 'bg-green-400' : 'bg-gray-600'}`} />
       {value ? labelOn : labelOff}
     </button>
   );
@@ -143,7 +143,7 @@ export default function GameVersionsModal({ isOpen, onClose }) {
                     </Row>
 
                     <Row step="2" label="How many card hands before rank is locked"
-                      description={`If a player selects \${v.rankLockThreshold} or more card hand\${v.rankLockThreshold !== 1 ? 's' : ''}, the Rank board locks and rank bets are unavailable.`}>
+                      description={`If a player selects ${v.rankLockThreshold} or more card hand${v.rankLockThreshold !== 1 ? 's' : ''}, the Rank board locks and rank bets are unavailable.`}>
                       <NumInput value={v.rankLockThreshold} onChange={val => set('rankLockThreshold', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>

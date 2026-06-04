@@ -261,9 +261,16 @@ export default function RapidFireGame() {
   });
 
   // When recovery check completes and finds an open round, show the modal
+  // GLI-19: If total_wagered is 0 (phantom round from a timer-triggered deal with no bets),
+  // auto-abandon silently instead of showing the recovery modal to the player.
   useEffect(() => {
     if (!recoveryChecking && incompleteRound) {
       const state = getRestoredBetState();
+      if (!state || (state.totalWagered || 0) === 0) {
+        // Phantom record — no bets were placed. Auto-abandon and move on.
+        abandonIncompleteRound().catch(() => {});
+        return;
+      }
       setRecoveredState(state);
       setShowRecoveryModal(true);
     }
@@ -1108,6 +1115,7 @@ export default function RapidFireGame() {
 
     // ── Phase 2 GLI-19: open AuditRound record (bets now locked) ─────────────
     // Skip if we are resuming a recovered round — record already exists in DB
+    // Skip if no bets were placed (timer-fired deal with $0 wagered = phantom round)
     if (!isResumingRound.current) {
     const auditHandBets   = handBets[activePlayer]    || {};
     const auditRankBets   = rankBets[activePlayer]    || {};
@@ -1118,6 +1126,7 @@ export default function RapidFireGame() {
       Object.values(auditRankBets).reduce((s,v)=>s+v,0)  +
       Object.values(auditColorBets).reduce((s,v)=>s+v,0) +
       (auditLowHighBet?.amount || 0);
+    if (auditTotalWagered > 0) {
     const auditRoundNum = getNextRoundNumber();
     openRound({
       roundNumber:      auditRoundNum,
@@ -1131,6 +1140,7 @@ export default function RapidFireGame() {
       playerSlot:       activePlayer,
       versionsSnapshot: versions ? { ...versions } : {},
     });
+    } // end auditTotalWagered > 0 guard
     } // end !isResumingRound guard
     isResumingRound.current = false; // reset for next round
     // ─────────────────────────────────────────────────────────────────────────
