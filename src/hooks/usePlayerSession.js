@@ -17,44 +17,36 @@ const SESSION_ID_KEY           = 'rfth_session_id';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Read device ID from cookie (survives localStorage clears / iframe reloads)
-function getDeviceIdFromCookie() {
-  try {
-    const match = document.cookie.match(/(?:^|;\s*)rfth_device_id=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  } catch { return null; }
-}
-
-// Write device ID to cookie with 1-year expiry
-function setDeviceIdCookie(id) {
-  try {
-    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `rfth_device_id=${encodeURIComponent(id)}; expires=${expires}; path=/; SameSite=Lax`;
-  } catch {}
-}
+// Device ID persistence strategy:
+// - Primary: localStorage (survives page refreshes, NOT cleared by Base44 iframe syncs)
+// - Backup: sessionStorage (per-tab, survives iframe reloads within same tab, NOT shared across tabs)
+// We deliberately do NOT use cookies — cookies are shared across all tabs on the same
+// domain, which causes device ID cross-contamination when multiple preview tabs are open.
 
 function getDeviceId() {
   try {
-    // Check cookie first — survives Base44 preview iframe reloads that clear localStorage
-    let id = getDeviceIdFromCookie();
+    // 1. Try localStorage first (primary, cross-reload persistence)
+    let id = localStorage.getItem(DEVICE_KEY);
     if (id) {
-      // Keep localStorage in sync too
-      localStorage.setItem(DEVICE_KEY, id);
-      console.log('[DEVICE] Loaded from cookie:', id);
+      // Keep sessionStorage in sync for iframe-reload survival
+      try { sessionStorage.setItem(DEVICE_KEY, id); } catch {}
+      console.log('[DEVICE] Loaded from localStorage:', id);
       return id;
     }
-    // Fall back to localStorage
-    id = localStorage.getItem(DEVICE_KEY);
+    // 2. Fall back to sessionStorage (survives Base44 iframe reloads that may clear localStorage)
+    try {
+      id = sessionStorage.getItem(DEVICE_KEY);
+    } catch {}
     if (id) {
-      // Back-fill cookie for future loads
-      setDeviceIdCookie(id);
-      console.log('[DEVICE] Loaded from localStorage, cookie set:', id);
+      // Restore localStorage
+      try { localStorage.setItem(DEVICE_KEY, id); } catch {}
+      console.log('[DEVICE] Restored from sessionStorage:', id);
       return id;
     }
-    // First ever visit — generate new id
+    // 3. First ever visit on this tab — generate new id
     id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
     localStorage.setItem(DEVICE_KEY, id);
-    setDeviceIdCookie(id);
+    try { sessionStorage.setItem(DEVICE_KEY, id); } catch {}
     console.log('[DEVICE] New device ID created:', id);
     return id;
   } catch {
