@@ -44,7 +44,7 @@ export async function loadVersionsFromDB() {
       return { config: v, recordId: rec.id };
     }
   } catch (e) {
-    console.warn('GameVersions DB load failed, using localStorage fallback:', e);
+    console.error('[GameVersions] DB load failed, using localStorage fallback:', e);
   }
   return { config: readLocal() || { ...DEFAULT_VERSIONS }, recordId: null };
 }
@@ -72,6 +72,7 @@ export async function saveVersionsToDB(v, recordId) {
         rankLockThreshold: v.rankLockThreshold,
         colorBothSides:    v.colorBothSides,
       });
+      console.log('[GameVersions] Saved to DB:', rid, v);
       return rid;
     } else {
       // No record exists at all — create one
@@ -79,7 +80,7 @@ export async function saveVersionsToDB(v, recordId) {
       return rec.id;
     }
   } catch (e) {
-    console.warn('GameVersions DB save failed:', e);
+    console.error('[GameVersions] DB save failed — settings will NOT persist:', e);
   }
   return recordId;
 }

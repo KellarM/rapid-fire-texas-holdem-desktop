@@ -1,0 +1,24 @@
+{
+  "name": "GameVersions",
+  "type": "object",
+  "properties": {
+    "config_key": {
+      "type": "string"
+    },
+    "maxCardHands": {
+      "type": "number"
+    },
+    "maxRankSlots": {
+      "type": "number"
+    },
+    "rankLockThreshold": {
+      "type": "number"
+    },
+    "colorBothSides": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "config_key"
+  ]
+}
