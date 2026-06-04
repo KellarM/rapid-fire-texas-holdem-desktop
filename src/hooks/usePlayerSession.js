@@ -16,16 +16,46 @@ const DEVICE_KEY               = 'rfth_device_id';
 const SESSION_ID_KEY           = 'rfth_session_id';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Read device ID from cookie (survives localStorage clears / iframe reloads)
+function getDeviceIdFromCookie() {
+  try {
+    const match = document.cookie.match(/(?:^|;\s*)rfth_device_id=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch { return null; }
+}
+
+// Write device ID to cookie with 1-year expiry
+function setDeviceIdCookie(id) {
+  try {
+    const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `rfth_device_id=${encodeURIComponent(id)}; expires=${expires}; path=/; SameSite=Lax`;
+  } catch {}
+}
+
 function getDeviceId() {
   try {
-    let id = localStorage.getItem(DEVICE_KEY);
-    if (!id) {
-      id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+    // Check cookie first — survives Base44 preview iframe reloads that clear localStorage
+    let id = getDeviceIdFromCookie();
+    if (id) {
+      // Keep localStorage in sync too
       localStorage.setItem(DEVICE_KEY, id);
-      console.log('[DEVICE] New device ID created:', id);
-    } else {
-      console.log('[DEVICE] Existing device ID loaded:', id);
+      console.log('[DEVICE] Loaded from cookie:', id);
+      return id;
     }
+    // Fall back to localStorage
+    id = localStorage.getItem(DEVICE_KEY);
+    if (id) {
+      // Back-fill cookie for future loads
+      setDeviceIdCookie(id);
+      console.log('[DEVICE] Loaded from localStorage, cookie set:', id);
+      return id;
+    }
+    // First ever visit — generate new id
+    id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+    localStorage.setItem(DEVICE_KEY, id);
+    setDeviceIdCookie(id);
+    console.log('[DEVICE] New device ID created:', id);
     return id;
   } catch {
     return 'dev_fallback_' + Math.random().toString(36).slice(2, 9);
