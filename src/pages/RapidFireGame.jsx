@@ -126,7 +126,16 @@ export default function RapidFireGame() {
   // handDisplayOrder — which hand id occupies each grid slot (shuffled each round after round 1)
   const [handDisplayOrder, setHandDisplayOrder] = useState([1,2,3,4,5,6,7,8,9,10]);
   const [redBlackBets, setRedBlackBets] = useState({}); // { [pid]: { key: amount } }
-  const [rankBets, setRankBets] = useState({}); // { [pid]: { key: amount } }
+  const [rankBets, setRankBets] = useState({});
+
+  // ── Live-value refs — always hold current state, readable in stale closures ──
+  const handBetsRef      = useRef({});
+  const rankBetsRef      = useRef({});
+  const redBlackBetsRef  = useRef({});
+  const lowHighBetsRef   = useRef({});
+  const balancesRef      = useRef([]);
+  const activePlayerRef  = useRef(0);
+  const versionsRef      = useRef(null); // { [pid]: { key: amount } }
   const [lowHighBets, setLowHighBets] = useState({}); // { [pid]: { type, amount } }
   const [activePlayer, setActivePlayer] = useState(0); // which player is placing bets
   const [communityCards, setCommunityCards] = useState([]);
@@ -242,6 +251,18 @@ export default function RapidFireGame() {
     sessionId,
   });
 
+  // ── Keep live-value refs in sync with state ────────────────────────────────
+  useEffect(() => { handBetsRef.current     = handBets;     }, [handBets]);
+  useEffect(() => { rankBetsRef.current     = rankBets;     }, [rankBets]);
+  useEffect(() => { redBlackBetsRef.current = redBlackBets; }, [redBlackBets]);
+  useEffect(() => { lowHighBetsRef.current  = lowHighBets;  }, [lowHighBets]);
+  useEffect(() => { balancesRef.current     = balances;     }, [balances]);
+  useEffect(() => { activePlayerRef.current = activePlayer; }, [activePlayer]);
+  useEffect(() => { versionsRef.current     = versions;     }, [versions]);
+
+  // Capture balance BEFORE any bets are placed this round
+  const balanceBeforeRoundRef = useRef(null);
+
   // ── Phase 3 GLI-19: incomplete round recovery ─────────────────────────────
   const isResumingRound = useRef(false); // true during a recovery resume — skips openRound
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
@@ -266,7 +287,12 @@ export default function RapidFireGame() {
   useEffect(() => {
     if (!recoveryChecking && incompleteRound) {
       const state = getRestoredBetState();
-      if (!state || (state.totalWagered || 0) === 0) {
+      // Phantom record check: auto-abandon if no bets AND total_wagered is 0
+      const hasAnyBets = Object.keys(state?.handBets || {}).length > 0 ||
+                         Object.keys(state?.rankBets || {}).length > 0 ||
+                         Object.keys(state?.colorBets || {}).length > 0 ||
+                         (state?.lowHighBet?.amount > 0);
+      if (!state || (!hasAnyBets && (state.totalWagered || 0) === 0)) {
         // Phantom record — no bets were placed. Auto-abandon and move on.
         abandonIncompleteRound().catch(() => {});
         return;
@@ -285,14 +311,11 @@ export default function RapidFireGame() {
     if (recoveredState.lowHighBet) {
       setLowHighBets({ [activePlayer]: recoveredState.lowHighBet });
     }
-    // Deduct bets from balance (they were deducted before the crash)
-    if ((recoveredState.totalWagered || 0) > 0) {
-      setBalances((prev) => {
-        const n = [...prev];
-        n[activePlayer] = Math.max(0, (n[activePlayer] ?? 0) - recoveredState.totalWagered);
-        return n;
-      });
-    }
+    // NOTE: Do NOT re-deduct balance here.
+    // The balance was already deducted when bets were placed, and that deduction
+    // was persisted to the DB (via usePlayerSession). On reload the DB balance
+    // is restored directly — so the bets are already "paid for".
+    // Re-deducting here would double-charge the player.
     setShowRecoveryModal(false);
     clearRecovery();
     // Jump straight to the flop deal — resume the round
@@ -1114,32 +1137,45 @@ export default function RapidFireGame() {
     timerActiveRef.current = false;
 
     // ── Phase 2 GLI-19: open AuditRound record (bets now locked) ─────────────
+    // IMPORTANT: read from REFS not closure variables — refs always hold current state.
     // Skip if we are resuming a recovered round — record already exists in DB
-    // Skip if no bets were placed (timer-fired deal with $0 wagered = phantom round)
     if (!isResumingRound.current) {
-    const auditHandBets   = handBets[activePlayer]    || {};
-    const auditRankBets   = rankBets[activePlayer]    || {};
-    const auditColorBets  = redBlackBets[activePlayer]|| {};
-    const auditLowHighBet = lowHighBets[activePlayer] || null;
+    const pid             = activePlayerRef.current;
+    const liveHandBets    = handBetsRef.current;
+    const liveRankBets    = rankBetsRef.current;
+    const liveColorBets   = redBlackBetsRef.current;
+    const liveLowHighBets = lowHighBetsRef.current;
+    const liveBalances    = balancesRef.current;
+    const liveVersions    = versionsRef.current;
+
+    const auditHandBets   = liveHandBets[pid]   || {};
+    const auditRankBets   = liveRankBets[pid]   || {};
+    const auditColorBets  = liveColorBets[pid]  || {};
+    const auditLowHighBet = liveLowHighBets[pid] || null;
+
     const auditTotalWagered =
       Object.values(auditHandBets).reduce((s,v)=>s+v,0)  +
       Object.values(auditRankBets).reduce((s,v)=>s+v,0)  +
       Object.values(auditColorBets).reduce((s,v)=>s+v,0) +
       (auditLowHighBet?.amount || 0);
+
+    // balanceBefore = current balance + bets already deducted = pre-bet balance
+    const balanceBefore = (liveBalances[pid] ?? 0) + auditTotalWagered;
+
     if (auditTotalWagered > 0) {
-    const auditRoundNum = getNextRoundNumber();
-    openRound({
-      roundNumber:      auditRoundNum,
-      balanceBefore:    balances[activePlayer] ?? 0,
-      handBets:         auditHandBets,
-      rankBets:         auditRankBets,
-      colorBets:        auditColorBets,
-      lowHighBet:       auditLowHighBet,
-      totalWagered:     auditTotalWagered,
-      killSwitchActive: isKillSwitchActive(Object.keys(auditHandBets).length, versions?.rankLockThreshold ?? 1),
-      playerSlot:       activePlayer,
-      versionsSnapshot: versions ? { ...versions } : {},
-    });
+      const auditRoundNum = getNextRoundNumber();
+      openRound({
+        roundNumber:      auditRoundNum,
+        balanceBefore:    balanceBefore,
+        handBets:         auditHandBets,
+        rankBets:         auditRankBets,
+        colorBets:        auditColorBets,
+        lowHighBet:       auditLowHighBet,
+        totalWagered:     auditTotalWagered,
+        killSwitchActive: isKillSwitchActive(Object.keys(auditHandBets).length, liveVersions?.rankLockThreshold ?? 1),
+        playerSlot:       pid,
+        versionsSnapshot: liveVersions ? { ...liveVersions } : {},
+      });
     } // end auditTotalWagered > 0 guard
     } // end !isResumingRound guard
     isResumingRound.current = false; // reset for next round
@@ -1164,7 +1200,7 @@ export default function RapidFireGame() {
       `Flop: ${flop.map(cardDisplay).join(' ')}`
     );
     setGamePhase('flop');
-  }, [gamePhase, stopTimer]);
+  }, [gamePhase, stopTimer, openRound, getNextRoundNumber]);
 
   const handleDealTurn = useCallback(() => {
     if (gamePhase !== 'flop') return;
