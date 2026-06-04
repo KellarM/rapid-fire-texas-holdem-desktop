@@ -189,5 +189,12 @@ export function useAuditRound({ deviceId, sessionId }) {
     }
   }, []);
 
-  return { openRound, settleRound, abandonRound, getNextRoundNumber };
+  // ── resumeRound — called when player resumes a recovered round ─────────────
+  // Injects the existing DB record id so settleRound completes the correct record
+  const resumeRound = useCallback((existingRecordId) => {
+    currentRecordId.current = existingRecordId;
+    console.log('[AuditRound] Resumed with existing record:', existingRecordId);
+  }, []);
+
+  return { openRound, settleRound, abandonRound, resumeRound, getNextRoundNumber };
 }

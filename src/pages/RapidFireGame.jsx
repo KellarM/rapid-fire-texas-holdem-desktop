@@ -49,6 +49,8 @@ import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameVersions } from '@/hooks/useGameVersions';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { useAuditRound } from '@/hooks/useAuditRound';
+import { useIncompleteRoundRecovery } from '@/hooks/useIncompleteRoundRecovery';
+import RoundRecoveryModal from '@/components/game/RoundRecoveryModal';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import VolumeControl from '@/components/game/VolumeControl';
@@ -235,10 +237,69 @@ export default function RapidFireGame() {
   } = usePlayerSession();
 
   // ── Phase 2 GLI-19: per-round immutable audit trail ───────────────────────
-  const { openRound, settleRound, abandonRound, getNextRoundNumber } = useAuditRound({
+  const { openRound, settleRound, abandonRound, resumeRound, getNextRoundNumber } = useAuditRound({
     deviceId,
     sessionId,
   });
+
+  // ── Phase 3 GLI-19: incomplete round recovery ─────────────────────────────
+  const isResumingRound = useRef(false); // true during a recovery resume — skips openRound
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveredState,    setRecoveredState]    = useState(null);
+  const {
+    checking:          recoveryChecking,
+    incompleteRound,
+    getRestoredBetState,
+    abandonIncompleteRound,
+    clearRecovery,
+  } = useIncompleteRoundRecovery({
+    deviceId,
+    onRecordId: (rid) => {
+      // Pre-wire the existing record into the audit hook before player decides
+      resumeRound(rid);
+    },
+  });
+
+  // When recovery check completes and finds an open round, show the modal
+  useEffect(() => {
+    if (!recoveryChecking && incompleteRound) {
+      const state = getRestoredBetState();
+      setRecoveredState(state);
+      setShowRecoveryModal(true);
+    }
+  }, [recoveryChecking, incompleteRound]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRecoveryResume = useCallback(() => {
+    if (!recoveredState) return;
+    // Restore bet state for the active player
+    setHandBets({ [activePlayer]: recoveredState.handBets });
+    setRankBets({ [activePlayer]: recoveredState.rankBets });
+    setRedBlackBets({ [activePlayer]: recoveredState.colorBets });
+    if (recoveredState.lowHighBet) {
+      setLowHighBets({ [activePlayer]: recoveredState.lowHighBet });
+    }
+    // Deduct bets from balance (they were deducted before the crash)
+    if ((recoveredState.totalWagered || 0) > 0) {
+      setBalances((prev) => {
+        const n = [...prev];
+        n[activePlayer] = Math.max(0, (n[activePlayer] ?? 0) - recoveredState.totalWagered);
+        return n;
+      });
+    }
+    setShowRecoveryModal(false);
+    clearRecovery();
+    // Jump straight to the flop deal — resume the round
+    // Flag so handleDealFlop skips opening a NEW AuditRound (record already exists)
+    isResumingRound.current = true;
+    handleDealFlop();
+  }, [recoveredState, activePlayer, clearRecovery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRecoveryAbandon = useCallback(async () => {
+    await abandonIncompleteRound();
+    setShowRecoveryModal(false);
+    setRecoveredState(null);
+  }, [abandonIncompleteRound]);
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Sound effects
   const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
@@ -1046,6 +1107,8 @@ export default function RapidFireGame() {
     timerActiveRef.current = false;
 
     // ── Phase 2 GLI-19: open AuditRound record (bets now locked) ─────────────
+    // Skip if we are resuming a recovered round — record already exists in DB
+    if (!isResumingRound.current) {
     const auditHandBets   = handBets[activePlayer]    || {};
     const auditRankBets   = rankBets[activePlayer]    || {};
     const auditColorBets  = redBlackBets[activePlayer]|| {};
@@ -1068,6 +1131,8 @@ export default function RapidFireGame() {
       playerSlot:       activePlayer,
       versionsSnapshot: versions ? { ...versions } : {},
     });
+    } // end !isResumingRound guard
+    isResumingRound.current = false; // reset for next round
     // ─────────────────────────────────────────────────────────────────────────
 
     const board5 = getSecureRandomBoard();
@@ -1710,6 +1775,13 @@ export default function RapidFireGame() {
   if (isMobile) {
     return (
       <>
+        {/* Phase 3 GLI-19: Incomplete round recovery modal */}
+        <RoundRecoveryModal
+          isOpen={showRecoveryModal}
+          restoredState={recoveredState}
+          onResume={handleRecoveryResume}
+          onAbandon={handleRecoveryAbandon}
+        />
         <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}`}</style>
         {/* Tool modals — same as desktop */}
         <PlayerStatsPanel isOpen={showStatsPanel} onClose={() => setShowStatsPanel(false)} playerStats={playerStats} playerCount={playerCount} />
@@ -1815,6 +1887,13 @@ export default function RapidFireGame() {
   // ── Desktop layout ────────────────────────────────────────────────────────
   return (
   <>
+      {/* Phase 3 GLI-19: Incomplete round recovery modal */}
+      <RoundRecoveryModal
+        isOpen={showRecoveryModal}
+        restoredState={recoveredState}
+        onResume={handleRecoveryResume}
+        onAbandon={handleRecoveryAbandon}
+      />
       <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}`}</style>
       <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
