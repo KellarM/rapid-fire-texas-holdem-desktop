@@ -25,12 +25,15 @@ function writeLocal(v) {
   } catch {}
 }
 
-// Fetch from DB and cache locally. Returns the config object.
+// Always fetches the canonical record from DB.
+// Returns { config, recordId } — recordId is the DB record id to use for updates.
 export async function loadVersionsFromDB() {
   try {
     const records = await GameVersions.filter({ config_key: 'default' });
     if (records && records.length > 0) {
-      const rec = records[0];
+      // If somehow duplicates exist, use the most recently updated one
+      const sorted = records.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+      const rec = sorted[0];
       const v = {
         maxCardHands:      rec.maxCardHands      ?? DEFAULT_VERSIONS.maxCardHands,
         maxRankSlots:      rec.maxRankSlots      ?? DEFAULT_VERSIONS.maxRankSlots,
@@ -46,19 +49,32 @@ export async function loadVersionsFromDB() {
   return { config: readLocal() || { ...DEFAULT_VERSIONS }, recordId: null };
 }
 
-// Save to both DB and localStorage.
+// Save to DB (upsert) and localStorage.
+// Always does a fresh DB lookup if recordId is null to avoid creating duplicates.
 export async function saveVersionsToDB(v, recordId) {
   writeLocal(v);
   try {
-    if (recordId) {
-      await GameVersions.update(recordId, {
+    let rid = recordId;
+
+    // If we don't have a recordId, query first to avoid duplicate creation
+    if (!rid) {
+      const existing = await GameVersions.filter({ config_key: 'default' });
+      if (existing && existing.length > 0) {
+        const sorted = existing.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+        rid = sorted[0].id;
+      }
+    }
+
+    if (rid) {
+      await GameVersions.update(rid, {
         maxCardHands:      v.maxCardHands,
         maxRankSlots:      v.maxRankSlots,
         rankLockThreshold: v.rankLockThreshold,
         colorBothSides:    v.colorBothSides,
       });
+      return rid;
     } else {
-      // No record yet — create one
+      // No record exists at all — create one
       const rec = await GameVersions.create({ config_key: 'default', ...v });
       return rec.id;
     }
@@ -69,9 +85,9 @@ export async function saveVersionsToDB(v, recordId) {
 }
 
 export function useGameVersions() {
-  const [versions,  setVersions]  = useState(() => readLocal() || { ...DEFAULT_VERSIONS });
-  const [recordId,  setRecordId]  = useState(null);
-  const [dbLoaded,  setDbLoaded]  = useState(false);
+  const [versions, setVersions] = useState(() => readLocal() || { ...DEFAULT_VERSIONS });
+  const [recordId, setRecordId] = useState(null);
+  const [dbLoaded, setDbLoaded] = useState(false);
 
   // On mount: load from DB (authoritative source)
   useEffect(() => {
@@ -79,7 +95,6 @@ export function useGameVersions() {
       setVersions(config);
       setRecordId(rid);
       setDbLoaded(true);
-      // Broadcast so any open modal syncs immediately
       window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: config }));
     });
   }, []);

@@ -47,9 +47,9 @@ function Row({ step, label, description, children }) {
   );
 }
 
-export default function GameVersionsModal({ isOpen, onClose, recordId: propRecordId = null }) {
+export default function GameVersionsModal({ isOpen, onClose }) {
   const [v, setV]           = useState({ ...DEFAULT_VERSIONS });
-  const [recordId, setRecordId] = useState(propRecordId);
+  const [recordId, setRecordId] = useState(null);
 
   useEffect(() => {
     if (isOpen) {

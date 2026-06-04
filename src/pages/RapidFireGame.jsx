@@ -1634,7 +1634,7 @@ export default function RapidFireGame() {
         </AnimatePresence>
         <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
         <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
-        <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} recordId={versionsRecordId} />
+        <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
         <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
         <MobileGameLayout
