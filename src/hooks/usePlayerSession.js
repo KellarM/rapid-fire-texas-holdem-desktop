@@ -1,13 +1,9 @@
 /**
  * usePlayerSession — GLI-19 compliant server-authoritative balance & session management.
- *
- * Design:
- *  - Each browser gets a permanent device_id (stored in localStorage, never cleared by resets).
- *  - Each player slot (0–9) has its own PlayerSession record in the DB.
- *  - Balance is always read FROM the DB on load. localStorage is only a fast-start cache.
- *  - After every balance change the new value is written to the DB immediately.
- *  - If the DB write fails, the change is queued and retried. The UI never blocks.
- *  - On reconnect/refresh the DB value is always the source of truth.
+ * 
+ * FIX: Removed illegal setState-inside-setState pattern that caused white screen crashes.
+ * recordIds is now stored in a useRef so it can be read synchronously without triggering
+ * additional state updates or violating React's rules of state transitions.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -17,7 +13,7 @@ import { PlayerSession } from '@/api/entities';
 export const STARTING_BALANCE  = 10000;
 export const NUM_PLAYERS       = 10;
 const DEVICE_KEY               = 'rfth_device_id';
-const BALANCE_CACHE_KEY        = 'rfth_balance_cache';   // fast-start only
+const BALANCE_CACHE_KEY        = 'rfth_balance_cache';
 const SESSION_ID_KEY           = 'rfth_session_id';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,13 +64,15 @@ export function usePlayerSession() {
   const sessionId  = useRef(getOrCreateSessionId());
 
   // Initialise from cache so the UI shows numbers immediately while DB loads
-  const [balances,    setBalancesState] = useState(() => readBalanceCache());
-  const [recordIds,   setRecordIds]     = useState(Array(NUM_PLAYERS).fill(null)); // DB record IDs per slot
-  const [dbReady,     setDbReady]       = useState(false);
+  const [balances, setBalancesState] = useState(() => readBalanceCache());
+
+  // FIX: Use ref for recordIds — avoids illegal setState-inside-setState
+  const recordIdsRef = useRef(Array(NUM_PLAYERS).fill(null));
+  const [dbReady, setDbReady] = useState(false);
 
   // Pending write queue — if a DB write fails we retry it
-  const pendingRef = useRef({}); // { [slot]: balance }
-  const retryTimer = useRef(null);
+  const pendingRef  = useRef({}); // { [slot]: balance }
+  const retryTimer  = useRef(null);
 
   // ── Load all 10 player sessions from DB on mount ──────────────────────────
   useEffect(() => {
@@ -82,20 +80,19 @@ export function usePlayerSession() {
       try {
         const records = await PlayerSession.filter({ device_id: deviceId.current });
         const newBalances = [...readBalanceCache()];
-        const newIds = Array(NUM_PLAYERS).fill(null);
 
         for (const rec of records) {
           const slot = rec.player_slot;
           if (slot >= 0 && slot < NUM_PLAYERS) {
             newBalances[slot] = rec.balance ?? STARTING_BALANCE;
-            newIds[slot] = rec.id;
+            recordIdsRef.current[slot] = rec.id;
           }
         }
 
         // Create records for any missing slots
         const creates = [];
         for (let slot = 0; slot < NUM_PLAYERS; slot++) {
-          if (!newIds[slot]) {
+          if (!recordIdsRef.current[slot]) {
             creates.push(
               PlayerSession.create({
                 device_id:      deviceId.current,
@@ -116,28 +113,27 @@ export function usePlayerSession() {
         if (creates.length > 0) {
           const created = await Promise.all(creates);
           for (const { slot, id } of created) {
-            newIds[slot] = id;
+            recordIdsRef.current[slot] = id;
           }
         }
 
         setBalancesState(newBalances);
-        setRecordIds(newIds);
         writeBalanceCache(newBalances);
         setDbReady(true);
         console.log('[PlayerSession] Loaded from DB:', newBalances);
       } catch (e) {
         console.error('[PlayerSession] DB load failed, using cache:', e);
-        setDbReady(true); // still mark ready so game doesn't stall
+        setDbReady(true);
       }
     }
     loadSessions();
   }, []);
 
   // ── Write a single slot balance to DB ────────────────────────────────────
-  const persistBalance = useCallback(async (slot, newBalance, recordIdsSnapshot) => {
-    const rid = recordIdsSnapshot[slot];
+  // FIX: reads recordIdsRef.current directly — no setState call
+  const persistBalance = useCallback(async (slot, newBalance) => {
+    const rid = recordIdsRef.current[slot];
     if (!rid) {
-      // Queue it — will be retried once DB is ready
       pendingRef.current[slot] = newBalance;
       return;
     }
@@ -146,23 +142,22 @@ export function usePlayerSession() {
         balance:        newBalance,
         last_active_at: new Date().toISOString(),
       });
-      // Clear from pending if it was there
       delete pendingRef.current[slot];
     } catch (e) {
       console.error(`[PlayerSession] Write failed slot ${slot}:`, e);
-      pendingRef.current[slot] = newBalance; // queue for retry
-      scheduleRetry(recordIdsSnapshot);
+      pendingRef.current[slot] = newBalance;
+      scheduleRetry();
     }
   }, []);
 
   // ── Retry loop for failed writes ─────────────────────────────────────────
-  function scheduleRetry(recordIdsSnapshot) {
+  function scheduleRetry() {
     if (retryTimer.current) return;
     retryTimer.current = setTimeout(async () => {
       retryTimer.current = null;
       const pending = { ...pendingRef.current };
       for (const [slotStr, bal] of Object.entries(pending)) {
-        await persistBalance(Number(slotStr), bal, recordIdsSnapshot);
+        await persistBalance(Number(slotStr), bal);
       }
     }, 3000);
   }
@@ -175,45 +170,34 @@ export function usePlayerSession() {
       writeBalanceCache(next);
       return next;
     });
-    // We need the current recordIds — capture via ref pattern
-    setRecordIds(currentIds => {
-      persistBalance(slot, newBalance, currentIds);
-      return currentIds; // unchanged
-    });
+    // FIX: persistBalance now reads ref directly — safe to call outside updater
+    persistBalance(slot, newBalance);
   }, [persistBalance]);
 
-  // ── Public: update balance for multiple slots at once (end of round) ─────
+  // ── Public: update balance for multiple slots at once ────────────────────
   const setBalances = useCallback((updaterOrArray) => {
     setBalancesState(prev => {
       const next = typeof updaterOrArray === 'function'
         ? updaterOrArray(prev)
         : updaterOrArray;
       writeBalanceCache(next);
-      // Persist every changed slot
-      setRecordIds(currentIds => {
-        for (let slot = 0; slot < NUM_PLAYERS; slot++) {
-          if (next[slot] !== prev[slot]) {
-            persistBalance(slot, next[slot], currentIds);
-          }
+      // FIX: persist AFTER computing next, reading ref directly — NO setState inside setState
+      for (let slot = 0; slot < NUM_PLAYERS; slot++) {
+        if (next[slot] !== prev[slot]) {
+          persistBalance(slot, next[slot]);
         }
-        return currentIds; // unchanged
-      });
+      }
       return next;
     });
   }, [persistBalance]);
 
   // ── Public: increment session stats after round settlement ────────────────
   const recordRoundResult = useCallback(async (slot, { wagered, returned }) => {
-    setRecordIds(currentIds => {
-      const rid = currentIds[slot];
-      if (!rid) return currentIds;
-      PlayerSession.update(rid, {
-        last_active_at: new Date().toISOString(),
-        // These are incremented in the backend — we do a read-modify-write here
-        // It's acceptable for stats (not financial) — balance is the critical field
-      }).catch(e => console.warn('[PlayerSession] stats update failed:', e));
-      return currentIds;
-    });
+    const rid = recordIdsRef.current[slot];
+    if (!rid) return;
+    PlayerSession.update(rid, {
+      last_active_at: new Date().toISOString(),
+    }).catch(e => console.warn('[PlayerSession] stats update failed:', e));
   }, []);
 
   // ── Public: hard reset all balances (Reset Bank action) ──────────────────
@@ -221,20 +205,18 @@ export function usePlayerSession() {
     const fresh = Array(NUM_PLAYERS).fill(STARTING_BALANCE);
     setBalancesState(fresh);
     writeBalanceCache(fresh);
-    setRecordIds(currentIds => {
-      for (let slot = 0; slot < NUM_PLAYERS; slot++) {
-        if (currentIds[slot]) {
-          PlayerSession.update(currentIds[slot], {
-            balance:        STARTING_BALANCE,
-            rounds_played:  0,
-            total_wagered:  0,
-            total_returned: 0,
-            last_active_at: new Date().toISOString(),
-          }).catch(e => console.warn('[PlayerSession] reset failed slot', slot, e));
-        }
+    for (let slot = 0; slot < NUM_PLAYERS; slot++) {
+      const rid = recordIdsRef.current[slot];
+      if (rid) {
+        PlayerSession.update(rid, {
+          balance:        STARTING_BALANCE,
+          rounds_played:  0,
+          total_wagered:  0,
+          total_returned: 0,
+          last_active_at: new Date().toISOString(),
+        }).catch(e => console.warn('[PlayerSession] reset failed slot', slot, e));
       }
-      return currentIds;
-    });
+    }
   }, []);
 
   return {
