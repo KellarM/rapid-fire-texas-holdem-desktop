@@ -237,6 +237,7 @@ export default function RapidFireGame() {
   // ── Server-authoritative balance & session (GLI-19 Phase 1) ──────────────
   const {
     balances,
+    setBalance,
     setBalances,
     resetAllBalances,
     recordRoundResult,
@@ -380,10 +381,26 @@ export default function RapidFireGame() {
   }, [recoveredState, activePlayer, clearRecovery, playCardDeal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRecoveryAbandon = useCallback(async () => {
+    // ── REFUND: restore the player's balance to what it was BEFORE bets were placed ──
+    // The AuditRound record holds balanceBefore (pre-bet) and totalWagered.
+    // Abandoning = voiding the round = the wager is returned in full.
+    if (recoveredState?.balanceBefore != null) {
+      const pid = activePlayer;
+      const refundedBalance = recoveredState.balanceBefore; // full pre-bet balance
+      setBalances((prev) => {
+        const next = [...prev];
+        next[pid] = refundedBalance;
+        return next;
+      });
+      // Persist the restored balance to DB so a refresh shows the correct value
+      setBalance(pid, refundedBalance);
+      console.log('[Abandon] Balance restored to', refundedBalance,
+        '(was', recoveredState.balanceBefore, '- wagered', recoveredState.totalWagered, ')');
+    }
     await abandonIncompleteRound();
     setShowRecoveryModal(false);
     setRecoveredState(null);
-  }, [abandonIncompleteRound]);
+  }, [abandonIncompleteRound, recoveredState, activePlayer, setBalance, setBalances]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Listen for timing updates from GameTimingModal
@@ -1738,7 +1755,10 @@ export default function RapidFireGame() {
   };
 
   const handleResetGame = () => {
-    setBalances(Array(10).fill(10000));
+    // Mark any open AuditRound as abandoned before wiping state (GLI-19 compliance)
+    abandonRound().catch(() => {});
+    // Use server-authoritative balance reset — writes $10,000 back to DB for all players
+    resetAllBalances();
     setHandBets({});
     setRedBlackBets({});
     setRankBets({});
