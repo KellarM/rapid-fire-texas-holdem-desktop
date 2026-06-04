@@ -48,6 +48,7 @@ import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameVersions } from '@/hooks/useGameVersions';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
+import { useAuditRound } from '@/hooks/useAuditRound';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import VolumeControl from '@/components/game/VolumeControl';
@@ -232,6 +233,12 @@ export default function RapidFireGame() {
     sessionId,
     dbReady,
   } = usePlayerSession();
+
+  // ── Phase 2 GLI-19: per-round immutable audit trail ───────────────────────
+  const { openRound, settleRound, abandonRound, getNextRoundNumber } = useAuditRound({
+    deviceId,
+    sessionId,
+  });
 
   // Sound effects
   const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
@@ -1038,6 +1045,31 @@ export default function RapidFireGame() {
     setCountdownActive(false);
     timerActiveRef.current = false;
 
+    // ── Phase 2 GLI-19: open AuditRound record (bets now locked) ─────────────
+    const auditHandBets   = handBets[activePlayer]    || {};
+    const auditRankBets   = rankBets[activePlayer]    || {};
+    const auditColorBets  = redBlackBets[activePlayer]|| {};
+    const auditLowHighBet = lowHighBets[activePlayer] || null;
+    const auditTotalWagered =
+      Object.values(auditHandBets).reduce((s,v)=>s+v,0)  +
+      Object.values(auditRankBets).reduce((s,v)=>s+v,0)  +
+      Object.values(auditColorBets).reduce((s,v)=>s+v,0) +
+      (auditLowHighBet?.amount || 0);
+    const auditRoundNum = getNextRoundNumber();
+    openRound({
+      roundNumber:      auditRoundNum,
+      balanceBefore:    balances[activePlayer] ?? 0,
+      handBets:         auditHandBets,
+      rankBets:         auditRankBets,
+      colorBets:        auditColorBets,
+      lowHighBet:       auditLowHighBet,
+      totalWagered:     auditTotalWagered,
+      killSwitchActive: isKillSwitchActive(Object.keys(auditHandBets).length, versions?.rankLockThreshold ?? 1),
+      playerSlot:       activePlayer,
+      versionsSnapshot: versions ? { ...versions } : {},
+    });
+    // ─────────────────────────────────────────────────────────────────────────
+
     const board5 = getSecureRandomBoard();
     const flop = [board5[0], board5[1], board5[2]];
     setCommunityCards(flop);
@@ -1366,6 +1398,43 @@ export default function RapidFireGame() {
       });
     }
 
+    // ── Phase 2 GLI-19: settle AuditRound with full outcome ──────────────────
+    {
+      const ap = activePlayer;
+      const apHandBets  = snapHandBets[ap]    || {};
+      const apColorBets = snapRedBlackBets[ap]|| {};
+      const apRankBets  = snapRankBets[ap]    || {};
+      const apLowHighBet= snapLowHighBets[ap] || null;
+      const apPayout    = playerWinnings[ap]  || 0;
+      const apBetTotal  = Object.values(apHandBets).reduce((s,v)=>s+v,0)
+        + Object.values(apColorBets).reduce((s,v)=>s+v,0)
+        + Object.values(apRankBets).reduce((s,v)=>s+v,0)
+        + (apLowHighBet?.amount || 0);
+      const balBefore = balances[ap] ?? 0;
+      const balAfter  = Math.max(0, balBefore + apPayout);
+
+      const apCardWin  = (leader?.handIds || []).some(wid => apHandBets[wid] > 0) || (leader?.communityBoardWin && Object.values(apHandBets).some(v=>v>0));
+      const apRankWin  = !!(handResult?.name && Object.entries(apRankBets).some(([k,v])=>v>0 && k===handResult.name));
+      const apColorWin = winRB.length > 0 && winRB.some(wc => (apColorBets[wc]||0) > 0);
+      const apRiverWin = !!(winLH && apLowHighBet?.amount > 0 && apLowHighBet?.type === winLH);
+
+      settleRound({
+        communityCards: finalComm.map(c => ({ rank: c.rank, suit: SUITS[c.suit] })),
+        winnerHandIds:  leader?.handIds || [],
+        winningRank:    handResult?.name || null,
+        winningColors:  winRB || [],
+        winningLowHigh: winLH || null,
+        isBoardWin:     leader?.communityBoardWin || false,
+        cardWin:        apCardWin,
+        rankWin:        apRankWin,
+        colorWin:       apColorWin,
+        riverWin:       apRiverWin,
+        totalReturned:  apPayout,
+        balanceAfter:   balAfter,
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     setGamePhase('winner');
 
     // Delay display window by 1 second
@@ -1494,6 +1563,7 @@ export default function RapidFireGame() {
 
   // Reset Bank handler — shared by desktop and mobile
   const handleResetBank = () => {
+    abandonRound(); // Phase 2 GLI-19: mark any open AuditRound as abandoned
     resetAllBalances(); // server-authoritative reset via usePlayerSession
     setRoundId(1);
     setCasinoProfit(0);
