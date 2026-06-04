@@ -212,6 +212,7 @@ export default function MobileGameLayout({
   onOpenObserver,
   onOpenGameTiming,
   onOpenAnalytics,
+  onOpenVersions,
   toolsVisible,
   onSetHoveredRankRow,
   onSetHoveredRiverType,
@@ -956,6 +957,7 @@ export default function MobileGameLayout({
             onOpenObserver={onOpenObserver}
             onOpenGameTiming={onOpenGameTiming}
             onOpenAnalytics={onOpenAnalytics}
+            onOpenVersions={onOpenVersions}
             toolsVisible={toolsVisible}
           />
         </div>

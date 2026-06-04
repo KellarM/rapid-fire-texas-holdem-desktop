@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Wrench, BarChart2, Award, PieChart, Layers, Timer, Eye, LineChart } from 'lucide-react';
+import { Wrench, BarChart2, Award, PieChart, Layers, Timer, Eye, LineChart, SlidersHorizontal } from 'lucide-react';
 
 const TOOLS = [
   { icon: BarChart2,  label: 'Player Stats',               type: 'stats'           },
@@ -10,6 +10,7 @@ const TOOLS = [
   { icon: PieChart,   label: 'Game Stats',                 href: '/game-stats'     },
   { icon: Layers,     label: 'Deck Inspector',             href: '/deck-inspector' },
   { icon: Timer,      label: 'Game Timing',                type: 'gameTiming'      },
+  { icon: SlidersHorizontal, label: 'Versions',             type: 'versions',         badge: 'NEW', badgeColor: 'bg-purple-700/60 text-purple-300 border-purple-600/40' },
 ];
 
 export default function ToolsMenu({
@@ -17,6 +18,7 @@ export default function ToolsMenu({
   onOpenObserver,
   onOpenAnalytics,
   onOpenGameTiming,
+  onOpenVersions,
   toolsVisible = true,
 }) {
   const [open, setOpen] = useState(false);
@@ -40,6 +42,7 @@ export default function ToolsMenu({
     observer:         onOpenObserver,
     analytics:        onOpenAnalytics,
     gameTiming:        onOpenGameTiming,
+    versions:          onOpenVersions,
   };
 
   return (

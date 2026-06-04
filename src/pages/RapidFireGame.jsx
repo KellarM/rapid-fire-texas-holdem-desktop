@@ -42,9 +42,11 @@ import AnalyticsDashboard from '@/components/game/AnalyticsDashboard';
 import RegulatoryComplianceReport from '@/components/game/TwoHandRankTest';
 
 import GameTimingModal from '@/components/game/GameTimingModal';
+import GameVersionsModal from '@/components/game/GameVersionsModal';
 import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
+import { useGameVersions } from '@/hooks/useGameVersions';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import VolumeControl from '@/components/game/VolumeControl';
@@ -164,6 +166,7 @@ export default function RapidFireGame() {
   // ─────────────────────────────────────────────────────────────────────────
   
   const [showGameTiming, setShowGameTiming] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [showPlayerSelector, setShowPlayerSelector] = useState(true);
   const [roundId, setRoundId] = useState(1);
@@ -216,6 +219,7 @@ export default function RapidFireGame() {
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
+  const { versions } = useGameVersions();
 
   // Sound effects
   const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
@@ -351,7 +355,7 @@ export default function RapidFireGame() {
   // Phase Lock: exactly 1 hand bet + at least 1 rank bet → finalize selection, lock remaining hands
   const phaseLockActive = handBetCount === 1 && isRankBetPlaced && !killSwitchActive;
   const handBetsLockedByRanks = phaseLockActive;
-  const maxHandBetsAllowed = MAX_HAND_BETS;
+  const maxHandBetsAllowed = versions?.maxCardHands ?? MAX_HAND_BETS;
 
   // Snowball cap values for active player
   const totalHandBetAmount = getTotalHandBets(pHandBets);
@@ -381,8 +385,9 @@ export default function RapidFireGame() {
     const existing = (handBets[pid] || {})[handId] || 0;
     const currentCount = Object.keys(handBets[pid] || {}).length;
 
-    // Enforce MAX_HAND_BETS (1) — maximum 1 hand per round
-    if (existing === 0 && currentCount >= MAX_HAND_BETS) {
+    // Enforce versions.maxCardHands — configurable max hands per round
+    const maxHandsAllowed = versions?.maxCardHands ?? MAX_HAND_BETS;
+    if (existing === 0 && currentCount >= maxHandsAllowed) {
       setShowHandLimitAlert(true);
       return;
     }
@@ -592,8 +597,11 @@ export default function RapidFireGame() {
 
     // --- ADD intent from here down ---
 
-    // Kill switch: 3–4 hands selected — rank market locked
-    if (isKillSwitchActive(Object.keys(handBets[pid] || {}).length)) {
+    // Versions config: rank locks when hands >= rankLockThreshold
+    const rankLockAt = versions?.rankLockThreshold ?? 2;
+    const rankUnlockUpTo = versions?.rankUnlockThreshold ?? 1;
+    const currentHandCountForRank = Object.keys(handBets[pid] || {}).length;
+    if (currentHandCountForRank >= rankLockAt || currentHandCountForRank > rankUnlockUpTo) {
       setRankAlertType('closed');
       setShowRankLimitAlert(true);
       return;
@@ -606,10 +614,12 @@ export default function RapidFireGame() {
       return;
     }
 
-    // Rank slot limit: 1 hand = 1 slot (max 1 hand allowed per round)
+    // Versions config: rank slot limit (fixed cap or scaling)
     const currentHandCount = Object.keys(handBets[pid] || {}).length;
     const currentRankSlots = Object.keys(pRankBets).length;
-    const slotsAllowed = currentHandCount === 1 ? 1 : 0;
+    const slotsAllowed = versions?.rankScaling
+      ? currentHandCount * (versions?.rankPerHand ?? 1)
+      : (versions?.rankFixedCap ?? 1);
     if (!pRankBets[key] && currentRankSlots >= slotsAllowed) {
       setRankAlertType('limit');
       setShowRankLimitAlert(true);
@@ -728,8 +738,11 @@ export default function RapidFireGame() {
     const hasBlackBet = ['3B','4B','5B'].some(k => (currentColorBets[k] || 0) > 0);
     const isRedKey   = ['3R','4R','5R'].includes(key);
     const isBlackKey = ['3B','4B','5B'].includes(key);
-    if (isRedKey && hasBlackBet) { setShowColorSideAlert(true); return; }
-    if (isBlackKey && hasRedBet) { setShowColorSideAlert(true); return; }
+    // Versions config: color both sides allowed?
+    if (!versions?.colorBothSides) {
+      if (isRedKey && hasBlackBet) { setShowColorSideAlert(true); return; }
+      if (isBlackKey && hasRedBet) { setShowColorSideAlert(true); return; }
+    }
 
     // Snowball Color Cap: total color bets ≤ total hand bets + total rank bets (ADD only)
     if (!checkColorCap(handBets[pid] || {}, rankBets[pid] || {}, redBlackBets[pid] || {}, selectedChip)) {
@@ -1589,6 +1602,7 @@ export default function RapidFireGame() {
         </AnimatePresence>
         <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
         <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
+        <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
         <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
         <MobileGameLayout
@@ -1659,6 +1673,7 @@ export default function RapidFireGame() {
           onOpenObserver={() => setShowObserver(true)}
           onOpenGameTiming={() => setShowGameTiming(true)}
           onOpenAnalytics={() => setShowAnalytics(true)}
+          onOpenVersions={() => setShowVersions(true)}
           toolsVisible={toolbarVisible}
           onSetHoveredRankRow={setHoveredRankRow}
           onSetHoveredRiverType={setHoveredRiverType}
@@ -2088,7 +2103,7 @@ export default function RapidFireGame() {
             )}
 
             {/* Tools */}
-            <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenAnalytics={() => setShowAnalytics(true)} onOpenGameTiming={() => setShowGameTiming(true)} toolsVisible={toolbarVisible} />
+            <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenAnalytics={() => setShowAnalytics(true)} onOpenGameTiming={() => setShowGameTiming(true)} onOpenVersions={() => setShowVersions(true)} toolsVisible={toolbarVisible} />
 
             {/* Game Rules — far right */}
             <div className="border-l border-yellow-700/20 pl-2 flex-shrink-0">
