@@ -303,6 +303,9 @@ export default function RapidFireGame() {
     }
   }, [recoveryChecking, incompleteRound]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sound effects — declared here so playCardDeal is available in handleRecoveryResume
+  const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
+
   const handleRecoveryResume = useCallback(() => {
     if (!recoveredState) return;
     const pid = activePlayer;
@@ -366,9 +369,6 @@ export default function RapidFireGame() {
     setRecoveredState(null);
   }, [abandonIncompleteRound]);
   // ─────────────────────────────────────────────────────────────────────────
-
-  // Sound effects
-  const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
 
   // Listen for timing updates from GameTimingModal
   useEffect(() => {
