@@ -10,6 +10,15 @@ export const DEFAULT_VERSIONS = {
   colorBothSides: false,
 };
 
+// Safe loading placeholder — used while DB fetch is in flight
+// Uses large numbers so nothing accidentally locks during load
+export const LOADING_VERSIONS = {
+  maxCardHands: 1,
+  maxRankSlots: 1,
+  rankLockThreshold: 99,
+  colorBothSides: false,
+};
+
 function readLocal() {
   try {
     const saved = localStorage.getItem(VERSIONS_STORAGE_KEY);
@@ -86,7 +95,9 @@ export async function saveVersionsToDB(v, recordId) {
 }
 
 export function useGameVersions() {
-  const [versions, setVersions] = useState(() => readLocal() || { ...DEFAULT_VERSIONS });
+  // Use localStorage if available (best case), otherwise LOADING_VERSIONS
+  // LOADING_VERSIONS has rankLockThreshold=99 so nothing locks while DB is fetching
+  const [versions, setVersions] = useState(() => readLocal() || { ...LOADING_VERSIONS });
   const [recordId, setRecordId] = useState(null);
   const [dbLoaded, setDbLoaded] = useState(false);
 
@@ -96,6 +107,8 @@ export function useGameVersions() {
       setVersions(config);
       setRecordId(rid);
       setDbLoaded(true);
+      // Always write confirmed DB values to localStorage so next load starts with correct settings
+      writeLocal(config);
       window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: config }));
     });
   }, []);
@@ -109,5 +122,5 @@ export function useGameVersions() {
     return () => window.removeEventListener('gameVersions:updated', handleUpdate);
   }, []);
 
-  return { versions, recordId, dbLoaded };
+  return { versions, recordId, dbLoaded }; // dbLoaded=true means DB values are confirmed
 }

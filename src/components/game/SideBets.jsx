@@ -57,6 +57,7 @@ export default function SideBets({
   winningLowHigh,
   disabled,
   killSwitchActive,
+  rankLockThreshold = 1,
   rankBetActive,
   activeColorSide,
   onColorSideConflict,
@@ -299,7 +300,7 @@ export default function SideBets({
         {killSwitchActive && gamePhase === 'betting' && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-xl bg-black/80 border-2 border-red-700/60 backdrop-blur-sm">
             <span className="text-red-400 font-black text-base mb-1">LOCKED</span>
-            <span className="text-red-300 text-xs font-semibold text-center px-2">4 Hands: Side Bets Disabled</span>
+            <span className="text-red-300 text-xs font-semibold text-center px-2">{rankLockThreshold}+ Hands: Side Bets Disabled</span>
           </div>
         )}
 

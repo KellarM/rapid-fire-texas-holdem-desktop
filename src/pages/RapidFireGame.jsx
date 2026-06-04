@@ -115,7 +115,18 @@ function getDynamicRiverPayout(finalComm, direction) {
 export default function RapidFireGame() {
   const [playerCount, setPlayerCount] = useState(1);
   // balances[i] = balance for player i+1
-  const [balances, setBalances] = useState(() => Array(10).fill(STARTING_BALANCE));
+  const [balances, setBalances] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rapidFireGameState');
+      if (saved) {
+        const state = JSON.parse(saved);
+        if (state.balances && Array.isArray(state.balances) && state.balances.length === 10) {
+          return state.balances;
+        }
+      }
+    } catch {}
+    return Array(10).fill(STARTING_BALANCE);
+  });
   const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP);
   // handBets[playerId][handId], redBlackBets[playerId][key], rankBets[playerId][key]
   const [handBets, setHandBets] = useState({}); // { [pid]: { handId: amount } }
@@ -2171,7 +2182,8 @@ export default function RapidFireGame() {
                 setRankAlertType(type);
                 setShowRankLimitAlert(true);
               }}
-              onHoverRankRow={setHoveredRankRow} />
+              onHoverRankRow={setHoveredRankRow}
+              rankLockThreshold={versions?.rankLockThreshold ?? 1} />
             
           </div>
           {/* Side Bets panel */}
@@ -2201,7 +2213,8 @@ export default function RapidFireGame() {
               riverWinFlash={riverWinFlash}
               selectedChip={selectedChip}
               hoveredRankRow={hoveredRankRow}
-              isRankBetPlaced={isRankBetPlaced} />
+              isRankBetPlaced={isRankBetPlaced}
+              rankLockThreshold={versions?.rankLockThreshold ?? 1} />
             
           </div>
         </div>
