@@ -23,6 +23,9 @@ function getDeviceId() {
     if (!id) {
       id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
       localStorage.setItem(DEVICE_KEY, id);
+      console.log('[DEVICE] New device ID created:', id);
+    } else {
+      console.log('[DEVICE] Existing device ID loaded:', id);
     }
     return id;
   } catch {

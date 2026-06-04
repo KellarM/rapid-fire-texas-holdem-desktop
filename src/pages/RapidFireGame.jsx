@@ -287,6 +287,7 @@ export default function RapidFireGame() {
   useEffect(() => {
     if (!recoveryChecking && incompleteRound) {
       const state = getRestoredBetState();
+      console.log('[RECOVERY] Open round found:', JSON.stringify({ totalWagered: state?.totalWagered, handBets: state?.handBets, balanceBefore: state?.balanceBefore }));
       // Phantom record check: auto-abandon if no bets AND total_wagered is 0
       const hasAnyBets = Object.keys(state?.handBets || {}).length > 0 ||
                          Object.keys(state?.rankBets || {}).length > 0 ||
