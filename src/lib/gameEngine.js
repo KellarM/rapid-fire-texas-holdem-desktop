@@ -431,9 +431,10 @@ export function isGrinderPath(handBetCount) {
   return handBetCount > 1;
 }
 
-// Kill Switch: returns true when side markets must be locked (2+ hands selected — impossible under new 1-hand max, kept for safety)
-export function isKillSwitchActive(handBetCount) {
-  return isGrinderPath(handBetCount);
+// Kill Switch: returns true when side markets must be locked.
+// rankLockThreshold comes from Versions config (default 1).
+export function isKillSwitchActive(handBetCount, rankLockThreshold = 1) {
+  return handBetCount >= rankLockThreshold;
 }
 
 // Phase 4 Gate: Color Board and River are unlocked ONLY when

@@ -1412,7 +1412,7 @@ export default function RapidFireGame() {
       rankBets: activePlayerRankBets,
       colorBets: activePlayerColorBets,
       lowHighBet: activePlayerLowHighBet,
-      killSwitchActive: isKillSwitchActive(Object.keys(activePlayerHandBets).length),
+      killSwitchActive: isKillSwitchActive(Object.keys(activePlayerHandBets).length, versions?.rankLockThreshold ?? 1),
       handBetCount: Object.keys(activePlayerHandBets).filter(k => (activePlayerHandBets[k] || 0) > 0).length,
       totalBet: activePlayerTotalBet,
       totalPayout: activePlayerPayout,

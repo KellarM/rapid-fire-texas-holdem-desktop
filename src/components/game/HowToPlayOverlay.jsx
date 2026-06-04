@@ -15,7 +15,6 @@ function buildSteps(v) {
   const maxHands       = v.maxCardHands ?? 1;
   const maxRanks       = v.maxRankSlots ?? 1;
   const rankLockAt     = v.rankLockThreshold ?? 1;
-  const handLockAt     = v.handLockThreshold ?? 1;
   const colorBothSides = v.colorBothSides ?? false;
 
   const handsLabel = maxHands === 1 ? '1 hand' : `up to ${maxHands} hands`;
@@ -29,7 +28,7 @@ function buildSteps(v) {
       description: `Pick ${handsLabel} from the 10 fixed hands on the board. Place your Hand Bet — this is required to play.`,
       highlight: maxHands === 1
         ? 'One hand per round. Your Hand Bet is the foundation of every round.'
-        : `You can select up to ${maxHands} hands. The hand grid locks once you reach ${handLockAt} selection${handLockAt !== 1 ? 's' : ''}.`,
+        : `You can select up to ${maxHands} hands. The hand grid locks once you reach ${maxHands} selection${maxHands !== 1 ? 's' : ''}.`,
     },
     {
       step: 2,
