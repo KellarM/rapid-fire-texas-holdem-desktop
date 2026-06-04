@@ -47,12 +47,13 @@ import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameVersions } from '@/hooks/useGameVersions';
+import { usePlayerSession } from '@/hooks/usePlayerSession';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import VolumeControl from '@/components/game/VolumeControl';
 
 
-const STARTING_BALANCE = 10000;
+// STARTING_BALANCE = 10000 (managed server-side via usePlayerSession)
 const CHIP_VALUES = [5, 10, 25, 50, 100, 500];
 const MAX_HAND_BET_AMOUNT = 500;
 const DEFAULT_CHIP = 5;
@@ -115,18 +116,7 @@ function getDynamicRiverPayout(finalComm, direction) {
 export default function RapidFireGame() {
   const [playerCount, setPlayerCount] = useState(1);
   // balances[i] = balance for player i+1
-  const [balances, setBalances] = useState(() => {
-    try {
-      const saved = localStorage.getItem('rapidFireGameState');
-      if (saved) {
-        const state = JSON.parse(saved);
-        if (state.balances && Array.isArray(state.balances) && state.balances.length === 10) {
-          return state.balances;
-        }
-      }
-    } catch {}
-    return Array(10).fill(STARTING_BALANCE);
-  });
+  // balances & setBalances now come from usePlayerSession hook (server-authoritative)
   const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP);
   // handBets[playerId][handId], redBlackBets[playerId][key], rankBets[playerId][key]
   const [handBets, setHandBets] = useState({}); // { [pid]: { handId: amount } }
@@ -232,6 +222,17 @@ export default function RapidFireGame() {
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
   const { versions, recordId: versionsRecordId } = useGameVersions();
 
+  // ── Server-authoritative balance & session (GLI-19 Phase 1) ──────────────
+  const {
+    balances,
+    setBalances,
+    resetAllBalances,
+    recordRoundResult,
+    deviceId,
+    sessionId,
+    dbReady,
+  } = usePlayerSession();
+
   // Sound effects
   const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
 
@@ -249,20 +250,19 @@ export default function RapidFireGame() {
   const handleDealRiverRef = useRef(null);
   const settleRef = useRef(null);
 
-  // Game progress persistence
+  // Game progress persistence — roundId/casinoProfit/roundsPlayed still use localStorage
+  // Balance is now server-authoritative via usePlayerSession
   useEffect(() => {
-    const savedGame = localStorage.getItem('rapidFireGameState');
-    if (savedGame) {
-      try {
+    try {
+      const savedGame = localStorage.getItem('rapidFireGameState');
+      if (savedGame) {
         const state = JSON.parse(savedGame);
-        setBalances(state.balances);
-        setRoundId(state.roundId);
-        setCasinoProfit(state.casinoProfit);
-        setRoundsPlayed(state.roundsPlayed);
-
-      } catch (e) {
-        console.log('Could not restore game state');
+        if (state.roundId)      setRoundId(state.roundId);
+        if (state.casinoProfit !== undefined) setCasinoProfit(state.casinoProfit);
+        if (state.roundsPlayed !== undefined) setRoundsPlayed(state.roundsPlayed);
       }
+    } catch (e) {
+      console.log('Could not restore game state');
     }
   }, []);
 
@@ -290,20 +290,15 @@ export default function RapidFireGame() {
     };
   }, []);
 
-  // Auto-save game state
+  // Auto-save non-balance game state (balance is server-authoritative via usePlayerSession)
   useEffect(() => {
-    const gameState = {
-      balances,
-      roundId,
-      casinoProfit,
-      roundsPlayed
-    };
+    const gameState = { roundId, casinoProfit, roundsPlayed };
     localStorage.setItem('rapidFireGameState', JSON.stringify(gameState));
-  }, [balances, roundId, casinoProfit, roundsPlayed]);
+  }, [roundId, casinoProfit, roundsPlayed]);
 
   // Active player helpers
   const pid = activePlayer;
-  const balance = balances[pid] ?? STARTING_BALANCE;
+  const balance = balances[pid] ?? 10000;
   const pHandBets = handBets[pid] || {};
   const pRedBlackBets = redBlackBets[pid] || {};
   const pRankBets = rankBets[pid] || {};
@@ -1359,6 +1354,18 @@ export default function RapidFireGame() {
     setCasinoProfit((p) => p + roundProfit);
     setRoundsPlayed((r) => r + 1);
 
+    // Phase 1 GLI-19: persist session stats to DB after every settled round
+    const activePlayerTotalBet2 = Object.values(snapHandBets[activePlayer] || {}).reduce((s,v)=>s+v,0)
+      + Object.values(snapRedBlackBets[activePlayer] || {}).reduce((s,v)=>s+v,0)
+      + Object.values(snapRankBets[activePlayer] || {}).reduce((s,v)=>s+v,0)
+      + ((snapLowHighBets[activePlayer] || null)?.amount || 0);
+    if (activePlayerTotalBet2 > 0) {
+      recordRoundResult(activePlayer, {
+        wagered:  activePlayerTotalBet2,
+        returned: playerWinnings[activePlayer] || 0,
+      });
+    }
+
     setGamePhase('winner');
 
     // Delay display window by 1 second
@@ -1487,14 +1494,14 @@ export default function RapidFireGame() {
 
   // Reset Bank handler — shared by desktop and mobile
   const handleResetBank = () => {
-    setBalances(Array(10).fill(STARTING_BALANCE));
+    resetAllBalances(); // server-authoritative reset via usePlayerSession
     setRoundId(1);
     setCasinoProfit(0);
     setRoundsPlayed(0);
   };
 
   const handleResetGame = () => {
-    setBalances(Array(10).fill(STARTING_BALANCE));
+    setBalances(Array(10).fill(10000));
     setHandBets({});
     setRedBlackBets({});
     setRankBets({});
@@ -1577,7 +1584,7 @@ export default function RapidFireGame() {
       Object.values(previousBets.handBets[i] || {}).reduce((s, v) => s + v, 0) +
       Object.values(previousBets.redBlackBets[i] || {}).reduce((s, v) => s + v, 0) +
       Object.values(previousBets.rankBets[i] || {}).reduce((s, v) => s + v, 0);
-      if ((balances[i] || STARTING_BALANCE) < playerBet) {
+      if ((balances[i] || 10000) < playerBet) {
         setShowInsufficientFunds(true);
         return;
       }
@@ -2112,7 +2119,9 @@ export default function RapidFireGame() {
               <VolumeControl soundManager={soundManager} />
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-yellow-500 bg-black">
                 <span className="text-yellow-400 text-xs font-black leading-none tracking-wider">P{activePlayer + 1}</span>
-                <span className="text-yellow-400 font-black text-lg leading-none tracking-tight" style={{ textShadow: '0 0 8px rgba(251,191,36,0.7)' }}>${(balances[activePlayer] ?? STARTING_BALANCE).toLocaleString()}</span>
+                <span className="text-yellow-400 font-black text-lg leading-none tracking-tight" style={{ textShadow: '0 0 8px rgba(251,191,36,0.7)' }}>${(balances[activePlayer] ?? 10000).toLocaleString()}</span>
+                {/* GLI-19 server-sync indicator: green = DB confirmed, amber = loading from cache */}
+                <span title={dbReady ? 'Balance synced to server' : 'Syncing balance...'} style={{ width: 7, height: 7, borderRadius: '50%', background: dbReady ? '#22c55e' : '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
               </div>
             </div>
 
@@ -2135,7 +2144,7 @@ export default function RapidFireGame() {
             {resetBankVisible && (
               <button
                 onClick={() => {
-                  setBalances(Array(10).fill(STARTING_BALANCE));
+                  setBalances(Array(10).fill(10000));
                   setRoundId(1);
                   setCasinoProfit(0);
                   setRoundsPlayed(0);
