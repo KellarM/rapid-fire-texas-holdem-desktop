@@ -118,14 +118,14 @@ export default function GameVersionsModal({ isOpen, onClose, recordId: propRecor
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Card Hand Rules</p>
                   <div className="space-y-4">
                     <Row step="1" label="How many card hands allowed to bet on"
-                      description="Maximum number of card hands a player can select per round.">
+                      description="Maximum number of card hands a player can select per round. Once this limit is reached, all remaining hands lock automatically.">
                       <NumInput value={v.maxCardHands} onChange={val => set('maxCardHands', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>
 
-                    <Row step="4" label="How many card hands before remaining hands lock"
-                      description={`Once a player bets on \${v.handLockThreshold} hand\${v.handLockThreshold !== 1 ? 's' : ''}, all remaining unselected hands are locked.`}>
-                      <NumInput value={v.handLockThreshold} onChange={val => set('handLockThreshold', val)} min={1} max={10} />
+                    <Row step="2" label="How many card hands before rank is locked"
+                      description={`If a player selects \${v.rankLockThreshold} or more card hand\${v.rankLockThreshold !== 1 ? 's' : ''}, the Rank board locks and rank bets are unavailable.`}>
+                      <NumInput value={v.rankLockThreshold} onChange={val => set('rankLockThreshold', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>
                   </div>
@@ -137,16 +137,10 @@ export default function GameVersionsModal({ isOpen, onClose, recordId: propRecor
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Rank Bet Rules</p>
                   <div className="space-y-4">
-                    <Row step="2" label="How many ranks allowed to bet on"
+                    <Row step="3" label="How many ranks allowed to bet on"
                       description="Maximum number of rank positions a player can bet on per round.">
                       <NumInput value={v.maxRankSlots} onChange={val => set('maxRankSlots', val)} min={1} max={9} />
                       <span className="text-gray-500 text-xs">ranks</span>
-                    </Row>
-
-                    <Row step="3" label="How many card hands before rank is locked"
-                      description={`If you bet on \${v.rankLockThreshold} or more card hand\${v.rankLockThreshold !== 1 ? 's' : ''}, the Rank board locks.`}>
-                      <NumInput value={v.rankLockThreshold} onChange={val => set('rankLockThreshold', val)} min={1} max={10} />
-                      <span className="text-gray-500 text-xs">hands</span>
                     </Row>
                   </div>
                 </div>

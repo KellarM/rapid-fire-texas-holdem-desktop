@@ -94,7 +94,6 @@ export default function GameRulesModal({ asMenuItem = false }) {
   const maxHands       = v.maxCardHands ?? 1;
   const maxRanks       = v.maxRankSlots ?? 1;
   const rankLockAt     = v.rankLockThreshold ?? 1;
-  const handLockAt     = v.handLockThreshold ?? 1;
   const colorBothSides = v.colorBothSides ?? false;
 
   return (
@@ -158,7 +157,6 @@ export default function GameRulesModal({ asMenuItem = false }) {
                 <VersionBadge label="Max Hands" value={maxHands} />
                 <VersionBadge label="Max Ranks" value={maxRanks} />
                 <VersionBadge label="Rank Locks At" value={`${rankLockAt}+ hands`} />
-                <VersionBadge label="Hand Grid Locks At" value={`${handLockAt}+ hands`} />
                 <VersionBadge label="Color Rule" value={colorBothSides ? 'Red & Black' : 'One Side Only'} />
               </div>
 
@@ -170,7 +168,7 @@ export default function GameRulesModal({ asMenuItem = false }) {
                   <Rule label="Minimum Bet">$5 per betting spot.</Rule>
                   <Rule label="Hand Selection">
                     You may select up to <strong className="text-yellow-300">{plural(maxHands, 'card hand')}</strong> per round.
-                    Once you have selected <strong className="text-yellow-300">{plural(handLockAt, 'hand')}</strong>, all remaining unselected hands lock automatically.
+                    Once you reach that limit, all remaining unselected hands lock automatically.
                     You may move your bet to a locked hand by dragging your chip onto it.
                   </Rule>
                   <Rule label="Maximum Bet per Hand">$500 maximum bet per individual card hand.</Rule>

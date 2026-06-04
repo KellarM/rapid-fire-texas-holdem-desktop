@@ -7,7 +7,6 @@ export const DEFAULT_VERSIONS = {
   maxCardHands: 1,
   maxRankSlots: 1,
   rankLockThreshold: 1,
-  handLockThreshold: 1,
   colorBothSides: false,
 };
 
@@ -36,7 +35,6 @@ export async function loadVersionsFromDB() {
         maxCardHands:      rec.maxCardHands      ?? DEFAULT_VERSIONS.maxCardHands,
         maxRankSlots:      rec.maxRankSlots      ?? DEFAULT_VERSIONS.maxRankSlots,
         rankLockThreshold: rec.rankLockThreshold ?? DEFAULT_VERSIONS.rankLockThreshold,
-        handLockThreshold: rec.handLockThreshold ?? DEFAULT_VERSIONS.handLockThreshold,
         colorBothSides:    rec.colorBothSides    ?? DEFAULT_VERSIONS.colorBothSides,
       };
       writeLocal(v);
@@ -57,7 +55,6 @@ export async function saveVersionsToDB(v, recordId) {
         maxCardHands:      v.maxCardHands,
         maxRankSlots:      v.maxRankSlots,
         rankLockThreshold: v.rankLockThreshold,
-        handLockThreshold: v.handLockThreshold,
         colorBothSides:    v.colorBothSides,
       });
     } else {

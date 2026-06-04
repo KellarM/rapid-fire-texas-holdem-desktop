@@ -29,7 +29,6 @@ export function buildRulesHash() {
     `h${v.maxCardHands}`,
     `r${v.maxRankSlots}`,
     `rl${v.rankLockThreshold}`,
-    `hl${v.handLockThreshold}`,
     `c${v.colorBothSides ? 1 : 0}`,
     // Hand payouts
     'HP:' + CARDED_HAND_PAYOUTS.join(','),

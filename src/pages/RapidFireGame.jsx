@@ -357,11 +357,10 @@ export default function RapidFireGame() {
   })();
 
   // Phase Lock: exactly 1 hand bet + at least 1 rank bet → finalize selection, lock remaining hands
-  // Hand grid locks when hand count hits handLockThreshold (independent of rank bets)
-  const phaseLockActive = handBetCount >= (versions?.handLockThreshold ?? 1);
-  const handBetsLockedByRanks = phaseLockActive;
+  // Hand grid locks when hand count reaches maxCardHands
   const maxHandBetsAllowed = versions?.maxCardHands ?? 1;
-  const handLockThreshold = versions?.handLockThreshold ?? 1;
+  const phaseLockActive = handBetCount >= maxHandBetsAllowed;
+  const handBetsLockedByRanks = phaseLockActive;
 
   // Snowball cap values for active player
   const totalHandBetAmount = getTotalHandBets(pHandBets);
@@ -1664,7 +1663,6 @@ export default function RapidFireGame() {
           sideBetGateOpen={sideBetGateOpen}
           handBetCount={handBetCount}
           maxHandBetsAllowed={maxHandBetsAllowed}
-          handLockThreshold={handLockThreshold}
           rankBetCount={rankBetCount}
           maxRankSlots={maxRankSlots}
           luminosityClass={luminosityClass}
@@ -2024,7 +2022,7 @@ export default function RapidFireGame() {
                 onDropChip={handleDropChip}
                 gamePhase={gamePhase}
                 disabled={balance < selectedChip && !pHandBets[hand.id]}
-                disabledByConstraint={!pHandBets[hand.id] && (handBetCount >= maxHandBetsAllowed || handBetCount >= handLockThreshold)}
+                disabledByConstraint={!pHandBets[hand.id] && handBetCount >= maxHandBetsAllowed}
                 onAttemptLockedBet={() => setShowHandLimitAlert(true)} />
               );
             })}
