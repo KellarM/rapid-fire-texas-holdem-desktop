@@ -13,7 +13,6 @@ import { PlayerSession } from '@/api/entities';
 export const STARTING_BALANCE  = 10000;
 export const NUM_PLAYERS       = 10;
 const DEVICE_KEY               = 'rfth_device_id';
-const BALANCE_CACHE_KEY        = 'rfth_balance_cache';
 const SESSION_ID_KEY           = 'rfth_session_id';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,6 +32,12 @@ function getDeviceId() {
   }
 }
 
+// Balance cache is keyed PER device so a new device_id never reads stale data
+// from a previous device's session.
+function balanceCacheKey(deviceId) {
+  return 'rfth_balance_cache_' + deviceId;
+}
+
 function getOrCreateSessionId() {
   try {
     let sid = sessionStorage.getItem(SESSION_ID_KEY);
@@ -46,28 +51,32 @@ function getOrCreateSessionId() {
   }
 }
 
-function readBalanceCache() {
+function readBalanceCache(deviceId) {
   try {
-    const raw = localStorage.getItem(BALANCE_CACHE_KEY);
+    const raw = localStorage.getItem(balanceCacheKey(deviceId));
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr) && arr.length === NUM_PLAYERS) return arr;
     }
   } catch {}
+  // No cache for this device — start from scratch (DB will authoritative-load shortly)
   return Array(NUM_PLAYERS).fill(STARTING_BALANCE);
 }
 
-function writeBalanceCache(balances) {
-  try { localStorage.setItem(BALANCE_CACHE_KEY, JSON.stringify(balances)); } catch {}
+function writeBalanceCache(deviceId, balances) {
+  try { localStorage.setItem(balanceCacheKey(deviceId), JSON.stringify(balances)); } catch {}
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function usePlayerSession() {
+  // Resolve deviceId synchronously FIRST so the balance cache key is correct.
+  // If deviceId changes (new localStorage), the cache miss returns STARTING_BALANCE
+  // instead of bleeding a stale value from a different device's session.
   const deviceId   = useRef(getDeviceId());
   const sessionId  = useRef(getOrCreateSessionId());
 
-  // Initialise from cache so the UI shows numbers immediately while DB loads
-  const [balances, setBalancesState] = useState(() => readBalanceCache());
+  // Initialise from cache for THIS device — shows correct value immediately while DB loads
+  const [balances, setBalancesState] = useState(() => readBalanceCache(deviceId.current));
 
   // FIX: Use ref for recordIds — avoids illegal setState-inside-setState
   const recordIdsRef = useRef(Array(NUM_PLAYERS).fill(null));
@@ -82,7 +91,7 @@ export function usePlayerSession() {
     async function loadSessions() {
       try {
         const records = await PlayerSession.filter({ device_id: deviceId.current });
-        const newBalances = [...readBalanceCache()];
+        const newBalances = [...readBalanceCache(deviceId.current)];
 
         for (const rec of records) {
           const slot = rec.player_slot;
@@ -121,7 +130,7 @@ export function usePlayerSession() {
         }
 
         setBalancesState(newBalances);
-        writeBalanceCache(newBalances);
+        writeBalanceCache(deviceId.current, newBalances);
         setDbReady(true);
         console.log('[PlayerSession] Loaded from DB:', newBalances);
       } catch (e) {
@@ -170,7 +179,7 @@ export function usePlayerSession() {
     setBalancesState(prev => {
       const next = [...prev];
       next[slot] = newBalance;
-      writeBalanceCache(next);
+      writeBalanceCache(deviceId.current, next);
       return next;
     });
     // FIX: persistBalance now reads ref directly — safe to call outside updater
@@ -183,7 +192,7 @@ export function usePlayerSession() {
       const next = typeof updaterOrArray === 'function'
         ? updaterOrArray(prev)
         : updaterOrArray;
-      writeBalanceCache(next);
+      writeBalanceCache(deviceId.current, next);
       // FIX: persist AFTER computing next, reading ref directly — NO setState inside setState
       for (let slot = 0; slot < NUM_PLAYERS; slot++) {
         if (next[slot] !== prev[slot]) {
@@ -207,7 +216,7 @@ export function usePlayerSession() {
   const resetAllBalances = useCallback(async () => {
     const fresh = Array(NUM_PLAYERS).fill(STARTING_BALANCE);
     setBalancesState(fresh);
-    writeBalanceCache(fresh);
+    writeBalanceCache(deviceId.current, fresh);
     for (let slot = 0; slot < NUM_PLAYERS; slot++) {
       const rid = recordIdsRef.current[slot];
       if (rid) {
