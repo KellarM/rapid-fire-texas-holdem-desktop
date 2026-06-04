@@ -77,7 +77,7 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
   // the same browser tab session.
   // Clears automatically when the tab is closed or a new session starts,
   // so players still see the overlay fresh each time they open the app.
-  const SESSION_SHOWN_KEY = 'rfth_htp_shown';
+  const SESSION_SHOWN_KEY = 'rfth_htp_shown'; // localStorage key with 24h expiry
 
   // ── Auto-show on first load (once per page session) ───────────────────────
   useEffect(() => {
@@ -93,12 +93,23 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
       return;
     }
 
-    // Auto-show: only if suppress is false AND we haven't shown in this session.
-    // sessionStorage persists across React remounts (unlike useRef) so this
-    // guard survives code-sync reloads and recovery modal open/close cycles.
-    const alreadyShown = sessionStorage.getItem(SESSION_SHOWN_KEY) === '1';
-    if (!suppress && !alreadyShown) {
-      sessionStorage.setItem(SESSION_SHOWN_KEY, '1');
+    // Auto-show guard: use localStorage with a 24-hour expiry.
+    // localStorage survives hard reloads (like Base44 code-sync iframe reloads)
+    // unlike sessionStorage which is cleared on every hard reload.
+    // After 24 hours the flag expires so the player sees it again next day.
+    const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+    try {
+      const raw = localStorage.getItem(SESSION_SHOWN_KEY);
+      if (raw) {
+        const { ts } = JSON.parse(raw);
+        if (Date.now() - ts < EXPIRY_MS) {
+          return; // Already shown within last 24h — don't show again
+        }
+      }
+    } catch {}
+
+    if (!suppress) {
+      try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
       setVisible(true);
     }
   }, [forceOpen, suppress]);
