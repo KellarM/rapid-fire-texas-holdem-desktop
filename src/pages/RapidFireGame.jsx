@@ -448,7 +448,7 @@ export default function RapidFireGame() {
         }
       );
     }
-  }, [gamePhase, balance, selectedChip, pid, handBets, pHandBets, pRankBets, pRedBlackBets, pLowHighBet, timing, startTimer]);
+  }, [gamePhase, balance, selectedChip, pid, handBets, pHandBets, pRankBets, pRedBlackBets, pLowHighBet, timing, startTimer, versions]);
 
   const handleRemoveHandBet = useCallback((handId) => {
     if (gamePhase !== 'betting') return;
@@ -646,7 +646,7 @@ export default function RapidFireGame() {
     setRankBets((prev) => ({ ...prev, [pid]: { ...(prev[pid] || {}), [key]: existing + selectedChip } }));
     setBalances((b) => {const n = [...b];n[pid] -= selectedChip;return n;});
     playChipPlace();
-  }, [gamePhase, balance, selectedChip, pid, rankBets, handBets, pRankBets]);
+  }, [gamePhase, balance, selectedChip, pid, rankBets, handBets, pRankBets, versions]);
 
   const handleRemoveRankBet = useCallback((key) => {
     if (gamePhase !== 'betting') return;
