@@ -1,0 +1,18 @@
+// ConfigAuditLog — GLI-19 Phase 4
+// Tamper-evident, append-only log of every operator config change.
+// Records are NEVER deleted or updated after creation.
+{
+  "name": "ConfigAuditLog",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "changed_at":      { "type": "string" },
+      "change_type":     { "type": "string", "enum": ["save", "reset"] },
+      "previous_config": { "type": "object" },
+      "new_config":      { "type": "object" },
+      "diff":            { "type": "object" },
+      "device_id":       { "type": "string" },
+      "session_id":      { "type": "string" }
+    }
+  }
+}

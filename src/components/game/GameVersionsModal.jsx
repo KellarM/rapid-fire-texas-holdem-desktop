@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS, saveVersionsToDB, loadVersionsFromDB } from '@/hooks/useGameVersions';
+import { useConfigAuditLog } from '@/hooks/useConfigAuditLog';
 
 function NumInput({ value, onChange, min = 1, max = 10 }) {
   return (
@@ -51,11 +52,24 @@ export default function GameVersionsModal({ isOpen, onClose }) {
   const [v, setV]           = useState({ ...DEFAULT_VERSIONS });
   const [recordId, setRecordId] = useState(null);
 
+  // Phase 4 GLI-19: config audit log
+  // configAtOpen captures the config that was active when the modal opened
+  // so we can diff it against what the operator saves.
+  const configAtOpen = useState(null);
+  const configAtOpenRef = { current: null };
+
+  // Get device/session id from localStorage (set by usePlayerSession)
+  const deviceId  = (() => { try { return localStorage.getItem('rfth_device_id')  || 'unknown'; } catch { return 'unknown'; } })();
+  const sessionId = (() => { try { return localStorage.getItem('rfth_session_id') || 'unknown'; } catch { return 'unknown'; } })();
+  const { logConfigChange } = useConfigAuditLog({ deviceId, sessionId });
+
   useEffect(() => {
     if (isOpen) {
       loadVersionsFromDB().then(({ config, recordId: rid }) => {
         setV(config);
         setRecordId(rid);
+        // Phase 4: snapshot the config at the moment operator opened the modal
+        configAtOpenRef.current = { ...config };
       });
     }
   }, [isOpen]);
@@ -65,13 +79,18 @@ export default function GameVersionsModal({ isOpen, onClose }) {
   const handleSave = async () => {
     const newId = await saveVersionsToDB(v, recordId);
     if (newId && newId !== recordId) setRecordId(newId);
+    // Phase 4 GLI-19: log config change
+    logConfigChange(configAtOpenRef.current || {}, v, 'save');
     window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: v }));
     onClose();
   };
 
   const handleReset = async () => {
+    const prevConfig = { ...v }; // capture current values before reset
     await saveVersionsToDB({ ...DEFAULT_VERSIONS }, recordId);
     setV({ ...DEFAULT_VERSIONS });
+    // Phase 4 GLI-19: log reset to defaults
+    logConfigChange(prevConfig, { ...DEFAULT_VERSIONS }, 'reset');
     window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: { ...DEFAULT_VERSIONS } }));
   };
 
