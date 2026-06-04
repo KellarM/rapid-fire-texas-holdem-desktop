@@ -219,7 +219,7 @@ export default function RapidFireGame() {
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
-  const { versions } = useGameVersions();
+  const { versions, recordId: versionsRecordId } = useGameVersions();
 
   // Sound effects
   const { playChipPlace, playChipRemove, playCardDeal, preloadSounds, soundManager } = useGameSounds();
@@ -1635,7 +1635,7 @@ export default function RapidFireGame() {
         </AnimatePresence>
         <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
         <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
-        <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
+        <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} recordId={versionsRecordId} />
         <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
         <MobileGameLayout

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X, RotateCcw } from 'lucide-react';
-import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
+import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS, saveVersionsToDB, loadVersionsFromDB } from '@/hooks/useGameVersions';
 
 function NumInput({ value, onChange, min = 1, max = 10 }) {
   return (
@@ -47,37 +47,32 @@ function Row({ step, label, description, children }) {
   );
 }
 
-export default function GameVersionsModal({ isOpen, onClose }) {
-  const [v, setV] = useState(() => {
-    try {
-      const saved = localStorage.getItem(VERSIONS_STORAGE_KEY);
-      return saved ? { ...DEFAULT_VERSIONS, ...JSON.parse(saved) } : { ...DEFAULT_VERSIONS };
-    } catch {
-      return { ...DEFAULT_VERSIONS };
-    }
-  });
+export default function GameVersionsModal({ isOpen, onClose, recordId: propRecordId = null }) {
+  const [v, setV]           = useState({ ...DEFAULT_VERSIONS });
+  const [recordId, setRecordId] = useState(propRecordId);
 
   useEffect(() => {
     if (isOpen) {
-      try {
-        const saved = localStorage.getItem(VERSIONS_STORAGE_KEY);
-        if (saved) setV({ ...DEFAULT_VERSIONS, ...JSON.parse(saved) });
-        else setV({ ...DEFAULT_VERSIONS });
-      } catch {}
+      loadVersionsFromDB().then(({ config, recordId: rid }) => {
+        setV(config);
+        setRecordId(rid);
+      });
     }
   }, [isOpen]);
 
   const set = (key, val) => setV(prev => ({ ...prev, [key]: val }));
 
-  const handleSave = () => {
-    localStorage.setItem(VERSIONS_STORAGE_KEY, JSON.stringify(v));
+  const handleSave = async () => {
+    const newId = await saveVersionsToDB(v, recordId);
+    if (newId && newId !== recordId) setRecordId(newId);
     window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: v }));
     onClose();
   };
 
-  const handleReset = () => {
-    localStorage.removeItem(VERSIONS_STORAGE_KEY);
+  const handleReset = async () => {
+    await saveVersionsToDB({ ...DEFAULT_VERSIONS }, recordId);
     setV({ ...DEFAULT_VERSIONS });
+    window.dispatchEvent(new CustomEvent('gameVersions:updated', { detail: { ...DEFAULT_VERSIONS } }));
   };
 
   return (
