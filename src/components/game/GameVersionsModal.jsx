@@ -47,30 +47,6 @@ function Row({ step, label, description, children }) {
   );
 }
 
-// Preview table: shows rank slots available for 1..maxCardHands
-function RankPreviewTable({ maxCardHands, rankCombinedMax, rankLockThreshold }) {
-  const rows = [];
-  for (let h = 1; h <= Math.min(maxCardHands, 6); h++) {
-    const locked = h >= rankLockThreshold;
-    const slots = locked ? 0 : Math.max(0, rankCombinedMax - h);
-    rows.push({ h, slots, locked });
-  }
-  return (
-    <div className="mt-2 rounded-lg border border-yellow-700/20 overflow-hidden">
-      <div className="grid grid-cols-3 text-[10px] font-bold uppercase tracking-widest text-yellow-400/50 px-3 py-1.5 border-b border-yellow-700/20">
-        <span>Hands</span><span className="text-center">Rank Slots</span><span className="text-right">Status</span>
-      </div>
-      {rows.map(({ h, slots, locked }) => (
-        <div key={h} className={`grid grid-cols-3 px-3 py-1 text-[11px] \${locked ? 'text-red-400/60' : 'text-green-300/80'}`}>
-          <span>{h} hand{h > 1 ? 's' : ''}</span>
-          <span className="text-center font-bold">{locked ? '—' : slots}</span>
-          <span className="text-right">{locked ? '🔒 locked' : '✓ open'}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function GameVersionsModal({ isOpen, onClose }) {
   const [v, setV] = useState(() => {
     try {
@@ -100,6 +76,7 @@ export default function GameVersionsModal({ isOpen, onClose }) {
   };
 
   const handleReset = () => {
+    localStorage.removeItem(VERSIONS_STORAGE_KEY);
     setV({ ...DEFAULT_VERSIONS });
   };
 
@@ -139,15 +116,21 @@ export default function GameVersionsModal({ isOpen, onClose }) {
               </div>
 
               {/* Body */}
-              <div className="px-5 py-4 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+              <div className="px-5 py-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
 
                 {/* SECTION: Card Hand Rules */}
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Card Hand Rules</p>
-                  <div className="space-y-3">
-                    <Row step="1" label="Max card hands selectable"
-                      description="Maximum number of hands a player can select per round.">
+                  <div className="space-y-4">
+                    <Row step="1" label="How many card hands allowed to bet on"
+                      description="Maximum number of card hands a player can select per round.">
                       <NumInput value={v.maxCardHands} onChange={val => set('maxCardHands', val)} min={1} max={10} />
+                      <span className="text-gray-500 text-xs">hands</span>
+                    </Row>
+
+                    <Row step="4" label="How many card hands before remaining hands lock"
+                      description={`Once a player bets on \${v.handLockThreshold} hand\${v.handLockThreshold !== 1 ? 's' : ''}, all remaining unselected hands are locked.`}>
+                      <NumInput value={v.handLockThreshold} onChange={val => set('handLockThreshold', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>
                   </div>
@@ -158,27 +141,18 @@ export default function GameVersionsModal({ isOpen, onClose }) {
                 {/* SECTION: Rank Bet Rules */}
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Rank Bet Rules</p>
-                  <div className="space-y-3">
-
-                    <Row step="2" label="Max combined (hands + ranks)"
-                      description="Total combined selections allowed. e.g. 3 means: 1 hand = 2 ranks, 2 hands = 1 rank.">
-                      <NumInput value={v.rankCombinedMax} onChange={val => set('rankCombinedMax', val)} min={2} max={10} />
-                      <span className="text-gray-500 text-xs">total</span>
+                  <div className="space-y-4">
+                    <Row step="2" label="How many ranks allowed to bet on"
+                      description="Maximum number of rank positions a player can bet on per round.">
+                      <NumInput value={v.maxRankSlots} onChange={val => set('maxRankSlots', val)} min={1} max={9} />
+                      <span className="text-gray-500 text-xs">ranks</span>
                     </Row>
 
-                    <Row step="3" label="Rank locks when hands ≥"
-                      description="Rank board locks entirely once player hits this hand count (0 rank slots).">
+                    <Row step="3" label="How many card hands before rank is locked"
+                      description={`If you bet on \${v.rankLockThreshold} or more card hand\${v.rankLockThreshold !== 1 ? 's' : ''}, the Rank board locks.`}>
                       <NumInput value={v.rankLockThreshold} onChange={val => set('rankLockThreshold', val)} min={1} max={10} />
                       <span className="text-gray-500 text-xs">hands</span>
                     </Row>
-
-                    {/* Live preview table */}
-                    <RankPreviewTable
-                      maxCardHands={v.maxCardHands}
-                      rankCombinedMax={v.rankCombinedMax}
-                      rankLockThreshold={v.rankLockThreshold}
-                    />
-
                   </div>
                 </div>
 
@@ -188,7 +162,7 @@ export default function GameVersionsModal({ isOpen, onClose }) {
                 <div>
                   <p className="text-yellow-400/50 text-[10px] font-bold uppercase tracking-widest mb-3">Color Bet Rules</p>
                   <div className="space-y-3">
-                    <Row step="4" label="Allow betting both Red & Black"
+                    <Row step="5" label="Allow betting both Red & Black"
                       description={v.colorBothSides
                         ? 'Player can bet Red AND Black simultaneously.'
                         : 'Player can only bet one side — Red OR Black, not both.'}>
