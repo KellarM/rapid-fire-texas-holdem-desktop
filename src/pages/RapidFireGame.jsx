@@ -1553,7 +1553,7 @@ export default function RapidFireGame() {
         const multiplier = playerBet > 0 ? playerWin / playerBet : 0;
 
         const prev_i = updated[i] || { totalBets: 0, totalWins: 0, roundsPlayed: 0, roundsWon: 0, highestMultiplier: 0, highestBalance: null, highestBalanceRound: null, lowestBalance: null, lowestBalanceRound: null };
-        const postRoundBalance = Math.max(0, (balances[i] ?? 0) + playerWin);
+        const postRoundBalance = Math.max(0, (balancesRef.current[i] ?? balances[i] ?? 0) + playerWin);
         const currentRound = roundsPlayed + 1;
         const newHighest = prev_i.highestBalance === null || postRoundBalance > prev_i.highestBalance;
         const newLowest = prev_i.lowestBalance === null || postRoundBalance < prev_i.lowestBalance;
@@ -1601,7 +1601,7 @@ export default function RapidFireGame() {
         + Object.values(apColorBets).reduce((s,v)=>s+v,0)
         + Object.values(apRankBets).reduce((s,v)=>s+v,0)
         + (apLowHighBet?.amount || 0);
-      const balBefore = balances[ap] ?? 0;
+      const balBefore = balancesRef.current[ap] ?? balances[ap] ?? 0;
       const balAfter  = Math.max(0, balBefore + apPayout);
 
       const apCardWin  = (leader?.handIds || []).some(wid => apHandBets[wid] > 0) || (leader?.communityBoardWin && Object.values(apHandBets).some(v=>v>0));
@@ -1674,7 +1674,7 @@ export default function RapidFireGame() {
       Object.values(activePlayerRankBets).reduce((s, v) => s + v, 0) +
       (activePlayerLowHighBet?.amount || 0);
     const activePlayerPayout = playerWinnings[activePlayer] || 0;
-    const activeBal = balances[activePlayer] ?? 0;
+    const activeBal = balancesRef.current[activePlayer] ?? balances[activePlayer] ?? 0;
     const observerKey = Date.now() + '_' + Math.random();
     const roundData = {
       roundId,
