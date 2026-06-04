@@ -276,6 +276,7 @@ export default function RankBets({
   handBetCount, maxRankSlots, rankBetCount, unlockedRanks,
   activePlayerId, activeHandIds,
   onAttemptLockedRank, onHoverRankRow,
+  rankLockThreshold = 1,
 }) {
   const canBet = gamePhase === 'betting' && !disabled && !killSwitchActive;
   // hasMathFilter removed: all ranks available when kill-switch is off

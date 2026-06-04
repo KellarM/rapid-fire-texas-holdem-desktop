@@ -11,11 +11,11 @@ export const DEFAULT_VERSIONS = {
 };
 
 // Safe loading placeholder — used while DB fetch is in flight
-// Uses large numbers so nothing accidentally locks during load
+// Mirrors DEFAULT_VERSIONS so behaviour is consistent before DB responds
 export const LOADING_VERSIONS = {
   maxCardHands: 1,
   maxRankSlots: 1,
-  rankLockThreshold: 99,
+  rankLockThreshold: 1,
   colorBothSides: false,
 };
 
