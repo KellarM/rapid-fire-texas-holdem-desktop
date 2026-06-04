@@ -111,7 +111,7 @@ export default function GameRulesModal({ asMenuItem = false }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
           }}
         >
-          \u{1F4D6} Game Rules
+          📖 Game Rules
         </button>
       ) : (
         <button
