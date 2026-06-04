@@ -71,24 +71,31 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
   const [steps,    setSteps]    = useState([]);
   const [updated,  setUpdated]  = useState(false);   // true = rules changed since last visit
 
+  // Track whether we have already auto-shown this overlay in this page session.
+  // Prevents it from re-firing every time 'suppress' toggles (e.g. after recovery modal closes).
+  const hasAutoShownRef = React.useRef(false);
+
+  // ── Auto-show on first load (once per page session) ───────────────────────
   useEffect(() => {
-    const v        = loadVersions();
-    const changed  = rulesHaveChanged();
+    const v       = loadVersions();
+    const changed = rulesHaveChanged();
     setSteps(buildSteps(v));
     setUpdated(changed);
     setStep(0);
 
-    // Suppress if there's an incomplete round to recover — show recovery modal instead
-    if (suppress) {
-      setVisible(false);
-      return;
-    }
+    // If this is a forced open (user tapped Help button), always show.
     if (forceOpen) {
       setVisible(true);
       return;
     }
-    // Always show on load
-    setVisible(true);
+
+    // Auto-show: only if suppress is currently false AND we haven't shown yet.
+    // When suppress goes false->true->false (recovery flow), hasAutoShownRef
+    // prevents re-firing after the recovery modal closes.
+    if (!suppress && !hasAutoShownRef.current) {
+      hasAutoShownRef.current = true;
+      setVisible(true);
+    }
   }, [forceOpen, suppress]);
 
   const handleClose = () => {
