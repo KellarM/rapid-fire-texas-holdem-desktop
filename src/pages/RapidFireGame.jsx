@@ -303,7 +303,7 @@ export default function RapidFireGame() {
   const rankBetCount = Object.keys(pRankBets).length;
 
   // Kill switch: 4 hands locks all side markets
-  const killSwitchActive = isKillSwitchActive(handBetCount);
+  const killSwitchActive = handBetCount >= (versions?.rankLockThreshold ?? 2);
 
   // Phase 4 gate: Color Board and River require total rank === total hand bets
   const sideBetGateOpen = !killSwitchActive && isSideBetGateOpen(pHandBets, pRankBets);
@@ -350,10 +350,17 @@ export default function RapidFireGame() {
   const activeHandIds = Object.keys(pHandBets).map(Number);
 
   // Max rank slots: 1 hand = 1 slot (only when exactly 1 hand selected)
-  const maxRankSlots = handBetCount === 1 ? 1 : 0;
+  const maxRankSlots = (() => {
+    const lockAt = versions?.rankLockThreshold ?? 2;
+    const unlockUpTo = versions?.rankUnlockThreshold ?? 1;
+    if (handBetCount >= lockAt || handBetCount > unlockUpTo) return 0;
+    return versions?.rankScaling
+      ? handBetCount * (versions?.rankPerHand ?? 1)
+      : (versions?.rankFixedCap ?? 1);
+  })();
 
   // Phase Lock: exactly 1 hand bet + at least 1 rank bet → finalize selection, lock remaining hands
-  const phaseLockActive = handBetCount === 1 && isRankBetPlaced && !killSwitchActive;
+  const phaseLockActive = handBetCount >= (versions?.maxCardHands ?? 1) && isRankBetPlaced && !killSwitchActive;
   const handBetsLockedByRanks = phaseLockActive;
   const maxHandBetsAllowed = versions?.maxCardHands ?? MAX_HAND_BETS;
 
@@ -675,7 +682,7 @@ export default function RapidFireGame() {
       setBalances((b) => {const n = [...b];n[pid] += existing;return n;});
     }
     playChipRemove();
-  }, [gamePhase, pid, rankBets, handBets, redBlackBets, lowHighBets]);
+  }, [gamePhase, pid, rankBets, handBets, redBlackBets, lowHighBets, versions]);
 
   const handleMoveRankBet = useCallback((fromKey, toKey) => {
     if (gamePhase !== 'betting') return;
@@ -718,8 +725,9 @@ export default function RapidFireGame() {
 
     // --- ADD intent from here down ---
 
-    // Kill switch: 3–4 hands selected — color market locked
-    if (isKillSwitchActive(Object.keys(handBets[pid] || {}).length)) {
+    // Versions config: color market locks at rankLockThreshold hands
+    const colorHandCount = Object.keys(handBets[pid] || {}).length;
+    if (colorHandCount >= (versions?.rankLockThreshold ?? 2)) {
       setCapAlertType('color_locked');
       setShowCapAlert(true);
       return;
@@ -1581,11 +1589,13 @@ export default function RapidFireGame() {
   // ── Mobile portrait layout ──────────────────────────────────────────────
   // Compute activeColorSide for this player's color bets
   const pRedBlackBetsMobile = redBlackBets[activePlayer] || {};
-  const activeColorSide = ['3R','4R','5R'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
-    ? 'red'
-    : ['3B','4B','5B'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
-    ? 'black'
-    : null;
+  const activeColorSide = versions?.colorBothSides
+    ? null
+    : ['3R','4R','5R'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
+      ? 'red'
+      : ['3B','4B','5B'].some(k => (pRedBlackBetsMobile[k]||0) > 0)
+      ? 'black'
+      : null;
 
   if (isMobile) {
     return (
@@ -2159,7 +2169,7 @@ export default function RapidFireGame() {
               disabled={gamePhase === 'betting' ? balance < selectedChip : gamePhase === 'lowHighBetting' ? balance < selectedChip : true}
               killSwitchActive={killSwitchActive}
               rankBetActive={sideBetGateOpen}
-              activeColorSide={['3R','4R','5R'].some(k => (pRedBlackBets[k]||0) > 0) ? 'red' : ['3B','4B','5B'].some(k => (pRedBlackBets[k]||0) > 0) ? 'black' : null}
+              activeColorSide={versions?.colorBothSides ? null : (['3R','4R','5R'].some(k => (pRedBlackBets[k]||0) > 0) ? 'red' : ['3B','4B','5B'].some(k => (pRedBlackBets[k]||0) > 0) ? 'black' : null)}
               onColorSideConflict={() => setShowColorSideAlert(true)}
               playerCount={playerCount}
               totalInvestment={totalInvestment}
