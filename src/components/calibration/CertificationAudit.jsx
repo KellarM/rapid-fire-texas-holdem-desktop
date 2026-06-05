@@ -957,7 +957,16 @@ export default function CertificationAudit() {
   const [moduleResults, setModuleResults] = useState(() => {
     const out = {};
     MODULES.forEach(m => {
-      const { results, progress } = loadFromStorage(m.id);
+      let { results, progress } = loadFromStorage(m.id);
+      // Auto-seed from SEED_AUDIT_DATA if no data exists in storage yet
+      if (Object.keys(results).length === 0 && SEED_AUDIT_DATA[m.id]) {
+        results = SEED_AUDIT_DATA[m.id];
+        progress = Object.keys(results).length;
+        try {
+          localStorage.setItem(getStorageKeys(m.id).results, JSON.stringify(results));
+          localStorage.setItem(getStorageKeys(m.id).progress, String(progress));
+        } catch {}
+      }
       out[m.id] = { results, progress };
     });
     return out;
@@ -1730,15 +1739,7 @@ export default function CertificationAudit() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={loadPriorResults}
-              className="flex items-center gap-1.5 text-blue-200 border border-blue-600 px-4 py-2 rounded-lg text-sm hover:bg-blue-900/30 transition-all font-semibold whitespace-nowrap"
-              title="Load verified results from RapidFire_CertAudit_2026-05-14. Carded Hands &amp; Ranks = PASS. Color &amp; River = FAIL (re-run needed)."
-            >
-              📂 Load Prior Results
-            </button>
-          </div>
+
           {hasAnyResults && (
             <div className="flex items-center gap-2 shrink-0">
               <button
