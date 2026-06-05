@@ -232,7 +232,7 @@ export default function RapidFireGame() {
 
   // Game timing
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
-  const { versions, recordId: versionsRecordId } = useGameVersions();
+  const { versions, recordId: versionsRecordId, dbLoaded: versionsReady } = useGameVersions();
 
   // ── Server-authoritative balance & session (GLI-19 Phase 1) ──────────────
   const {
@@ -2025,6 +2025,7 @@ export default function RapidFireGame() {
           showUnlockFlash={showUnlockFlash}
           suppressHowToPlay={recoveryChecking || showRecoveryModal}
           versions={versions}
+          versionsReady={versionsReady}
         />
       </>
     );

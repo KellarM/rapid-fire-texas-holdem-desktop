@@ -55,7 +55,7 @@ function buildSteps(v) {
   ];
 }
 
-export default function HowToPlayOverlay({ versions = {}, forceOpen = false, onClose, suppress = false }) {
+export default function HowToPlayOverlay({ versions = {}, versionsReady = false, forceOpen = false, onClose, suppress = false }) {
   const [visible,  setVisible]  = useState(false);
   const [step,     setStep]     = useState(0);
   const [steps,    setSteps]    = useState([]);
@@ -71,6 +71,12 @@ export default function HowToPlayOverlay({ versions = {}, forceOpen = false, onC
 
   // ── Auto-show on first load (once per page session) ───────────────────────
   useEffect(() => {
+    // IMPORTANT: Do not run until DB versions have loaded.
+    // versions starts as {} (default prop). If we check before the DB responds
+    // we compare defaults-vs-defaults and always get "no change" — overlay never fires.
+    // versionsReady flips to true only after loadVersionsFromDB() resolves.
+    if (!versionsReady && !forceOpen) return;
+
     // Use DB-loaded versions passed in as prop — never read localStorage here.
     // This guarantees every device compares against the same server values.
     const changed = rulesHaveChanged(versions);
@@ -109,7 +115,7 @@ export default function HowToPlayOverlay({ versions = {}, forceOpen = false, onC
 
     try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
     setVisible(true);
-  }, [forceOpen, suppress, versions]);
+  }, [forceOpen, suppress, versions, versionsReady]);
 
   const handleClose = () => {
     markRulesSeen(versions);  // stamp the DB-versions hash so warning clears next time
