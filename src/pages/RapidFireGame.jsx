@@ -2303,12 +2303,12 @@ export default function RapidFireGame() {
         {/* CENTER: Main Game Board */}
         <div className="flex-1 flex flex-col gap-1.5 min-w-0 items-center">
 
-          {/* Dealer Announcement — expands when unlock flash is active */}
+          {/* Dealer Announcement — fixed height, never expands */}
           <div
             style={{
-              height: showUnlockFlash ? '90px' : '32px',
-              minHeight: showUnlockFlash ? '90px' : '32px',
-              maxHeight: showUnlockFlash ? '90px' : '32px',
+              height: '32px',
+              minHeight: '32px',
+              maxHeight: '32px',
               width: '100%',
               flexShrink: 0,
               overflow: 'visible',
@@ -2321,35 +2321,39 @@ export default function RapidFireGame() {
               background: 'linear-gradient(90deg, rgba(78,47,0,0.5) 0%, rgba(83,37,0,0.5) 100%)',
               boxSizing: 'border-box',
               position: 'relative',
-              transition: 'height 0.2s ease, min-height 0.2s ease',
             }}>
             <DealerAnnouncement message={dealerMessage} phase={gamePhase} />
-            {showUnlockFlash && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 40,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '0.5rem',
-                background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
-                border: '1.5px solid #eab308',
-                boxShadow: '0 0 20px rgba(234,179,8,0.35)',
-                animation: 'rfUnlockFadeOut 4s ease forwards',
-                pointerEvents: 'none',
-                padding: '6px 10px',
-                gap: 0,
-              }}>
-                <span style={{ fontSize: 11, fontWeight: 900, color: '#eab308', letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center' }}>🔓 Bonus Bets Unlocked</span>
-                <div style={{ height: 5 }} />
-                <span style={{ fontSize: 9, color: '#f87171', fontWeight: 700, textAlign: 'center' }}>🔴 Color Board Open</span>
-                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>🌊 River Bet Available</span>
-                <span style={{ fontSize: 9, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>After The Turn Card</span>
-              </div>
-            )}
           </div>
+
+          {/* Bonus Bets Unlocked — fixed overlay, zero layout impact */}
+          {showUnlockFlash && (
+            <div style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -60%)',
+              zIndex: 999,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '14px',
+              background: 'linear-gradient(160deg, rgba(0,0,0,0.97) 0%, rgba(25,12,0,0.98) 100%)',
+              border: '2px solid #eab308',
+              boxShadow: '0 0 40px rgba(234,179,8,0.5), 0 8px 32px rgba(0,0,0,0.8)',
+              animation: 'rfUnlockFadeOut 4s ease forwards',
+              pointerEvents: 'none',
+              padding: '16px 28px',
+              gap: 0,
+              minWidth: '220px',
+            }}>
+              <span style={{ fontSize: 15, fontWeight: 900, color: '#eab308', letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center' }}>🔓 Bonus Bets Unlocked</span>
+              <div style={{ height: 8 }} />
+              <span style={{ fontSize: 12, color: '#f87171', fontWeight: 700, textAlign: 'center' }}>🔴 Color Board Open</span>
+              <div style={{ height: 4 }} />
+              <span style={{ fontSize: 12, color: '#60a5fa', fontWeight: 700, textAlign: 'center' }}>🌊 River Bet Available After The Turn</span>
+            </div>
+          )}
 
           {/* Community Cards — expanded canvas for labels, assets stay fixed size */}
           <div
@@ -2376,11 +2380,6 @@ export default function RapidFireGame() {
               position: 'relative',
             }}>
 
-{/* ── Countdown Clock — absolute center overlay, zero layout impact ── */}
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 60, pointerEvents: 'none' }}>
-              <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
-            </div>
-
             {/* Board color — now in ⚙ Gear menu */}
             
             {/* Logo — left side */}
@@ -2400,7 +2399,18 @@ export default function RapidFireGame() {
           <DetailedPayoutDisplay winInfo={lastWinInfo} playerCount={playerCount} />
 
           {/* 10 Fixed Hands Grid */}
-          <div className="flex-1 min-h-0 w-full">
+          <div className="flex-1 min-h-0 w-full" style={{ position: 'relative' }}>
+            {/* ── Countdown Clock — centered over hand grid, large, zero layout impact ── */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 60,
+              pointerEvents: 'none',
+            }}>
+              <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
+            </div>
             <div className="grid grid-cols-5 gap-1.5 h-full auto-rows-fr">
               {handDisplayOrder.map((hid) => {
               const hand = FIXED_HANDS.find(h => h.id === hid);
