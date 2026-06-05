@@ -958,14 +958,19 @@ export default function CertificationAudit() {
     const out = {};
     MODULES.forEach(m => {
       let { results, progress } = loadFromStorage(m.id);
-      // Auto-seed from SEED_AUDIT_DATA if no data exists in storage yet
-      if (Object.keys(results).length === 0 && SEED_AUDIT_DATA[m.id]) {
-        results = SEED_AUDIT_DATA[m.id];
-        progress = Object.keys(results).length;
-        try {
-          localStorage.setItem(getStorageKeys(m.id).results, JSON.stringify(results));
-          localStorage.setItem(getStorageKeys(m.id).progress, String(progress));
-        } catch {}
+      // Auto-seed from SEED_AUDIT_DATA — fill any missing keys
+      if (SEED_AUDIT_DATA[m.id]) {
+        let changed = false;
+        Object.entries(SEED_AUDIT_DATA[m.id]).forEach(([key, val]) => {
+          if (!results[key]) { results[key] = val; changed = true; }
+        });
+        if (changed) {
+          progress = Object.keys(results).length;
+          try {
+            localStorage.setItem(getStorageKeys(m.id).results, JSON.stringify(results));
+            localStorage.setItem(getStorageKeys(m.id).progress, String(progress));
+          } catch {}
+        }
       }
       out[m.id] = { results, progress };
     });
