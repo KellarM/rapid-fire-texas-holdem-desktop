@@ -45,6 +45,7 @@ import GameTimingModal from '@/components/game/GameTimingModal';
 import GameVersionsModal from '@/components/game/GameVersionsModal';
 import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
+import HowToPlayOverlay from '@/components/game/HowToPlayOverlay';
 import { useGameTiming } from '@/hooks/useGameTiming';
 import { useGameVersions } from '@/hooks/useGameVersions';
 import { usePlayerSession } from '@/hooks/usePlayerSession';
@@ -85,6 +86,149 @@ const PLAYER_TAB_STYLES = [
 
 
 // ── Mobile detection ─────────────────────────────────────────────────────
+// ── GearMenu — always-visible settings button ────────────────────────────────
+function GearMenu({ soundManager, boardTheme, setBoardTheme, onHowToPlay, onResetBank }) {
+  const [open, setOpen] = useState(false);
+  const [colorOpen, setColorOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setColorOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const COLORS = [
+    { id: 'red',   label: 'Red',   dot: '#b30000' },
+    { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
+    { id: 'green', label: 'Green', dot: '#0a4a1e' },
+  ];
+
+  const itemStyle = {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
+    color: '#e2e8f0', background: 'transparent', border: 'none',
+    width: '100%', textAlign: 'left', fontWeight: 500,
+    transition: 'background 0.15s',
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        onClick={() => { setOpen(o => !o); setColorOpen(false); }}
+        title="Settings"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '34px', height: '34px', borderRadius: '8px', cursor: 'pointer',
+          border: open ? '1px solid rgba(234,179,8,0.8)' : '1px solid rgba(202,138,4,0.4)',
+          background: open ? 'rgba(120,70,0,0.45)' : 'rgba(0,0,0,0.45)',
+          color: '#facc15', fontSize: '18px', lineHeight: 1,
+          transition: 'all 0.15s',
+        }}
+      >
+        ⚙
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: '42px', right: 0,
+          background: '#0f172a', border: '1px solid rgba(202,138,4,0.35)',
+          borderRadius: '12px', minWidth: '190px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.7)', zIndex: 200, overflow: 'hidden',
+        }}>
+          <div style={{ padding: '6px 14px 5px', borderBottom: '1px solid rgba(202,138,4,0.2)' }}>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(250,204,21,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Settings</span>
+          </div>
+
+          {/* Color Change — opens sub-menu */}
+          <div style={{ position: 'relative' }}>
+            <button
+              style={{ ...itemStyle, justifyContent: 'space-between' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onClick={() => setColorOpen(o => !o)}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: COLORS.find(c=>c.id===boardTheme)?.dot || '#b30000', border: '1px solid rgba(255,255,255,0.25)', flexShrink: 0 }} />
+                Board Color
+              </span>
+              <span style={{ color: 'rgba(250,204,21,0.4)', fontSize: '11px' }}>{colorOpen ? '▴' : '▾'}</span>
+            </button>
+            {colorOpen && (
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                {COLORS.map(t => (
+                  <button key={t.id}
+                    style={{
+                      ...itemStyle,
+                      paddingLeft: '32px',
+                      color: boardTheme === t.id ? '#fde047' : '#94a3b8',
+                      background: boardTheme === t.id ? 'rgba(234,179,8,0.1)' : 'transparent',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = boardTheme === t.id ? 'rgba(234,179,8,0.15)' : 'rgba(234,179,8,0.06)'}
+                    onMouseLeave={e => e.currentTarget.style.background = boardTheme === t.id ? 'rgba(234,179,8,0.1)' : 'transparent'}
+                    onClick={() => { setBoardTheme(t.id); setColorOpen(false); setOpen(false); }}
+                  >
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: t.dot, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
+                    {t.label}
+                    {boardTheme === t.id && <span style={{ marginLeft: 'auto', color: '#facc15', fontSize: '11px' }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+          </div>
+
+          {/* Sound */}
+          <div style={{ padding: '4px 14px 6px', borderTop: colorOpen ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
+            {soundManager && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 0' }}>
+                <span style={{ fontSize: '14px' }}>🔊</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>Sound</span>
+                <div style={{ marginLeft: 'auto' }}>
+                  <VolumeControl soundManager={soundManager} compact />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {/* Game Rules */}
+            <div style={{ padding: '2px 0' }}>
+              <GameRulesModal asMenuItem />
+            </div>
+
+            {/* How To Play */}
+            <button
+              style={itemStyle}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onClick={() => { onHowToPlay(); setOpen(false); }}
+            >
+              <span style={{ fontSize: '14px' }}>📖</span>
+              How To Play
+            </button>
+
+            {/* Reset Bank */}
+            <button
+              style={{ ...itemStyle, color: '#fca5a5', borderTop: '1px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onClick={() => { onResetBank(); setOpen(false); }}
+            >
+              <span style={{ fontSize: '14px' }}>↺</span>
+              Reset Bank
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function useIsMobile() {
   return false; // Desktop repo — always use the full desktop layout
 }
@@ -180,6 +324,7 @@ export default function RapidFireGame() {
   
   const [showGameTiming, setShowGameTiming] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [showPlayerSelector, setShowPlayerSelector] = useState(true);
   const [roundId, setRoundId] = useState(1);
@@ -2044,9 +2189,6 @@ export default function RapidFireGame() {
       <style>{`@keyframes rfUnlockFadeOut{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}`}</style>
       <div className={`velvet-board h-screen w-screen overflow-hidden text-white flex flex-col theme-${boardTheme}`} onClick={preloadSounds} onTouchStart={preloadSounds}>
 
-      {/* Countdown Clock */}
-      <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
-
       {/* Alerts */}
       <HandBetLimitAlert
         isOpen={showHandLimitAlert}
@@ -2141,6 +2283,13 @@ export default function RapidFireGame() {
 
       <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
       <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
+      <HowToPlayOverlay
+        versions={versions}
+        versionsReady={versionsReady}
+        forceOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        suppress={recoveryChecking || showRecoveryModal}
+      />
 
       {/* Main Layout: 3 columns, fills remaining height */}
       <div className="flex gap-1.5 p-1.5 flex-1 min-h-0">
@@ -2226,78 +2375,12 @@ export default function RapidFireGame() {
               position: 'relative',
             }}>
 
-            {/* ── Board Color Picker ── top-right corner of dealer box */}
-            <div style={{ position: 'absolute', top: '6px', right: '8px', zIndex: 50 }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowBoardColorPicker(v => !v); }}
-                title="Change board color"
-                style={{
-                  background: 'rgba(0,0,0,0.55)',
-                  border: '1px solid rgba(202,138,4,0.5)',
-                  borderRadius: '6px',
-                  padding: '4px 6px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#facc15',
-                  fontSize: '14px',
-                  lineHeight: 1,
-                }}
-              >
-                🎨
-              </button>
-              {showBoardColorPicker && (
-                <div
-                  onClick={e => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    top: '32px',
-                    right: 0,
-                    background: '#1e293b',
-                    border: '1px solid #475569',
-                    borderRadius: '10px',
-                    padding: '6px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    minWidth: '100px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-                  }}
-                >
-                  <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: 600, padding: '0 6px 4px', borderBottom: '1px solid #334155', margin: 0 }}>Board Color</p>
-                  {[
-                    { id: 'red',   label: 'Red',   dot: '#b30000' },
-                    { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
-                    { id: 'green', label: 'Green', dot: '#0a4a1e' },
-                  ].map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setBoardTheme(t.id); setShowBoardColorPicker(false); }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 10px',
-                        borderRadius: '7px',
-                        border: boardTheme === t.id ? '1px solid rgba(234,179,8,0.5)' : '1px solid transparent',
-                        background: boardTheme === t.id ? 'rgba(234,179,8,0.15)' : 'transparent',
-                        color: boardTheme === t.id ? '#fde047' : '#cbd5e1',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        width: '100%',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.dot, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                      {t.label}
-                      {boardTheme === t.id && <span style={{ marginLeft: 'auto', color: '#facc15', fontSize: '11px' }}>✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
+{/* ── Countdown Clock — absolute center overlay, zero layout impact ── */}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 60, pointerEvents: 'none' }}>
+              <CountdownClock timeRemaining={countdownTime} isActive={countdownActive} phase={gamePhase} />
             </div>
+
+            {/* Board color — now in ⚙ Gear menu */}
             
             {/* Logo — left side */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>
@@ -2411,13 +2494,11 @@ export default function RapidFireGame() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Player Bank display + Volume Control — centered */}
+            {/* Player Bank display — centered */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <VolumeControl soundManager={soundManager} />
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-yellow-500 bg-black">
                 <span className="text-yellow-400 text-xs font-black leading-none tracking-wider">P{activePlayer + 1}</span>
                 <span className="text-yellow-400 font-black text-lg leading-none tracking-tight" style={{ textShadow: '0 0 8px rgba(251,191,36,0.7)' }}>${(balances[activePlayer] ?? 10000).toLocaleString()}</span>
-                {/* GLI-19 server-sync indicator: green = DB confirmed, amber = loading from cache */}
                 <span title={dbReady ? 'Balance synced to server' : 'Syncing balance...'} style={{ width: 7, height: 7, borderRadius: '50%', background: dbReady ? '#22c55e' : '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
               </div>
             </div>
@@ -2431,34 +2512,27 @@ export default function RapidFireGame() {
               <button
                 onClick={clearBets}
                 className="px-3 py-1.5 rounded-lg border border-red-700/50 bg-red-900/30 text-red-300 text-xs font-semibold hover:bg-red-900/50 transition-all">
-                
                   Clear
                 </button>
               }
             </div>
 
-            {/* Reset Bank — hidden by default, toggled with Ctrl+Alt+B+M */}
-            {resetBankVisible && (
-              <button
-                onClick={() => {
-                  setBalances(Array(10).fill(10000));
-                  setRoundId(1);
-                  setCasinoProfit(0);
-                  setRoundsPlayed(0);
-                }}
-                title="Reset all player banks to $10,000 and clear P/L"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-700/50 bg-emerald-900/20 text-emerald-300 text-xs font-bold hover:border-emerald-500 hover:bg-emerald-900/40 transition-all flex-shrink-0">
-                ↺ Reset Bank
-              </button>
-            )}
-
-            {/* Tools */}
+            {/* Tools — secret key triggered, hidden by default */}
             <ToolsMenu onOpenStats={() => setShowStatsPanel(true)} onOpenMollySimulator={() => setShowMollySimulator(true)} onOpenArchetypeBattle={() => setShowArchetypeBattle(true)} onOpenExploitHunter={() => setShowExploitHunter(true)} onOpenComplianceReport={() => setShowComplianceReport(true)} onOpenKsStrategyTest={() => setShowKsStrategyTest(true)} onOpenObserver={() => setShowObserver(true)} onOpenAnalytics={() => setShowAnalytics(true)} onOpenGameTiming={() => setShowGameTiming(true)} onOpenVersions={() => setShowVersions(true)} toolsVisible={toolbarVisible} />
 
-            {/* Game Rules — far right */}
-            <div className="border-l border-yellow-700/20 pl-2 flex-shrink-0">
-              <GameRulesModal />
-            </div>
+            {/* ⚙ Gear Button — always visible */}
+            <GearMenu
+              soundManager={soundManager}
+              boardTheme={boardTheme}
+              setBoardTheme={setBoardTheme}
+              onHowToPlay={() => setShowHowToPlay(true)}
+              onResetBank={() => {
+                setBalances(Array(10).fill(10000));
+                setRoundId(1);
+                setCasinoProfit(0);
+                setRoundsPlayed(0);
+              }}
+            />
           </div>
         </div>
 
