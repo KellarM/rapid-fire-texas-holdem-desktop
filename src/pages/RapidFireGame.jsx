@@ -86,7 +86,7 @@ const PLAYER_TAB_STYLES = [
 
 // ── Mobile detection ─────────────────────────────────────────────────────
 function useIsMobile() {
-  return true; // Always use mobile layout — landscape handled inside MobileGameLayout
+  return false; // Desktop repo — always use the full desktop layout
 }
 
 // Phases: 'betting' | 'flop' | 'turn' | 'lowHighBetting' | 'river' | 'settlement' | 'winner'
