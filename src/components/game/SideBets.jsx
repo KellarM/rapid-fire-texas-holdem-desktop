@@ -459,11 +459,9 @@ export default function SideBets({
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
-                  // If the tap landed on a chip (or any child with data-chip), remove the bet
+                  // If the tap landed on a chip, remove the bet
                   if (e.target.closest('[data-chip="true"]')) { onRemoveLowHighBet(); return; }
-                  // If there's already a bet placed, a simple tap removes it
-                  if (hasBet) { onRemoveLowHighBet(); return; }
-                  // No bet yet — add one
+                  // Otherwise always add to the bet
                   onLowHighBet(type);
                 }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
