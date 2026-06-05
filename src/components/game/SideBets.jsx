@@ -219,6 +219,7 @@ export default function SideBets({
                     className="transition-transform hover:scale-110"
                     title={`P${chip.pid + 1}: $${chip.amt}`}
                     style={{ pointerEvents: 'auto', flexShrink: 0 }}
+                    data-chip="true"
                   />
                 );
               })}
@@ -244,6 +245,7 @@ export default function SideBets({
                     className="transition-transform hover:scale-110"
                     title={`P${chip.pid + 1}: $${chip.amt}`}
                     style={{ pointerEvents: 'auto', flexShrink: 0 }}
+                    data-chip="true"
                   />
                 );
               })}
@@ -457,9 +459,11 @@ export default function SideBets({
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   if (gamePhase !== 'lowHighBetting') return;
-                  // If the tap landed on a chip, remove the bet
+                  // If the tap landed on a chip (or any child with data-chip), remove the bet
                   if (e.target.closest('[data-chip="true"]')) { onRemoveLowHighBet(); return; }
-                  // Otherwise always add
+                  // If there's already a bet placed, a simple tap removes it
+                  if (hasBet) { onRemoveLowHighBet(); return; }
+                  // No bet yet — add one
                   onLowHighBet(type);
                 }}
                 onContextMenu={(e) => { e.preventDefault(); if (gamePhase === 'lowHighBetting' && lowHighBet && lowHighBet.type === type && lowHighBet.amount > 0) onRemoveLowHighBet(); }}
@@ -483,8 +487,8 @@ export default function SideBets({
 
                 {chipsHere.length > 0 && (
                   <div
-                    className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-around"
-                    style={{ padding: '3px 4px', overflow: 'visible' }}
+                    className="absolute inset-0 z-10 flex flex-col justify-around"
+                    style={{ padding: '3px 4px', overflow: 'visible', pointerEvents: 'none' }}
                   >
                     {/* Row 1: P1–P5 */}
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 2, overflow: 'visible' }}>
@@ -498,7 +502,8 @@ export default function SideBets({
                             amount={chip.amt}
                             scale={0.6}
                             title={`P${chip.pid + 1}: $${chip.amt}`}
-                            style={{ flexShrink: 0 }}
+                            style={{ flexShrink: 0, pointerEvents: 'none' }}
+                            data-chip="true"
                           />
                         );
                       })}
@@ -516,7 +521,8 @@ export default function SideBets({
                             amount={chip.amt}
                             scale={0.6}
                             title={`P${chip.pid + 1}: $${chip.amt}`}
-                            style={{ flexShrink: 0 }}
+                            style={{ flexShrink: 0, pointerEvents: 'none' }}
+                            data-chip="true"
                           />
                         );
                       })}
