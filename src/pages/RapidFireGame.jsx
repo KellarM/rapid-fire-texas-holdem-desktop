@@ -2140,6 +2140,7 @@ export default function RapidFireGame() {
       <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
       <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
+      <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
 
       {/* Main Layout: 3 columns, fills remaining height */}
       <div className="flex gap-1.5 p-1.5 flex-1 min-h-0">
