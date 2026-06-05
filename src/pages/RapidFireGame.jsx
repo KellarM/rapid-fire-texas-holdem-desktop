@@ -179,6 +179,7 @@ function GearMenu({ soundManager, boardTheme, setBoardTheme, onHowToPlay, onRese
                   </button>
                 ))}
               </div>
+            )}
           </div>
 
           {/* Sound */}
