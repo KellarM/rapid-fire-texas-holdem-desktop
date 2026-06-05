@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
 import { rulesHaveChanged, markRulesSeen } from '@/lib/rulesHash';
-
-function loadVersions() {
-  try {
-    const saved = localStorage.getItem(VERSIONS_STORAGE_KEY);
-    return saved ? { ...DEFAULT_VERSIONS, ...JSON.parse(saved) } : { ...DEFAULT_VERSIONS };
-  } catch {
-    return { ...DEFAULT_VERSIONS };
-  }
-}
 
 function buildSteps(v) {
   const maxHands       = v.maxCardHands ?? 1;
@@ -65,7 +55,7 @@ function buildSteps(v) {
   ];
 }
 
-export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress = false }) {
+export default function HowToPlayOverlay({ versions = {}, forceOpen = false, onClose, suppress = false }) {
   const [visible,  setVisible]  = useState(false);
   const [step,     setStep]     = useState(0);
   const [steps,    setSteps]    = useState([]);
@@ -81,41 +71,48 @@ export default function HowToPlayOverlay({ forceOpen = false, onClose, suppress 
 
   // ── Auto-show on first load (once per page session) ───────────────────────
   useEffect(() => {
-    const v       = loadVersions();
-    const changed = rulesHaveChanged();
-    setSteps(buildSteps(v));
+    // Use DB-loaded versions passed in as prop — never read localStorage here.
+    // This guarantees every device compares against the same server values.
+    const changed = rulesHaveChanged(versions);
+    setSteps(buildSteps(versions));
     setUpdated(changed);
     setStep(0);
 
-    // If this is a forced open (user tapped Help button), always show.
+    // Forced open (user tapped Help button) — always show.
     if (forceOpen) {
       setVisible(true);
       return;
     }
 
-    // Auto-show guard: use localStorage with a 24-hour expiry.
-    // localStorage survives hard reloads (like Base44 code-sync iframe reloads)
-    // unlike sessionStorage which is cleared on every hard reload.
-    // After 24 hours the flag expires so the player sees it again next day.
+    if (suppress) return;
+
+    // If rules have changed since last acknowledgement, ALWAYS show —
+    // bypass the 24h guard so no device ever misses a config update.
+    if (changed) {
+      try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
+      setVisible(true);
+      return;
+    }
+
+    // No rule changes — apply 24h guard so the overlay doesn't reappear
+    // on every single refresh once the player has seen it today.
     const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
     try {
       const raw = localStorage.getItem(SESSION_SHOWN_KEY);
       if (raw) {
         const { ts } = JSON.parse(raw);
         if (Date.now() - ts < EXPIRY_MS) {
-          return; // Already shown within last 24h — don't show again
+          return; // Already shown within last 24h and no changes — skip
         }
       }
     } catch {}
 
-    if (!suppress) {
-      try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
-      setVisible(true);
-    }
-  }, [forceOpen, suppress]);
+    try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
+    setVisible(true);
+  }, [forceOpen, suppress, versions]);
 
   const handleClose = () => {
-    markRulesSeen();          // stamp the current hash so warning clears next time
+    markRulesSeen(versions);  // stamp the DB-versions hash so warning clears next time
     setVisible(false);
     if (onClose) onClose();
   };

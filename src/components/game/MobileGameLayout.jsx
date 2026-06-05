@@ -228,6 +228,7 @@ export default function MobileGameLayout({
   onSetTheme,
   onOpenHelp,
   suppressHowToPlay = false,
+  versions = {},
 }) {
   const pid = activePlayer;
   const balance = balances[pid] ?? 10000;
@@ -521,7 +522,7 @@ export default function MobileGameLayout({
             </div>
           </div>
         )}
-        <HowToPlayOverlay forceOpen={showHowToPlay} onClose={()=>setShowHowToPlay(false)} suppress={suppressHowToPlay} />
+        <HowToPlayOverlay versions={versions} forceOpen={showHowToPlay} onClose={()=>setShowHowToPlay(false)} suppress={suppressHowToPlay} />
       </div>
     );
   }
@@ -906,6 +907,7 @@ export default function MobileGameLayout({
 
           {/* ── How To Play Overlay ── */}
           <HowToPlayOverlay
+            versions={versions}
             forceOpen={showHowToPlay}
             onClose={() => setShowHowToPlay(false)}
             suppress={suppressHowToPlay}

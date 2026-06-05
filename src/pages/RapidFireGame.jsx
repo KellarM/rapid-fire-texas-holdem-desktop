@@ -2024,6 +2024,7 @@ export default function RapidFireGame() {
           onSetTheme={setBoardTheme}
           showUnlockFlash={showUnlockFlash}
           suppressHowToPlay={recoveryChecking || showRecoveryModal}
+          versions={versions}
         />
       </>
     );
