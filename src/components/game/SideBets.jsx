@@ -485,11 +485,12 @@ export default function SideBets({
 
                 {chipsHere.length > 0 && (
                   <div
+                    data-chip="true"
                     className="absolute inset-0 z-10 flex flex-col justify-around"
-                    style={{ padding: '3px 4px', overflow: 'visible', pointerEvents: 'none' }}
+                    style={{ padding: '3px 4px', overflow: 'visible', pointerEvents: 'auto' }}
                   >
                     {/* Row 1: P1–P5 */}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 2, overflow: 'visible' }}>
+                    <div data-chip="true" style={{ display: 'flex', justifyContent: 'center', gap: 2, overflow: 'visible' }}>
                       {Array.from({ length: 5 }, (_, i) => {
                         const chip = chipsHere.find(c => c.pid === i);
                         if (!chip) return <span key={i} style={{ width: Math.round(24 * 0.6), height: Math.round(24 * 0.6) + 4, display: 'inline-block', flexShrink: 0 }} />;
@@ -500,14 +501,13 @@ export default function SideBets({
                             amount={chip.amt}
                             scale={0.6}
                             title={`P${chip.pid + 1}: $${chip.amt}`}
-                            style={{ flexShrink: 0, pointerEvents: 'none' }}
-                            data-chip="true"
+                            style={{ flexShrink: 0 }}
                           />
                         );
                       })}
                     </div>
                     {/* Row 2: P6–P10 */}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 2, overflow: 'visible' }}>
+                    <div data-chip="true" style={{ display: 'flex', justifyContent: 'center', gap: 2, overflow: 'visible' }}>
                       {Array.from({ length: 5 }, (_, i) => {
                         const pid = i + 5;
                         const chip = chipsHere.find(c => c.pid === pid);
@@ -519,8 +519,7 @@ export default function SideBets({
                             amount={chip.amt}
                             scale={0.6}
                             title={`P${chip.pid + 1}: $${chip.amt}`}
-                            style={{ flexShrink: 0, pointerEvents: 'none' }}
-                            data-chip="true"
+                            style={{ flexShrink: 0 }}
                           />
                         );
                       })}
