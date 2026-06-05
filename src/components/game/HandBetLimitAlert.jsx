@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function HandBetLimitAlert({ isOpen, onClose }) {
+export default function HandBetLimitAlert({ isOpen, onClose, maxHands = 1 }) {
   const [countdown, setCountdown] = useState(2);
   const [dismissing, setDismissing] = useState(false);
   const consumedRef = useRef(false);
@@ -75,7 +75,7 @@ export default function HandBetLimitAlert({ isOpen, onClose }) {
                 <div className="text-white font-black text-2xl mb-2">⚠️</div>
                 <h2 className="text-white font-bold text-xl mb-4">Hand Betting Limit</h2>
                 <p className="text-red-100 text-lg font-semibold mb-6">
-                  Hand betting is limited to 4 Hands
+                  Hand betting is limited to {maxHands} Hand{maxHands !== 1 ? 's' : ''}
                 </p>
                 {!dismissing && (
                   <div className="text-red-100 text-sm">
