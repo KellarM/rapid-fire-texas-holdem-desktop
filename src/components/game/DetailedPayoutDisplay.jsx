@@ -408,7 +408,7 @@ export default function DetailedPayoutDisplay({ winInfo, playerCount = 1 }) {
                   {[
                     { label: 'Total Wagered', value: `$${payout.totalBet.toFixed(2)}`, color: '#fff' },
                     { label: 'Net Win',       value: `$${payout.netWin.toFixed(2)}`,   color: payout.netWin >= 0 ? '#4ade80' : '#f87171' },
-                    { label: 'Total Win',     value: `$${totalWin.toFixed(2)}`,         color: payout.netWin >= 0 ? '#4ade80' : '#f87171' },
+                    { label: 'Total Win',     value: `$${totalWin.toFixed(2)}`,         color: '#4ade80' },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ textAlign: 'center', flex: 1 }}>
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>

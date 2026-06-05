@@ -2,16 +2,39 @@
   "name": "PlayerSession",
   "type": "object",
   "properties": {
-    "device_id":       { "type": "string" },
-    "player_slot":     { "type": "number" },
-    "balance":         { "type": "number" },
-    "rounds_played":   { "type": "number" },
-    "total_wagered":   { "type": "number" },
-    "total_returned":  { "type": "number" },
-    "session_id":      { "type": "string" },
-    "started_at":      { "type": "string" },
-    "last_active_at":  { "type": "string" },
-    "is_active":       { "type": "boolean" }
+    "device_id": {
+      "type": "string"
+    },
+    "player_slot": {
+      "type": "number"
+    },
+    "balance": {
+      "type": "number"
+    },
+    "rounds_played": {
+      "type": "number"
+    },
+    "total_wagered": {
+      "type": "number"
+    },
+    "total_returned": {
+      "type": "number"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "last_active_at": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean"
+    }
   },
-  "required": ["device_id", "player_slot"]
+  "required": [
+    "device_id",
+    "player_slot"
+  ]
 }

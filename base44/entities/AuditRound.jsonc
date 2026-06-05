@@ -2,34 +2,110 @@
   "name": "AuditRound",
   "type": "object",
   "properties": {
-    "session_id":        { "type": "string" },
-    "device_id":         { "type": "string" },
-    "player_slot":       { "type": "number" },
-    "round_number":      { "type": "number" },
-    "timestamp_open":    { "type": "string" },
-    "timestamp_settled": { "type": "string" },
-    "balance_before":    { "type": "number" },
-    "balance_after":     { "type": "number" },
-    "total_wagered":     { "type": "number" },
-    "total_returned":    { "type": "number" },
-    "net_result":        { "type": "number" },
-    "hand_bets":         { "type": "object" },
-    "rank_bets":         { "type": "object" },
-    "color_bets":        { "type": "object" },
-    "low_high_bet":      { "type": "object" },
-    "community_cards":   { "type": "array", "items": { "type": "object" } },
-    "winner_hand_ids":   { "type": "array", "items": { "type": "number" } },
-    "winning_rank":      { "type": "string" },
-    "winning_colors":    { "type": "array", "items": { "type": "string" } },
-    "winning_low_high":  { "type": "string" },
-    "kill_switch_active":{ "type": "boolean" },
-    "is_board_win":      { "type": "boolean" },
-    "card_win":          { "type": "boolean" },
-    "rank_win":          { "type": "boolean" },
-    "color_win":         { "type": "boolean" },
-    "river_win":         { "type": "boolean" },
-    "status":            { "type": "string", "enum": ["open", "settled", "abandoned"] },
-    "versions_snapshot": { "type": "object" }
+    "session_id": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "player_slot": {
+      "type": "number"
+    },
+    "round_number": {
+      "type": "number"
+    },
+    "timestamp_open": {
+      "type": "string"
+    },
+    "timestamp_settled": {
+      "type": "string"
+    },
+    "balance_before": {
+      "type": "number"
+    },
+    "balance_after": {
+      "type": "number"
+    },
+    "total_wagered": {
+      "type": "number"
+    },
+    "total_returned": {
+      "type": "number"
+    },
+    "net_result": {
+      "type": "number"
+    },
+    "hand_bets": {
+      "type": "object"
+    },
+    "rank_bets": {
+      "type": "object"
+    },
+    "color_bets": {
+      "type": "object"
+    },
+    "low_high_bet": {
+      "type": "object"
+    },
+    "community_cards": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "winner_hand_ids": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "winning_rank": {
+      "type": "string"
+    },
+    "winning_colors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "winning_low_high": {
+      "type": "string"
+    },
+    "kill_switch_active": {
+      "type": "boolean"
+    },
+    "is_board_win": {
+      "type": "boolean"
+    },
+    "card_win": {
+      "type": "boolean"
+    },
+    "rank_win": {
+      "type": "boolean"
+    },
+    "color_win": {
+      "type": "boolean"
+    },
+    "river_win": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "settled",
+        "abandoned"
+      ]
+    },
+    "versions_snapshot": {
+      "type": "object"
+    }
   },
-  "required": ["session_id", "device_id", "player_slot", "round_number", "status"]
+  "required": [
+    "session_id",
+    "device_id",
+    "player_slot",
+    "round_number",
+    "status"
+  ]
 }
