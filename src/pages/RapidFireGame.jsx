@@ -43,6 +43,22 @@ import RegulatoryComplianceReport from '@/components/game/TwoHandRankTest';
 
 import GameTimingModal from '@/components/game/GameTimingModal';
 import GameVersionsModal from '@/components/game/GameVersionsModal';
+import BellCurveModal from '@/components/game/BellCurveModal';
+import { HAND_BET_REDUCTIONS, RANK_BET_REDUCTIONS } from '@/lib/bellCurveConfig';
+
+function loadBellCurveReductions() {
+  try {
+    const saved = localStorage.getItem('rapidfire_bell_curve_config');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        hand: parsed.handReductions || HAND_BET_REDUCTIONS,
+        rank: parsed.rankReductions || RANK_BET_REDUCTIONS,
+      };
+    }
+  } catch {}
+  return { hand: HAND_BET_REDUCTIONS, rank: RANK_BET_REDUCTIONS };
+}
 import { base44 } from '@/api/base44Client';
 import CountdownClock from '@/components/game/CountdownClock';
 import HowToPlayOverlay from '@/components/game/HowToPlayOverlay';
@@ -183,6 +199,8 @@ export default function RapidFireGame() {
   
   const [showGameTiming, setShowGameTiming] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [showBellCurve, setShowBellCurve] = useState(false);
+  const [bellCurveConfig, setBellCurveConfig] = useState(null);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [showPlayerSelector, setShowPlayerSelector] = useState(true);
@@ -1369,6 +1387,7 @@ export default function RapidFireGame() {
   handleDealRiverRef.current = handleDealRiver;
 
   const settle = (finalComm, leader, winRB, winLH, leaderHand, handResult, snapHandBets, snapRedBlackBets, snapRankBets, snapLowHighBets) => {
+    const bellCurveReductions = loadBellCurveReductions();
     // Use centralized payouts (imported at top of file)
 
     let totalBetsAllPlayers = 0;
@@ -1393,12 +1412,15 @@ export default function RapidFireGame() {
           const bet = ph[wid] || 0;
           if (bet > 0) {
             const hand = FIXED_HANDS.find((h) => h.id === wid);
-            const effectiveRatio = calculateTiePayout(hand.payout, numWinners);
+            const playerHandBetCount = Object.values(ph).filter(b => b > 0).length;
+            const handReductionPct = bellCurveReductions.hand[Math.min(playerHandBetCount - 1, bellCurveReductions.hand.length - 1)] || 0;
+            const baseRatio = calculateTiePayout(hand.payout, numWinners);
+            const effectiveRatio = baseRatio * (1 - handReductionPct / 100);
             const payout = calculatePayout(bet, effectiveRatio);
             w += payout;
-            const oddsLabel = numWinners > 1 ?
-            `${effectiveRatio.toFixed(2)}:1 (tie/${numWinners})` :
-            `${hand.payout}:1`;
+            const oddsLabel = numWinners > 1
+              ? `${effectiveRatio.toFixed(2)}:1 (tie/${numWinners}${handReductionPct > 0 ? `, -${handReductionPct}%` : ''})`
+              : handReductionPct > 0 ? `${effectiveRatio.toFixed(2)}:1 (-${handReductionPct}%)` : `${hand.payout}:1`;
             wins.push({
               label: `Hand ${wid}`,
               bet,
@@ -1464,14 +1486,17 @@ export default function RapidFireGame() {
             if (rankBetAmt <= 0) continue;
             if (rankKey === actualWinnerRankName) {
               // Pay at the actual winning hand's per-hand rank odds
-              const ratio = getPerHandRankPayout(actualWinnerHandId, rankKey);
-              if (ratio !== null) {
-                const payout = calculatePayout(rankBetAmt, ratio);
+              const playerRankBetCount = Object.values(prk).filter(b => b > 0).length;
+              const rankReductionPct = bellCurveReductions.rank[Math.min(playerRankBetCount - 1, bellCurveReductions.rank.length - 1)] || 0;
+              const baseRankRatio = getPerHandRankPayout(actualWinnerHandId, rankKey);
+              if (baseRankRatio !== null) {
+                const effectiveRankRatio = baseRankRatio * (1 - rankReductionPct / 100);
+                const payout = calculatePayout(rankBetAmt, effectiveRankRatio);
                 w += payout;
                 wins.push({
                   label: rankKey,
                   bet: rankBetAmt,
-                  odds: `${ratio}:1`,
+                  odds: rankReductionPct > 0 ? `${effectiveRankRatio.toFixed(2)}:1 (-${rankReductionPct}%)` : `${baseRankRatio}:1`,
                   payout,
                   boardType: 'rank'
                 });
@@ -1936,6 +1961,12 @@ export default function RapidFireGame() {
         <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
         <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} onSaved={reloadTiming} />
         <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
+        {showBellCurve && (
+          <BellCurveModal
+            onClose={() => setShowBellCurve(false)}
+            onSave={(cfg) => { setBellCurveConfig(cfg); setShowBellCurve(false); }}
+          />
+        )}
         <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
         <MobileGameLayout
@@ -2008,6 +2039,7 @@ export default function RapidFireGame() {
           onOpenGameTiming={() => setShowGameTiming(true)}
           onOpenAnalytics={() => setShowAnalytics(true)}
           onOpenVersions={() => setShowVersions(true)}
+          onOpenBellCurve={() => setShowBellCurve(true)}
           toolsVisible={toolbarVisible}
           onSetHoveredRankRow={setHoveredRankRow}
           onSetHoveredRiverType={setHoveredRiverType}
@@ -2136,6 +2168,12 @@ export default function RapidFireGame() {
 
       <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} onSaved={reloadTiming} />
       <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
+      {showBellCurve && (
+        <BellCurveModal
+          onClose={() => setShowBellCurve(false)}
+          onSave={(cfg) => { setBellCurveConfig(cfg); setShowBellCurve(false); }}
+        />
+      )}
       <HowToPlayOverlay
         versions={versions}
         versionsReady={versionsReady}
