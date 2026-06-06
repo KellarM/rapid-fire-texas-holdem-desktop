@@ -315,7 +315,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
       if (dbData && Object.keys(dbData.results).length > 0) {
         // DB is the source of truth — always restore from it
         setResults(dbData.results);
-        setProgress(dbData.progress);
+        setProgress(Object.keys(dbData.results).length);
         try {
           localStorage.setItem(getStorageKeys(module.id).results, JSON.stringify(dbData.results));
           localStorage.setItem(getStorageKeys(module.id).progress, String(dbData.progress));
@@ -664,11 +664,11 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
           <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
             {!running && canContinue && (
               <button
-                onClick={continueRun}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-semibold text-sm transition-all whitespace-nowrap"
+              onClick={continueRun}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-black font-semibold text-sm transition-all whitespace-nowrap"
               >
-                <SkipForward className="w-3.5 h-3.5" />
-                Continue ({progress}/{bets.length} done)
+              <SkipForward className="w-3.5 h-3.5" />
+              Continue ({done}/{bets.length} done)
               </button>
             )}
             {!running && !canContinue && (
