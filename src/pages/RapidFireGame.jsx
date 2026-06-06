@@ -54,7 +54,7 @@ import { useIncompleteRoundRecovery } from '@/hooks/useIncompleteRoundRecovery';
 import RoundRecoveryModal from '@/components/game/RoundRecoveryModal';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
-import VolumeControl from '@/components/game/VolumeControl';
+import GearMenu from '@/components/game/GearMenu';
 
 
 // STARTING_BALANCE = 10000 (managed server-side via usePlayerSession)
@@ -86,148 +86,6 @@ const PLAYER_TAB_STYLES = [
 
 
 // ── Mobile detection ─────────────────────────────────────────────────────
-// ── GearMenu — always-visible settings button ────────────────────────────────
-function GearMenu({ soundManager, boardTheme, setBoardTheme, onHowToPlay, onResetBank }) {
-  const [open, setOpen] = useState(false);
-  const [colorOpen, setColorOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-        setColorOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const COLORS = [
-    { id: 'red',   label: 'Red',   dot: '#b30000' },
-    { id: 'blue',  label: 'Blue',  dot: '#0a2a6e' },
-    { id: 'green', label: 'Green', dot: '#0a4a1e' },
-  ];
-
-  const itemStyle = {
-    display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '8px 14px', cursor: 'pointer', fontSize: '13px',
-    color: '#e2e8f0', background: 'transparent', border: 'none',
-    width: '100%', textAlign: 'left', fontWeight: 500,
-    transition: 'background 0.15s',
-  };
-
-  return (
-    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
-      <button
-        onClick={() => { setOpen(o => !o); setColorOpen(false); }}
-        title="Settings"
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: '34px', height: '34px', borderRadius: '8px', cursor: 'pointer',
-          border: open ? '1px solid rgba(234,179,8,0.8)' : '1px solid rgba(202,138,4,0.4)',
-          background: open ? 'rgba(120,70,0,0.45)' : 'rgba(0,0,0,0.45)',
-          color: '#facc15', fontSize: '18px', lineHeight: 1,
-          transition: 'all 0.15s',
-        }}
-      >
-        ⚙
-      </button>
-
-      {open && (
-        <div style={{
-          position: 'absolute', bottom: '42px', right: 0,
-          background: '#0f172a', border: '1px solid rgba(202,138,4,0.35)',
-          borderRadius: '12px', minWidth: '190px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.7)', zIndex: 200, overflow: 'hidden',
-        }}>
-          <div style={{ padding: '6px 14px 5px', borderBottom: '1px solid rgba(202,138,4,0.2)' }}>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(250,204,21,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Settings</span>
-          </div>
-
-          {/* Color Change — opens sub-menu */}
-          <div style={{ position: 'relative' }}>
-            <button
-              style={{ ...itemStyle, justifyContent: 'space-between' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.08)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              onClick={() => setColorOpen(o => !o)}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: COLORS.find(c=>c.id===boardTheme)?.dot || '#b30000', border: '1px solid rgba(255,255,255,0.25)', flexShrink: 0 }} />
-                Board Color
-              </span>
-              <span style={{ color: 'rgba(250,204,21,0.4)', fontSize: '11px' }}>{colorOpen ? '▴' : '▾'}</span>
-            </button>
-            {colorOpen && (
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                {COLORS.map(t => (
-                  <button key={t.id}
-                    style={{
-                      ...itemStyle,
-                      paddingLeft: '32px',
-                      color: boardTheme === t.id ? '#fde047' : '#94a3b8',
-                      background: boardTheme === t.id ? 'rgba(234,179,8,0.1)' : 'transparent',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = boardTheme === t.id ? 'rgba(234,179,8,0.15)' : 'rgba(234,179,8,0.06)'}
-                    onMouseLeave={e => e.currentTarget.style.background = boardTheme === t.id ? 'rgba(234,179,8,0.1)' : 'transparent'}
-                    onClick={() => { setBoardTheme(t.id); setColorOpen(false); setOpen(false); }}
-                  >
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: t.dot, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                    {t.label}
-                    {boardTheme === t.id && <span style={{ marginLeft: 'auto', color: '#facc15', fontSize: '11px' }}>✓</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sound */}
-          <div style={{ padding: '4px 14px 6px', borderTop: colorOpen ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
-            {soundManager && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 0' }}>
-                <span style={{ fontSize: '14px' }}>🔊</span>
-                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>Sound</span>
-                <div style={{ marginLeft: 'auto' }}>
-                  <VolumeControl soundManager={soundManager} compact />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            {/* Game Rules */}
-            <div style={{ padding: '2px 0' }}>
-              <GameRulesModal asMenuItem />
-            </div>
-
-            {/* How To Play */}
-            <button
-              style={itemStyle}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(234,179,8,0.08)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              onClick={() => { onHowToPlay(); setOpen(false); }}
-            >
-              <span style={{ fontSize: '14px' }}>📖</span>
-              How To Play
-            </button>
-
-            {/* Reset Bank */}
-            <button
-              style={{ ...itemStyle, color: '#fca5a5', borderTop: '1px solid rgba(255,255,255,0.06)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              onClick={() => { onResetBank(); setOpen(false); }}
-            >
-              <span style={{ fontSize: '14px' }}>↺</span>
-              Reset Bank
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 
 function useIsMobile() {
@@ -2531,12 +2389,8 @@ export default function RapidFireGame() {
               boardTheme={boardTheme}
               setBoardTheme={setBoardTheme}
               onHowToPlay={() => setShowHowToPlay(true)}
-              onResetBank={() => {
-                setBalances(Array(10).fill(10000));
-                setRoundId(1);
-                setCasinoProfit(0);
-                setRoundsPlayed(0);
-              }}
+              onOpenStats={() => setShowStatsPanel(true)}
+              onResetBank={handleResetBank}
             />
           </div>
         </div>
