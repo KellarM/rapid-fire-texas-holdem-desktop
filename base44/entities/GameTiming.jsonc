@@ -1,0 +1,31 @@
+{
+  "name": "GameTiming",
+  "type": "object",
+  "properties": {
+    "bettingClose": {
+      "type": "number",
+      "default": 14
+    },
+    "flopReveal": {
+      "type": "number",
+      "default": 8
+    },
+    "turnReveal": {
+      "type": "number",
+      "default": 2
+    },
+    "riverBetting": {
+      "type": "number",
+      "default": 14
+    },
+    "riverReveal": {
+      "type": "number",
+      "default": 5
+    },
+    "endOfRound": {
+      "type": "number",
+      "default": 14
+    }
+  },
+  "required": []
+}

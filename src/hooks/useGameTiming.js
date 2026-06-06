@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const DEFAULT_TIMING = {
   bettingClose: 14,
@@ -9,28 +10,31 @@ const DEFAULT_TIMING = {
   endOfRound: 14,
 };
 
-const STORAGE_KEY = 'rapidFireGameTiming';
-
 export function useGameTiming() {
-  const [timing, setTiming] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_TIMING, ...JSON.parse(saved) } : DEFAULT_TIMING;
-    } catch {
-      return DEFAULT_TIMING;
-    }
-  });
-
+  const [timing, setTiming] = useState(DEFAULT_TIMING);
+  const [recordId, setRecordId] = useState(null);
   const timerRef = useRef(null);
+
+  // Load timing from DB on mount
+  useEffect(() => {
+    base44.entities.GameTiming.list().then(records => {
+      if (records && records.length > 0) {
+        const rec = records[0];
+        setRecordId(rec.id);
+        setTiming({ ...DEFAULT_TIMING, ...rec });
+      }
+    }).catch(() => {});
+  }, []);
 
   // Listen for timing updates saved from GameTimingModal
   const reloadTiming = useCallback(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      setTiming(saved ? { ...DEFAULT_TIMING, ...JSON.parse(saved) } : DEFAULT_TIMING);
-    } catch {
-      setTiming(DEFAULT_TIMING);
-    }
+    base44.entities.GameTiming.list().then(records => {
+      if (records && records.length > 0) {
+        const rec = records[0];
+        setRecordId(rec.id);
+        setTiming({ ...DEFAULT_TIMING, ...rec });
+      }
+    }).catch(() => {});
   }, []);
 
   const startTimer = useCallback((duration, onTick, onComplete) => {
@@ -58,5 +62,5 @@ export function useGameTiming() {
     }
   }, []);
 
-  return { timing, startTimer, stopTimer, reloadTiming };
+  return { timing, recordId, startTimer, stopTimer, reloadTiming };
 }

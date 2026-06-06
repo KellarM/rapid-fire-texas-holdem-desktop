@@ -556,14 +556,7 @@ export default function RapidFireGame() {
   }, [abandonIncompleteRound, recoveredState, activePlayer, forceBalance]);
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Listen for timing updates from GameTimingModal
-  useEffect(() => {
-    const handleTimingUpdate = () => {
-      reloadTiming();
-    };
-    window.addEventListener('gameTiming:updated', handleTimingUpdate);
-    return () => window.removeEventListener('gameTiming:updated', handleTimingUpdate);
-  }, [reloadTiming]);
+  // reloadTiming is passed as onSaved to GameTimingModal — no event listener needed
   const [countdownTime, setCountdownTime] = useState(0);
   const [countdownActive, setCountdownActive] = useState(false);
   const timerActiveRef = useRef(false);
@@ -2083,7 +2076,7 @@ export default function RapidFireGame() {
           {showKsStrategyTest && <KillSwitchStrategyTest onClose={() => setShowKsStrategyTest(false)} />}
         </AnimatePresence>
         <Observer isOpen={showObserver} onClose={() => setShowObserver(false)} observeOn={observeOn} onObserveToggle={handleObserveToggle} onRoundSettledRef={onRoundSettledRef} roundCount={observerRoundCount} onRoundCountChange={setObserverRoundCount} />
-        <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
+        <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} onSaved={reloadTiming} />
         <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
         <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
@@ -2283,7 +2276,7 @@ export default function RapidFireGame() {
       {/* Analytics Dashboard */}
       <AnalyticsDashboard isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
-      <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} />
+      <GameTimingModal isOpen={showGameTiming} onClose={() => setShowGameTiming(false)} onSaved={reloadTiming} />
       <GameVersionsModal isOpen={showVersions} onClose={() => setShowVersions(false)} />
       <HowToPlayOverlay
         versions={versions}

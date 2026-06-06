@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const DEFAULT_TIMING = {
   bettingClose: 14,
@@ -50,42 +51,22 @@ const TIMING_FIELDS = [
   },
 ];
 
-const STORAGE_KEY = 'rapidFireGameTiming';
-
-export function useGameTiming() {
-  const [timing, setTiming] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_TIMING, ...JSON.parse(saved) } : DEFAULT_TIMING;
-    } catch {
-      return DEFAULT_TIMING;
-    }
-  });
-
-  const saveTiming = (newTiming) => {
-    setTiming(newTiming);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTiming));
-  };
-
-  return { timing, saveTiming };
-}
-
-export default function GameTimingModal({ isOpen, onClose }) {
-  const [values, setValues] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_TIMING, ...JSON.parse(saved) } : DEFAULT_TIMING;
-    } catch {
-      return DEFAULT_TIMING;
-    }
-  });
+export default function GameTimingModal({ isOpen, onClose, onSaved }) {
+  const [values, setValues] = useState(DEFAULT_TIMING);
+  const [recordId, setRecordId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) setValues({ ...DEFAULT_TIMING, ...JSON.parse(saved) });
-      } catch {}
+      base44.entities.GameTiming.list().then(records => {
+        if (records && records.length > 0) {
+          const rec = records[0];
+          setRecordId(rec.id);
+          setValues({ ...DEFAULT_TIMING, ...rec });
+        } else {
+          setValues(DEFAULT_TIMING);
+        }
+      }).catch(() => {});
     }
   }, [isOpen]);
 
@@ -94,11 +75,28 @@ export default function GameTimingModal({ isOpen, onClose }) {
     setValues(prev => ({ ...prev, [key]: num }));
   };
 
-  const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
-    // Force parent component to reload timing from localStorage
-    window.dispatchEvent(new CustomEvent('gameTiming:updated', { detail: values }));
-    onClose();
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      bettingClose: values.bettingClose,
+      flopReveal: values.flopReveal,
+      turnReveal: values.turnReveal,
+      riverBetting: values.riverBetting,
+      riverReveal: values.riverReveal,
+      endOfRound: values.endOfRound,
+    };
+    try {
+      if (recordId) {
+        await base44.entities.GameTiming.update(recordId, payload);
+      } else {
+        const created = await base44.entities.GameTiming.create(payload);
+        setRecordId(created.id);
+      }
+      onSaved?.();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
