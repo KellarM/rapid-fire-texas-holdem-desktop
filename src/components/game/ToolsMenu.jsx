@@ -10,6 +10,7 @@ const TOOLS = [
   { icon: Layers,     label: 'Deck Inspector',             href: '/deck-inspector' },
   { icon: Timer,      label: 'Game Timing',                type: 'gameTiming'      },
   { icon: SlidersHorizontal, label: 'Versions',             type: 'versions',         badge: 'NEW', badgeColor: 'bg-purple-700/60 text-purple-300 border-purple-600/40' },
+  { icon: SlidersHorizontal, label: 'Bell Curve',           type: 'bellCurve',        badge: 'NEW', badgeColor: 'bg-red-700/60 text-red-300 border-red-600/40' },
 ];
 
 export default function ToolsMenu({
@@ -17,6 +18,7 @@ export default function ToolsMenu({
   onOpenAnalytics,
   onOpenGameTiming,
   onOpenVersions,
+  onOpenBellCurve,
   toolsVisible = true,
 }) {
   const [open, setOpen] = useState(false);
@@ -40,6 +42,7 @@ export default function ToolsMenu({
     analytics:        onOpenAnalytics,
     gameTiming:        onOpenGameTiming,
     versions:          onOpenVersions,
+    bellCurve:         onOpenBellCurve,
   };
 
   return (
