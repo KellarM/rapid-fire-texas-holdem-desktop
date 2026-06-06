@@ -403,6 +403,12 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
       const bet = bets[i];
       const betKey = `${bet.betType}:${bet.betKey}`;
 
+      // Skip bets that already have a result (prevents re-running completed bets on continue)
+      if (results[betKey]) {
+        setProgress(i + 1);
+        continue;
+      }
+
       // Check if there's a saved checkpoint for this exact bet
       const savedCheckpoint = loadCheckpoint(module.id);
       const resumeFrom = (savedCheckpoint && savedCheckpoint.betKey === betKey) ? savedCheckpoint : null;
@@ -585,7 +591,9 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
   };
 
   const continueRun = () => {
-    runFrom(progress);
+    // Find the first bet index that doesn't have a result yet
+    const firstMissing = bets.findIndex(b => !results[`${b.betType}:${b.betKey}`]);
+    runFrom(firstMissing >= 0 ? firstMissing : progress);
     setExpanded(true);
   };
 
@@ -605,7 +613,7 @@ function ModulePanel({ module, bets, onResultsChange, onExportCertificate }) {
 
   const done = Object.keys(results).length;
   const pct = Math.round((done / bets.length) * 100);
-  const canContinue = !running && progress > 0 && progress < bets.length;
+  const canContinue = !running && done > 0 && done < bets.length;
 
   const passed = Object.values(results).filter(r => {
     const v = parseFloat(r.rtp);
