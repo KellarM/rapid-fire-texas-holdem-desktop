@@ -3,6 +3,26 @@ import { X, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
+import { HAND_BET_REDUCTIONS, RANK_BET_REDUCTIONS } from '@/lib/bellCurveConfig';
+
+const BELL_CURVE_STORAGE_KEY = 'rapidfire_bell_curve_config';
+
+function loadBellCurveConfig() {
+  try {
+    const saved = localStorage.getItem(BELL_CURVE_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        handReductions: parsed.handReductions || HAND_BET_REDUCTIONS,
+        rankReductions: parsed.rankReductions || RANK_BET_REDUCTIONS,
+      };
+    }
+  } catch {}
+  return { handReductions: HAND_BET_REDUCTIONS, rankReductions: RANK_BET_REDUCTIONS };
+}
+
+const HAND_LABELS_SHORT = ['1','2','3','4','5','6','7','8','9','10'];
+const RANK_LABELS_SHORT  = ['1','2','3','4','5','6','7'];
 
 const FIXED_HANDS = [
   { id: 1,  label: 'A\u2666 / 10\u2665', payout: CARDED_HAND_PAYOUTS[0] },
@@ -85,10 +105,14 @@ function VersionBadge({ label, value }) {
 export default function GameRulesModal({ asMenuItem = false }) {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState(DEFAULT_VERSIONS);
+  const [bellCurve, setBellCurve] = useState({ handReductions: HAND_BET_REDUCTIONS, rankReductions: RANK_BET_REDUCTIONS });
 
   // Load versions each time modal opens
   useEffect(() => {
-    if (open) setV(loadVersions());
+    if (open) {
+      setV(loadVersions());
+      setBellCurve(loadBellCurveConfig());
+    }
   }, [open]);
 
   const maxHands       = v.maxCardHands ?? 1;
@@ -265,6 +289,44 @@ export default function GameRulesModal({ asMenuItem = false }) {
                       </div>
                     ))}
                   </div>
+                </Section>
+
+                <Section title="Multi-Hand Payout Reduction (Bell Curve)" defaultOpen={false}>
+                  <p className="text-gray-400 text-xs mb-3">
+                    When betting multiple hands or rank positions simultaneously, payouts are adjusted using a bell curve reduction.
+                    The reduction peaks at 5–6 hands to deter exploit strategies, then decreases for higher hand counts where the house advantage increases naturally.
+                  </p>
+                  <div className="mb-4">
+                    <p className="text-yellow-400 text-xs font-bold uppercase tracking-wide mb-2">Hand Bet Reductions</p>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {bellCurve.handReductions.map((pct, i) => (
+                        <div key={i} className={`flex flex-col items-center px-2 py-2 rounded-lg border text-center
+                          ${pct === 0 ? 'border-green-600/30 bg-green-900/10' : pct >= 20 ? 'border-red-600/40 bg-red-900/10' : 'border-yellow-700/20 bg-slate-800/40'}`}>
+                          <span className="text-gray-400 text-[10px]">{HAND_LABELS_SHORT[i]} hand{i > 0 ? 's' : ''}</span>
+                          <span className={`text-sm font-bold ${pct === 0 ? 'text-green-300' : pct >= 20 ? 'text-red-300' : 'text-yellow-300'}`}>
+                            {pct === 0 ? 'Full' : `-${pct}%`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-yellow-400 text-xs font-bold uppercase tracking-wide mb-2">Rank Bet Reductions</p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {bellCurve.rankReductions.map((pct, i) => (
+                        <div key={i} className={`flex flex-col items-center px-2 py-2 rounded-lg border text-center
+                          ${pct === 0 ? 'border-green-600/30 bg-green-900/10' : pct >= 20 ? 'border-red-600/40 bg-red-900/10' : 'border-yellow-700/20 bg-slate-800/40'}`}>
+                          <span className="text-gray-400 text-[10px]">{RANK_LABELS_SHORT[i]} rank{i > 0 ? 's' : ''}</span>
+                          <span className={`text-sm font-bold ${pct === 0 ? 'text-green-300' : pct >= 20 ? 'text-red-300' : 'text-yellow-300'}`}>
+                            {pct === 0 ? 'Full' : `-${pct}%`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-gray-500 text-[10px] mt-3 italic">
+                    These values are set by the operator via the Bell Curve tool and may vary per installation.
+                  </p>
                 </Section>
 
               </div>
