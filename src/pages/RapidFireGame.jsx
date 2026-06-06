@@ -55,7 +55,7 @@ import RoundRecoveryModal from '@/components/game/RoundRecoveryModal';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import GearMenu from '@/components/game/GearMenu';
-import { usePlayerStats } from '@/hooks/usePlayerStats.js';
+import { usePlayerStats } from '../hooks/usePlayerStats.js';
 
 const CHIP_VALUES = [5, 10, 25, 50, 100, 500];
 const MAX_HAND_BET_AMOUNT = 500;
