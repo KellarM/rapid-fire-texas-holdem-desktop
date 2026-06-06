@@ -52,6 +52,13 @@ function buildSteps(v) {
       description: 'The River card is dealt. All markets settle simultaneously — your Hand and Rank result, your Color Board result, and your River result. A new round begins automatically.',
       highlight: 'If the Board beats all player hands, hand bets are collected. Color Board and River bets resolve independently.',
     },
+    {
+      step: 6,
+      title: 'Multi-Hand Payout Reduction',
+      icon: '📉',
+      description: 'Betting more hands in a single round adjusts your payout odds. Payouts are at full value for 1–2 hands. A reduction applies from 3 hands onward, peaking at 5–6 hands, then decreasing again at higher counts.',
+      highlight: 'Betting 1 or 2 hands always pays full odds. The reduction peaks at 5–6 hands — the exploit zone — then eases off as you spread across more hands.',
+    },
   ];
 }
 
