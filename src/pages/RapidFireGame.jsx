@@ -55,9 +55,8 @@ import RoundRecoveryModal from '@/components/game/RoundRecoveryModal';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import MobileGameLayout from '@/components/game/MobileGameLayout';
 import GearMenu from '@/components/game/GearMenu';
+import { usePlayerStats } from '@/hooks/usePlayerStats.js';
 
-
-// STARTING_BALANCE = 10000 (managed server-side via usePlayerSession)
 const CHIP_VALUES = [5, 10, 25, 50, 100, 500];
 const MAX_HAND_BET_AMOUNT = 500;
 const DEFAULT_CHIP = 5;
@@ -151,7 +150,6 @@ export default function RapidFireGame() {
   const [winningRedBlack, setWinningRedBlack] = useState([]);
   const [winningLowHigh, setWinningLowHigh] = useState(null);
   const [history, setHistory] = useState(() => { try { const s = localStorage.getItem('rfth_history'); return s ? JSON.parse(s) : []; } catch { return []; } });
-  const [playerStats, setPlayerStats] = useState({});
   const [showStatsPanel, setShowStatsPanel] = useState(false);
   const [showMollySimulator, setShowMollySimulator] = useState(false);
   const [showArchetypeBattle, setShowArchetypeBattle] = useState(false);
@@ -160,7 +158,6 @@ export default function RapidFireGame() {
   const [showKsStrategyTest, setShowKsStrategyTest] = useState(false);
   const [showObserver, setShowObserver] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [observerRoundData, setObserverRoundData] = useState(null);
   // Observer persists across refreshes — ON by default, only OFF if user explicitly toggled it off
   const [observeOn, setObserveOn] = useState(
     () => localStorage.getItem('rfth_observer_on') !== 'false'
@@ -238,19 +235,12 @@ export default function RapidFireGame() {
   const { timing, startTimer, stopTimer, reloadTiming } = useGameTiming();
   const { versions, recordId: versionsRecordId, dbLoaded: versionsReady } = useGameVersions();
 
-  // ── Server-authoritative balance & session (GLI-19 Phase 1) ──────────────
   const {
-    balances,
-    setBalance,
-    setBalances,
-    persistBalance,
-    forceBalance,
-    resetAllBalances,
-    recordRoundResult,
-    deviceId,
-    sessionId,
-    dbReady,
+    balances, setBalance, setBalances, persistBalance, forceBalance,
+    resetAllBalances, recordRoundResult, deviceId, sessionId, dbReady,
   } = usePlayerSession();
+
+  const { playerStats, updatePlayerStat, resetAllPlayerStats } = usePlayerStats(deviceId);
 
   // ── Phase 2 GLI-19: per-round immutable audit trail ───────────────────────
   const { openRound, settleRound, abandonRound, resumeRound, getNextRoundNumber } = useAuditRound({
@@ -1537,24 +1527,20 @@ export default function RapidFireGame() {
       return n;
     });
 
-    // Update player stats
-    setPlayerStats((prev) => {
-      const updated = { ...prev };
-      for (let i = 0; i < playerCount; i++) {
-        const playerBet = Object.values(snapHandBets[i] || {}).reduce((s, v) => s + v, 0) +
+    // Update player stats — persisted to DB via usePlayerStats hook
+    for (let i = 0; i < playerCount; i++) {
+      const playerBet = Object.values(snapHandBets[i] || {}).reduce((s, v) => s + v, 0) +
         Object.values(snapRedBlackBets[i] || {}).reduce((s, v) => s + v, 0) +
-        Object.values(snapRankBets[i] || {}).reduce((s, v) => s + v, 0) + (
-        snapLowHighBets[i]?.amount || 0);
-
-        const playerWin = playerWinnings[i] || 0;
-        const multiplier = playerBet > 0 ? playerWin / playerBet : 0;
-
-        const prev_i = updated[i] || { totalBets: 0, totalWins: 0, roundsPlayed: 0, roundsWon: 0, highestMultiplier: 0, highestBalance: null, highestBalanceRound: null, lowestBalance: null, lowestBalanceRound: null };
-        const postRoundBalance = Math.max(0, (balancesRef.current[i] ?? balances[i] ?? 0) + playerWin);
-        const currentRound = roundsPlayed + 1;
+        Object.values(snapRankBets[i] || {}).reduce((s, v) => s + v, 0) +
+        (snapLowHighBets[i]?.amount || 0);
+      const playerWin = playerWinnings[i] || 0;
+      const multiplier = playerBet > 0 ? playerWin / playerBet : 0;
+      const postRoundBalance = Math.max(0, (balancesRef.current[i] ?? balances[i] ?? 0) + playerWin);
+      const currentRound = roundsPlayed + 1;
+      updatePlayerStat(i, (prev_i) => {
         const newHighest = prev_i.highestBalance === null || postRoundBalance > prev_i.highestBalance;
         const newLowest = prev_i.lowestBalance === null || postRoundBalance < prev_i.lowestBalance;
-        updated[i] = {
+        return {
           totalBets: prev_i.totalBets + playerBet,
           totalWins: prev_i.totalWins + playerWin,
           roundsPlayed: prev_i.roundsPlayed + (playerBet > 0 ? 1 : 0),
@@ -1563,11 +1549,10 @@ export default function RapidFireGame() {
           highestBalance: newHighest ? postRoundBalance : prev_i.highestBalance,
           highestBalanceRound: newHighest ? currentRound : prev_i.highestBalanceRound,
           lowestBalance: newLowest ? postRoundBalance : prev_i.lowestBalance,
-          lowestBalanceRound: newLowest ? currentRound : prev_i.lowestBalanceRound
+          lowestBalanceRound: newLowest ? currentRound : prev_i.lowestBalanceRound,
         };
-      }
-      return updated;
-    });
+      });
+    }
 
     // Casino profit = total bets - total winnings paid out
     const roundProfit = totalBetsAllPlayers - totalWinningsAllPlayers;
@@ -1751,11 +1736,10 @@ export default function RapidFireGame() {
 
   // Reset Bank handler — shared by desktop and mobile
   const handleResetBank = () => {
-    abandonRound(); // Phase 2 GLI-19: mark any open AuditRound as abandoned
-    resetAllBalances(); // server-authoritative reset via usePlayerSession
-    setRoundId(1);
-    setCasinoProfit(0);
-    setRoundsPlayed(0);
+    abandonRound();
+    resetAllBalances();
+    resetAllPlayerStats(playerCount);
+    setRoundId(1); setCasinoProfit(0); setRoundsPlayed(0);
   };
 
   const handleResetGame = () => {
@@ -1781,7 +1765,7 @@ export default function RapidFireGame() {
     setRoundsPlayed(0);
     setCasinoProfit(0);
     setHistory([]); try { localStorage.removeItem('rfth_history'); } catch {}
-    setPlayerStats({});
+    resetAllPlayerStats(playerCount);
     setActivePlayer(0);
     setPlayerCount(1);
     setShowPlayerSelector(true);
