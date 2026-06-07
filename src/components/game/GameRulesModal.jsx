@@ -293,8 +293,20 @@ export default function GameRulesModal({ asMenuItem = false }) {
 
                 <Section title="Multi-Hand Payout Reduction (Bell Curve)" defaultOpen={false}>
                   <p className="text-gray-400 text-xs mb-3">
-                    When betting multiple hands or rank positions simultaneously, payouts are adjusted using a bell curve reduction.
-                    The reduction peaks at 5–6 hands to deter exploit strategies, then decreases for higher hand counts where the house advantage increases naturally.
+                    {(() => {
+                      const hr = bellCurve.handReductions;
+                      // Find how many hands are at full value (leading zeros)
+                      let fullCount = 0;
+                      for (let i = 0; i < hr.length; i++) { if (hr[i] === 0) fullCount = i + 1; else break; }
+                      // Find peak
+                      let peakIdx = 0, peakPct = 0;
+                      for (let i = 0; i < hr.length; i++) { if (hr[i] > peakPct) { peakPct = hr[i]; peakIdx = i; } }
+                      const peakHands = peakIdx + 1;
+                      const descends = peakIdx < hr.length - 1 && hr[peakIdx + 1] < peakPct;
+                      if (fullCount >= hr.length) return 'All hand counts pay at full value. No payout reduction is currently active.';
+                      const fullLabel = fullCount === 1 ? 'only 1 hand' : `1–${fullCount} hands`;
+                      return `When betting multiple hands simultaneously, payouts are adjusted. ${fullCount === 1 ? 'Only 1 hand pays full value.' : `Payouts are at full value for ${fullLabel}.`} The reduction peaks at ${peakHands} hand${peakHands !== 1 ? 's' : ''} (−${peakPct}%) to deter exploit strategies${descends ? ', then decreases for higher hand counts where the house advantage increases naturally' : ''}.`;
+                    })()}
                   </p>
                   <div className="mb-4">
                     <p className="text-yellow-400 text-xs font-bold uppercase tracking-wide mb-2">Hand Bet Reductions</p>

@@ -1,5 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { rulesHaveChanged, markRulesSeen } from '@/lib/rulesHash';
+import { HAND_BET_REDUCTIONS, RANK_BET_REDUCTIONS } from '@/lib/bellCurveConfig';
+
+const BELL_CURVE_STORAGE_KEY = 'rapidfire_bell_curve_config';
+
+function loadBellCurveReductions() {
+  try {
+    const saved = localStorage.getItem(BELL_CURVE_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        hand: parsed.handReductions || HAND_BET_REDUCTIONS,
+        rank: parsed.rankReductions || RANK_BET_REDUCTIONS,
+      };
+    }
+  } catch {}
+  return { hand: HAND_BET_REDUCTIONS, rank: RANK_BET_REDUCTIONS };
+}
+
+/** Derive human-readable description & highlight from the actual hand reduction array */
+function buildBellCurveText(handReductions) {
+  // Find last index with 0 reduction (full value hands)
+  let lastFullIdx = -1;
+  for (let i = 0; i < handReductions.length; i++) {
+    if (handReductions[i] === 0) lastFullIdx = i;
+    else break;
+  }
+  const fullHandCount = lastFullIdx + 1; // number of hands at full value
+
+  // Find the peak reduction index
+  let peakIdx = 0;
+  let peakPct = 0;
+  for (let i = 0; i < handReductions.length; i++) {
+    if (handReductions[i] > peakPct) { peakPct = handReductions[i]; peakIdx = i; }
+  }
+  const peakHands = peakIdx + 1;
+
+  // Check if reduction descends after peak
+  const descends = peakIdx < handReductions.length - 1 && handReductions[peakIdx + 1] < peakPct;
+
+  let description;
+  let highlight;
+
+  if (fullHandCount >= handReductions.length) {
+    // All hands at full value — no reduction active
+    description = 'All hand counts pay at full value. No payout reduction is currently active.';
+    highlight = 'Every hand count pays full odds — no reduction applies.';
+  } else if (fullHandCount === 1) {
+    // Only 1 hand at full value
+    description = `Only betting 1 hand pays full value. A reduction applies from 2 hands onward, peaking at ${peakHands} hand${peakHands !== 1 ? 's' : ''} (−${peakPct}%)${descends ? ', then decreasing again at higher counts' : ''}.`;
+    highlight = `Only 1 hand pays full odds. The reduction peaks at ${peakHands} hand${peakHands !== 1 ? 's' : ''} (−${peakPct}%) — the exploit zone${descends ? ' — then eases off as you spread across more hands' : ''}.`;
+  } else {
+    // Multiple hands at full value
+    const fullLabel = fullHandCount === 1 ? '1 hand' : `1–${fullHandCount} hands`;
+    description = `Payouts are at full value for ${fullLabel}. A reduction applies from ${fullHandCount + 1} hand${fullHandCount + 1 !== 1 ? 's' : ''} onward, peaking at ${peakHands} hand${peakHands !== 1 ? 's' : ''} (−${peakPct}%)${descends ? ', then decreasing again at higher counts' : ''}.`;
+    highlight = `Betting ${fullLabel} always pays full odds. The reduction peaks at ${peakHands} hand${peakHands !== 1 ? 's' : ''} — the exploit zone${descends ? ' — then eases off as you spread across more hands' : ''}.`;
+  }
+
+  return { description, highlight };
+}
 
 function buildSteps(v) {
   const maxHands       = v.maxCardHands ?? 1;
@@ -9,6 +68,9 @@ function buildSteps(v) {
 
   const handsLabel = maxHands === 1 ? '1 hand' : `up to ${maxHands} hands`;
   const ranksLabel = maxRanks === 1 ? '1 Rank bet' : `up to ${maxRanks} Rank bets`;
+
+  const bc = loadBellCurveReductions();
+  const { description: bcDesc, highlight: bcHighlight } = buildBellCurveText(bc.hand);
 
   return [
     {
@@ -56,8 +118,8 @@ function buildSteps(v) {
       step: 6,
       title: 'Multi-Hand Payout Reduction',
       icon: '📉',
-      description: 'Betting more hands in a single round adjusts your payout odds. Payouts are at full value for 1–2 hands. A reduction applies from 3 hands onward, peaking at 5–6 hands, then decreasing again at higher counts.',
-      highlight: 'Betting 1 or 2 hands always pays full odds. The reduction peaks at 5–6 hands — the exploit zone — then eases off as you spread across more hands.',
+      description: bcDesc,
+      highlight: bcHighlight,
     },
   ];
 }
