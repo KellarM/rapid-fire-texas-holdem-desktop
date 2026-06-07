@@ -1,22 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { rulesHaveChanged, markRulesSeen } from '@/lib/rulesHash';
-import { HAND_BET_REDUCTIONS, RANK_BET_REDUCTIONS } from '@/lib/bellCurveConfig';
-
-const BELL_CURVE_STORAGE_KEY = 'rapidfire_bell_curve_config';
-
-function loadBellCurveReductions() {
-  try {
-    const saved = localStorage.getItem(BELL_CURVE_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        hand: parsed.handReductions || HAND_BET_REDUCTIONS,
-        rank: parsed.rankReductions || RANK_BET_REDUCTIONS,
-      };
-    }
-  } catch {}
-  return { hand: HAND_BET_REDUCTIONS, rank: RANK_BET_REDUCTIONS };
-}
+import { loadBellCurveFromDB, DEFAULT_BELL_CURVE } from '@/hooks/useBellCurve';
 
 /** Derive human-readable description & highlight from the actual hand reduction array */
 function buildBellCurveText(handReductions) {
@@ -60,7 +44,7 @@ function buildBellCurveText(handReductions) {
   return { description, highlight };
 }
 
-function buildSteps(v) {
+function buildSteps(v, bellCurve) {
   const maxHands       = v.maxCardHands ?? 1;
   const maxRanks       = v.maxRankSlots ?? 1;
   const rankLockAt     = v.rankLockThreshold ?? 1;
@@ -69,8 +53,8 @@ function buildSteps(v) {
   const handsLabel = maxHands === 1 ? '1 hand' : `up to ${maxHands} hands`;
   const ranksLabel = maxRanks === 1 ? '1 Rank bet' : `up to ${maxRanks} Rank bets`;
 
-  const bc = loadBellCurveReductions();
-  const { description: bcDesc, highlight: bcHighlight } = buildBellCurveText(bc.hand);
+  const bc = bellCurve || DEFAULT_BELL_CURVE;
+  const { description: bcDesc, highlight: bcHighlight } = buildBellCurveText(bc.handReductions || DEFAULT_BELL_CURVE.handReductions);
 
   return [
     {
@@ -128,7 +112,16 @@ export default function HowToPlayOverlay({ versions = {}, versionsReady = false,
   const [visible,  setVisible]  = useState(false);
   const [step,     setStep]     = useState(0);
   const [steps,    setSteps]    = useState([]);
-  const [updated,  setUpdated]  = useState(false);   // true = rules changed since last visit
+  const [updated,  setUpdated]  = useState(false);
+  const [bellCurve, setBellCurve] = useState(DEFAULT_BELL_CURVE);
+
+  // Load bell curve from DB once on mount
+  useEffect(() => {
+    loadBellCurveFromDB().then(({ config }) => setBellCurve(config));
+    function handleUpdate(e) { if (e.detail) setBellCurve(e.detail); }
+    window.addEventListener('bellCurve:updated', handleUpdate);
+    return () => window.removeEventListener('bellCurve:updated', handleUpdate);
+  }, []);
 
   // ── Auto-show guard ──────────────────────────────────────────────────────
   // Uses sessionStorage (NOT a ref) so the flag survives React remounts,
@@ -149,7 +142,7 @@ export default function HowToPlayOverlay({ versions = {}, versionsReady = false,
     // Use DB-loaded versions passed in as prop — never read localStorage here.
     // This guarantees every device compares against the same server values.
     const changed = rulesHaveChanged(versions);
-    setSteps(buildSteps(versions));
+    setSteps(buildSteps(versions, bellCurve));
     setUpdated(changed);
     setStep(0);
 
@@ -184,7 +177,7 @@ export default function HowToPlayOverlay({ versions = {}, versionsReady = false,
 
     try { localStorage.setItem(SESSION_SHOWN_KEY, JSON.stringify({ ts: Date.now() })); } catch {}
     setVisible(true);
-  }, [forceOpen, suppress, versions, versionsReady]);
+  }, [forceOpen, suppress, versions, versionsReady, bellCurve]);
 
   const handleClose = () => {
     markRulesSeen(versions);  // stamp the DB-versions hash so warning clears next time

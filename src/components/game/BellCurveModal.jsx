@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, TrendingUp, BarChart2, RotateCcw } from 'lucide-react';
+import { saveBellCurveToDB } from '@/hooks/useBellCurve';
 
 // Default values matching bellCurveConfig.js
 const DEFAULT_HAND_REDUCTIONS = [0, 0, 8, 15, 25, 20, 15, 10, 8, 5];
@@ -11,9 +12,7 @@ const RANK_LABELS = ['1 Rank','2 Ranks','3 Ranks','4 Ranks','5 Ranks','6 Ranks',
 const EXPLOIT_ZONE_HAND = [4, 5]; // index 4=5hands, 5=6hands
 const EXPLOIT_ZONE_RANK = [3, 4]; // index 3=4ranks, 4=5ranks
 
-export default function BellCurveModal({ onClose, onSave }) {
-  const BELL_CURVE_STORAGE_KEY = 'rapidfire_bell_curve_config';
-
+export default function BellCurveModal({ onClose, onSave, recordId: initialRecordId }) {
   function loadSavedConfig() {
     try {
       const saved = localStorage.getItem('rapidfire_bell_curve_config');
@@ -33,6 +32,7 @@ export default function BellCurveModal({ onClose, onSave }) {
   const [rankReductions, setRankReductions] = useState([...savedConfig.rank]);
   const [activeTab, setActiveTab] = useState('hand');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   function updateHand(index, value) {
     const clamped = Math.min(100, Math.max(0, Number(value) || 0));
@@ -60,13 +60,14 @@ export default function BellCurveModal({ onClose, onSave }) {
     setSaved(false);
   }
 
-  function handleSave() {
+  async function handleSave() {
+    setSaving(true);
     const config = { handReductions, rankReductions };
-    try {
-      localStorage.setItem('rapidfire_bell_curve_config', JSON.stringify(config));
-    } catch {}
+    await saveBellCurveToDB(config, initialRecordId);
+    window.dispatchEvent(new CustomEvent('bellCurve:updated', { detail: config }));
     onSave?.(config);
     setSaved(true);
+    setSaving(false);
   }
 
   const reductions = activeTab === 'hand' ? handReductions : rankReductions;
@@ -213,7 +214,7 @@ export default function BellCurveModal({ onClose, onSave }) {
                 ? 'bg-green-700/60 border border-green-600/40 text-green-200'
                 : 'bg-yellow-700/40 border border-yellow-600/40 text-yellow-200 hover:bg-yellow-700/60'}`}
           >
-            {saved ? '✓ Saved to Game Engine' : 'Save Configuration'}
+            {saving ? 'Saving...' : saved ? '✓ Saved to Game Engine' : 'Save Configuration'}
           </button>
         </div>
 

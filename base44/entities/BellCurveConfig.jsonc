@@ -1,0 +1,27 @@
+{
+  "name": "BellCurveConfig",
+  "type": "object",
+  "properties": {
+    "config_key": {
+      "type": "string",
+      "description": "Always 'default' \u2014 single operator config record"
+    },
+    "handReductions": {
+      "type": "array",
+      "description": "Payout reduction % for each hand count (index 0 = 1 hand, index 9 = 10 hands)",
+      "items": {
+        "type": "number"
+      }
+    },
+    "rankReductions": {
+      "type": "array",
+      "description": "Payout reduction % for each rank count (index 0 = 1 rank, index 6 = 7 ranks)",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "required": [
+    "config_key"
+  ]
+}

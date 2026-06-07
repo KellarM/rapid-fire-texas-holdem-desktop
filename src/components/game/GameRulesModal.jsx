@@ -3,23 +3,7 @@ import { X, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CARDED_HAND_PAYOUTS, COLOR_BOARD_PAYOUTS, LOW_HIGH_PAYOUT, RIVER_STATE_PAYOUTS } from '@/lib/payoutConstants';
 import { VERSIONS_STORAGE_KEY, DEFAULT_VERSIONS } from '@/hooks/useGameVersions';
-import { HAND_BET_REDUCTIONS, RANK_BET_REDUCTIONS } from '@/lib/bellCurveConfig';
-
-const BELL_CURVE_STORAGE_KEY = 'rapidfire_bell_curve_config';
-
-function loadBellCurveConfig() {
-  try {
-    const saved = localStorage.getItem(BELL_CURVE_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        handReductions: parsed.handReductions || HAND_BET_REDUCTIONS,
-        rankReductions: parsed.rankReductions || RANK_BET_REDUCTIONS,
-      };
-    }
-  } catch {}
-  return { handReductions: HAND_BET_REDUCTIONS, rankReductions: RANK_BET_REDUCTIONS };
-}
+import { loadBellCurveFromDB, DEFAULT_BELL_CURVE } from '@/hooks/useBellCurve';
 
 const HAND_LABELS_SHORT = ['1','2','3','4','5','6','7','8','9','10'];
 const RANK_LABELS_SHORT  = ['1','2','3','4','5','6','7'];
@@ -105,13 +89,12 @@ function VersionBadge({ label, value }) {
 export default function GameRulesModal({ asMenuItem = false }) {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState(DEFAULT_VERSIONS);
-  const [bellCurve, setBellCurve] = useState({ handReductions: HAND_BET_REDUCTIONS, rankReductions: RANK_BET_REDUCTIONS });
+  const [bellCurve, setBellCurve] = useState(DEFAULT_BELL_CURVE);
 
-  // Load versions each time modal opens
   useEffect(() => {
     if (open) {
       setV(loadVersions());
-      setBellCurve(loadBellCurveConfig());
+      loadBellCurveFromDB().then(({ config }) => setBellCurve(config));
     }
   }, [open]);
 
